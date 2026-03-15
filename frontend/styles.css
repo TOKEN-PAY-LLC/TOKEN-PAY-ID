@@ -95,11 +95,12 @@ img{max-width:100%;display:block}
 .hero-buttons{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:18px}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:var(--rs);font-size:.95rem;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:var(--t);position:relative;overflow:hidden}
-.btn-primary{background:#fff;color:#000;box-shadow:0 4px 20px rgba(255,255,255,.1)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,255,255,.2)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:var(--rs);font-size:.95rem;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.btn:active{transform:scale(.97)!important;transition:all .08s}
+.btn-primary{background:#fff;color:#000;box-shadow:0 4px 20px rgba(255,255,255,.12)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(255,255,255,.22);background:#f4f4f4}
 .btn-secondary{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border-hover)}
-.btn-secondary:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);transform:translateY(-2px)}
+.btn-secondary:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
 .btn-full{width:100%;justify-content:center}
 
 /* HERO STATS */
