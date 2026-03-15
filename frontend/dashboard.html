@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Личный кабинет — TOKEN PAY ID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="styles.css?v=20260316d">
+    <script src="theme-init.js?v=20260316d"></script>
+    <style>
+    .d2{display:flex;min-height:100vh;min-height:100dvh;overflow-x:hidden;width:100%}
+    .d2-side{width:260px;background:rgba(8,8,10,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,.06);padding:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+    .d2-side-logo{padding:24px 24px 20px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .d2-side-logo img{height:22px}
+    .d2-side-nav{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:2px}
+    .d2-side-nav::-webkit-scrollbar{width:3px}
+    .d2-side-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
+    .d2-nav-label{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.2);padding:16px 12px 6px;font-weight:700}
+    .d2-nav-item{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:10px;font-size:.82rem;color:rgba(255,255,255,.45);cursor:pointer;transition:all .15s;border:none;background:none;font-family:inherit;width:100%;text-align:left}
+    .d2-nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.7)}
+    .d2-nav-item.active{background:rgba(255,255,255,.07);color:#fff;font-weight:600}
+    .d2-nav-item svg{width:17px;height:17px;opacity:.5;flex-shrink:0}
+    .d2-nav-item.active svg{opacity:.9}
+    .d2-side-footer{padding:16px;border-top:1px solid rgba(255,255,255,.04);margin-top:auto}
+    .d2-user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;transition:all .15s}
+    .d2-user-card:hover{background:rgba(255,255,255,.04)}
+    .d2-avatar{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.03));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;color:rgba(255,255,255,.7);flex-shrink:0;border:1px solid rgba(255,255,255,.06)}
+    .d2-user-name{color:rgba(255,255,255,.85);font-weight:600;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .d2-user-email{color:rgba(255,255,255,.3);font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .d2-user-info{flex:1;min-width:0}
+    .d2-logout-btn{background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;padding:6px;border-radius:6px;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .d2-logout-btn:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.04)}
+    .d2-logout-btn svg{width:16px;height:16px}
+    .d2-main{flex:1;margin-left:260px;padding:0;min-height:100vh;min-height:100dvh;background:transparent;overflow-x:hidden;max-width:100vw}
+    .d2-topbar{position:sticky;top:0;z-index:50;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.04)}
+    .d2-topbar h1{font-size:1.3rem;font-weight:700;color:#fff;margin:0}
+    .d2-topbar-actions{display:flex;gap:8px;align-items:center}
+    .d2-content{padding:24px 32px 48px}
+    .d2-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:28px}
+    .d2-stat{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px;transition:all .2s}
+    .d2-stat:hover{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
+    .d2-stat-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.3);margin-bottom:8px;font-weight:600}
+    .d2-stat-val{font-size:1.5rem;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;line-height:1.2}
+    .d2-stat-hint{font-size:.68rem;margin-top:6px;color:rgba(255,255,255,.3)}
+    .d2-stat-hint.ok{color:rgba(255,255,255,.5)}
+    .d2-stat-hint.warn{color:rgba(255,200,100,.6)}
+    .d2-panel{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:24px;margin-bottom:20px;transition:border-color .2s}
+    .d2-panel:hover{border-color:rgba(255,255,255,.08)}
+    .d2-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+    .d2-panel-head h2{font-size:1rem;font-weight:700;color:rgba(255,255,255,.9);margin:0}
+    .d2-panel-desc{font-size:.8rem;color:rgba(255,255,255,.35);margin:-10px 0 18px;line-height:1.5}
+    .d2-table{width:100%;border-collapse:collapse}
+    .d2-table th{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.25);font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .d2-table td{padding:12px;font-size:.82rem;color:rgba(255,255,255,.6);border-bottom:1px solid rgba(255,255,255,.03)}
+    .d2-table tr:last-child td{border-bottom:none}
+    .d2-table tr:hover td{background:rgba(255,255,255,.01)}
+    .d2-table .mono{font-family:'JetBrains Mono',monospace;font-size:.75rem}
+    .d2-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:600;letter-spacing:.3px}
+    .d2-badge-ok{background:rgba(100,220,100,.08);color:rgba(130,230,130,.8);border:1px solid rgba(100,220,100,.12)}
+    .d2-badge-warn{background:rgba(255,200,50,.06);color:rgba(255,210,80,.7);border:1px solid rgba(255,200,50,.1)}
+    .d2-badge-off{background:rgba(255,255,255,.03);color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.06)}
+    .d2-badge-info{background:rgba(100,150,255,.06);color:rgba(130,170,255,.7);border:1px solid rgba(100,150,255,.1)}
+    .d2-badge-danger{background:rgba(255,80,80,.06);color:rgba(255,120,120,.7);border:1px solid rgba(255,80,80,.1)}
+    .d2-btn{padding:8px 18px;border-radius:8px;font-size:.78rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;border:none;display:inline-flex;align-items:center;gap:6px}
+    .d2-btn-primary{background:#fff;color:#000}
+    .d2-btn-primary:hover{background:#e8e8e8;transform:translateY(-1px)}
+    .d2-btn-secondary{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.08)}
+    .d2-btn-secondary:hover{background:rgba(255,255,255,.1);color:#fff}
+    .d2-btn-danger{background:rgba(255,60,60,.06);color:rgba(255,120,120,.8);border:1px solid rgba(255,60,60,.1)}
+    .d2-btn-danger:hover{background:rgba(255,60,60,.12);color:rgba(255,140,140,.9)}
+    .d2-btn-sm{padding:6px 14px;font-size:.72rem}
+    .d2-tabs{display:flex;gap:2px;margin-bottom:20px;background:rgba(255,255,255,.02);border-radius:10px;padding:3px;border:1px solid rgba(255,255,255,.04);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
+    .d2-tabs::-webkit-scrollbar{display:none}
+    .d2-tab{padding:8px 18px;border-radius:8px;font-size:.78rem;font-weight:500;color:rgba(255,255,255,.35);cursor:pointer;transition:all .15s;border:none;background:none;font-family:inherit;white-space:nowrap}
+    .d2-tab:hover{color:rgba(255,255,255,.6)}
+    .d2-tab.active{background:rgba(255,255,255,.07);color:#fff;font-weight:600}
+    .d2-activity{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+    .d2-activity:last-child{border-bottom:none}
+    .d2-activity-dot{width:7px;height:7px;border-radius:50%;margin-top:6px;flex-shrink:0}
+    .d2-activity-dot.success{background:rgba(100,220,100,.6)}
+    .d2-activity-dot.warning{background:rgba(255,200,50,.5)}
+    .d2-activity-dot.error{background:rgba(255,80,80,.5)}
+    .d2-activity-dot.info{background:rgba(255,255,255,.2)}
+    .d2-activity-title{font-size:.82rem;color:rgba(255,255,255,.75);margin-bottom:2px}
+    .d2-activity-meta{font-size:.7rem;color:rgba(255,255,255,.25)}
+    .d2-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+    .d2-row:last-child{border-bottom:none}
+    .d2-row-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .d2-row-icon svg{width:16px;height:16px;color:rgba(255,255,255,.4)}
+    .d2-row-info{flex:1;min-width:0}
+    .d2-row-title{font-size:.85rem;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .d2-row-sub{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .d2-row-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+    .d2-empty{text-align:center;padding:48px 24px}
+    .d2-empty svg{width:40px;height:40px;color:rgba(255,255,255,.1);margin:0 auto 14px;display:block}
+    .d2-empty p{font-size:.85rem;color:rgba(255,255,255,.25)}
+    .d2-section{display:none}
+    .d2-section.active{display:block;animation:d2FadeIn .25s ease}
+    @keyframes d2FadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .d2-chart{width:100%;height:180px;background:rgba(255,255,255,.01);border-radius:10px;position:relative;overflow:hidden}
+    .d2-chart canvas{width:100%!important;height:100%!important}
+    .d2-field{margin-bottom:20px}
+    .d2-field label{display:block;font-size:.65rem;font-weight:600;color:rgba(255,255,255,.3);margin-bottom:8px;text-transform:uppercase;letter-spacing:1.5px}
+    .d2-field input,.d2-field select{width:100%;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:inherit;font-size:.88rem;transition:all .2s;outline:none}
+    .d2-field input:focus,.d2-field select:focus{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.05)}
+    .d2-field input:disabled{opacity:.4;cursor:not-allowed}
+    .d2-field input::placeholder{color:rgba(255,255,255,.15)}
+    .d2-field .d2-hint{font-size:.7rem;color:rgba(255,255,255,.2);margin-top:6px}
+    .d2-field select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+    .d2-mobile-bar{display:none;position:sticky;top:0;z-index:101;padding:14px 20px;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);align-items:center;justify-content:center}
+    .d2-mobile-bar img{height:18px}
+    .d2-mobile-toggle{position:absolute;left:16px;top:50%;transform:translateY(-50%);background:none;border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.5);cursor:pointer;padding:7px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .d2-mobile-toggle:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
+    .d2-mobile-toggle svg{width:18px;height:18px}
+    .d2-side-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99;transition:opacity .3s}
+    .d2-side-overlay.open{display:block}
+    .d2-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:.82rem;font-weight:500;color:#fff;z-index:10000;animation:d2ToastIn .3s ease;background:rgba(20,20,20,.95);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px)}
+    @keyframes d2ToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:1024px){.d2-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:768px){
+        .d2{flex-direction:column}
+        .d2-mobile-bar{width:100%;flex-shrink:0}
+        .d2-side{transform:translateX(-100%);width:280px;z-index:200}
+        .d2-side.open{transform:translateX(0)}
+        .d2-main{margin-left:0;max-width:100vw;width:100%}
+        .d2-mobile-bar{display:flex}
+        .d2-topbar{padding:14px 16px}
+        .d2-topbar h1{font-size:1.05rem}
+        .d2-topbar-actions{gap:4px}
+        .d2-topbar-actions .d2-btn{padding:5px 10px;font-size:.68rem}
+        .d2-content{padding:12px 12px 32px}
+        .d2-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+        .d2-stat{padding:14px;border-radius:12px}
+        .d2-stat-label{font-size:.58rem;letter-spacing:1px;margin-bottom:5px}
+        .d2-stat-val{font-size:1.15rem}
+        .d2-stat-hint{font-size:.62rem}
+        .d2-panel{padding:14px;margin-bottom:14px;border-radius:12px}
+        .d2-panel-head{margin-bottom:12px;gap:8px}
+        .d2-panel-head h2{font-size:.88rem}
+        .d2-panel-desc{font-size:.72rem;margin:-6px 0 12px}
+        .d2-row{flex-wrap:wrap;padding:10px 0;gap:10px}
+        .d2-row-icon{width:30px;height:30px;border-radius:8px}
+        .d2-row-icon svg{width:14px;height:14px}
+        .d2-row-info{min-width:0;flex:1}
+        .d2-row-title{font-size:.78rem;gap:6px}
+        .d2-row-sub{font-size:.62rem;word-break:break-all}
+        .d2-row-actions{width:100%;justify-content:flex-start;margin-top:2px;gap:4px}
+        .d2-row-actions .d2-btn{padding:5px 10px;font-size:.65rem}
+        .d2-badge{font-size:.58rem;padding:2px 7px}
+        .d2-btn{padding:6px 12px;font-size:.72rem}
+        .d2-btn-sm{padding:5px 10px;font-size:.65rem}
+        .d2-table{font-size:.72rem;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+        .d2-table th{font-size:.58rem;padding:6px;letter-spacing:1px}
+        .d2-table td{padding:8px 6px;font-size:.72rem}
+        .d2-table .mono{font-size:.65rem}
+        .d2-tabs{gap:0;padding:2px;margin-bottom:14px}
+        .d2-tab{padding:7px 12px;font-size:.7rem}
+        .d2-activity{padding:10px 0;gap:8px}
+        .d2-activity-title{font-size:.75rem}
+        .d2-activity-meta{font-size:.62rem}
+        .d2-activity-dot{width:6px;height:6px;margin-top:5px}
+        .d2-empty{padding:28px 16px}
+        .d2-empty svg{width:30px;height:30px}
+        .d2-empty p{font-size:.78rem}
+        .d2-field{margin-bottom:14px}
+        .d2-field label{font-size:.58rem;margin-bottom:6px;letter-spacing:1px}
+        .d2-field input,.d2-field select{padding:10px 12px;font-size:.82rem;border-radius:8px}
+        .d2-field .d2-hint{font-size:.62rem}
+        .d2-chart{height:140px}
+        .d2-toast{left:12px;right:12px;bottom:12px;font-size:.78rem;padding:10px 14px}
+        .d2-nav-label{font-size:.55rem;padding:12px 10px 4px}
+        .d2-nav-item{padding:9px 12px;font-size:.78rem;gap:9px}
+        .d2-nav-item svg{width:15px;height:15px}
+        #adminUserSearch{width:120px!important;font-size:.72rem!important;padding:6px 10px 6px 28px!important}
+        .d2-section form{max-width:100%!important}
+    }
+    @media(max-width:480px){
+        .d2-grid{grid-template-columns:1fr;gap:8px}
+        .d2-content{padding:10px 10px 28px}
+        .d2-topbar{padding:10px 12px}
+        .d2-topbar h1{font-size:.92rem}
+        .d2-panel{padding:12px;border-radius:10px}
+        .d2-stat{padding:12px}
+        .d2-stat-val{font-size:1rem}
+        .d2-row-title{font-size:.75rem}
+        .d2-row-sub{font-size:.58rem}
+        .d2-tab{padding:6px 10px;font-size:.65rem}
+        .d2-field input,.d2-field select{padding:9px 10px;font-size:.78rem}
+        .d2-mobile-bar{padding:10px 16px}
+        .d2-mobile-bar img{height:16px}
+    }
+    @media(max-width:380px){
+        .d2-grid{gap:6px}
+        .d2-stat{padding:10px}
+        .d2-stat-val{font-size:.9rem}
+        .d2-stat-label{font-size:.52rem}
+        .d2-content{padding:8px 8px 24px}
+        .d2-panel{padding:10px}
+    }
+    </style>
+</head>
+<body>
+    <canvas id="d2-stars" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35"></canvas>
+    <div class="d2" style="position:relative;z-index:1">
+        <div class="d2-mobile-bar">
+            <button class="d2-mobile-toggle" onclick="toggleMobileMenu()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            </button>
+            <a href="/"><img src="tokenpay-logo.png" alt="TOKEN PAY"></a>
+        </div>
+        <div class="d2-side-overlay" id="sideOverlay" onclick="toggleMobileMenu()"></div>
+        <aside class="d2-side" id="dashSide">
+            <div class="d2-side-logo"><a href="/"><img src="tokenpay-logo.png" alt="TOKEN PAY"></a></div>
+            <nav class="d2-side-nav" id="sideNav"></nav>
+            <div class="d2-side-footer">
+                <div class="d2-user-card" onclick="switchSection('settings')">
+                    <div class="d2-avatar" id="userAvatar">--</div>
+                    <div class="d2-user-info">
+                        <div class="d2-user-name" id="userName" data-ru="Загрузка..." data-en="Loading...">Загрузка...</div>
+                        <div class="d2-user-email" id="userEmail">...</div>
+                    </div>
+                    <button class="d2-logout-btn" onclick="event.stopPropagation();logout()" title="">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        <main class="d2-main">
+            <!-- OVERVIEW -->
+            <div class="d2-section active" id="sec-overview">
+                <div class="d2-topbar"><h1 id="overviewTitle">Обзор</h1><div class="d2-topbar-actions" id="overviewActions"></div></div>
+                <div class="d2-content">
+                    <div class="d2-grid" id="overviewStats"></div>
+                    <div class="d2-panel" id="overviewChartPanel" style="display:none">
+                        <div class="d2-panel-head"><h2 data-ru="Статистика запросов" data-en="Request Statistics">Статистика запросов</h2></div>
+                        <div class="d2-chart"><canvas id="requestsChart"></canvas></div>
+                    </div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Последняя активность" data-en="Recent Activity">Последняя активность</h2><button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="switchSection('activity')" data-ru="Все" data-en="All">Все</button></div>
+                        <div id="recentActivity"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- SESSIONS -->
+            <div class="d2-section" id="sec-sessions">
+                <div class="d2-topbar"><h1 data-ru="Устройства и сессии" data-en="Devices & Sessions">Устройства и сессии</h1><div class="d2-topbar-actions"><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeAllSessions()" data-ru="Завершить все" data-en="Revoke All">Завершить все</button></div></div>
+                <div class="d2-content"><div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Активные сессии" data-en="Active Sessions">Активные сессии</h2></div><div id="sessionsList"></div></div></div>
+            </div>
+            <!-- CONNECTED APPS -->
+            <div class="d2-section" id="sec-apps">
+                <div class="d2-topbar"><h1 data-ru="Подключённые сервисы" data-en="Connected Services">Подключённые сервисы</h1></div>
+                <div class="d2-content"><div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Авторизации через TOKEN PAY ID" data-en="Authorized via TOKEN PAY ID">Авторизации через TOKEN PAY ID</h2></div><p class="d2-panel-desc" data-ru="Приложения и сайты, где вы вошли через ваш аккаунт." data-en="Apps and websites where you signed in with your account.">Приложения и сайты, где вы вошли через ваш аккаунт.</p><div id="connectedAppsList"></div></div></div>
+            </div>
+            <!-- API KEYS -->
+            <div class="d2-section" id="sec-api-keys">
+                <div class="d2-topbar"><h1 data-ru="API ключи" data-en="API Keys">API ключи</h1><div class="d2-topbar-actions"><button class="d2-btn d2-btn-primary d2-btn-sm" onclick="createApiKey()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span data-ru="Создать" data-en="Create">Создать</span></button></div></div>
+                <div class="d2-content">
+                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Ваши ключи" data-en="Your Keys">Ваши ключи</h2></div><p class="d2-panel-desc" data-ru="pk — клиентские запросы. sk — серверные запросы (никогда не передавайте клиенту)." data-en="pk — client requests. sk — server requests (never expose to clients).">pk — клиентские запросы. sk — серверные запросы (никогда не передавайте клиенту).</p><div id="apiKeysList"></div></div>
+                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Использование API" data-en="API Usage">Использование API</h2></div><div style="overflow-x:auto"><table class="d2-table"><thead><tr><th>Endpoint</th><th>24h</th><th data-ru="Время" data-en="Time">Время</th><th data-ru="Ошибки" data-en="Errors">Ошибки</th></tr></thead><tbody><tr><td class="mono">/api/v1/auth/verify</td><td>2,847</td><td>45ms</td><td>0.1%</td></tr><tr><td class="mono">/api/v1/users/me</td><td>1,523</td><td>32ms</td><td>0.0%</td></tr><tr><td class="mono">/api/v1/tokens/refresh</td><td>892</td><td>28ms</td><td>0.2%</td></tr></tbody></table></div></div>
+                </div>
+            </div>
+            <!-- ENTERPRISE USERS -->
+            <div class="d2-section" id="sec-ent-users">
+                <div class="d2-topbar"><h1 data-ru="Пользователи" data-en="Users">Пользователи</h1></div>
+                <div class="d2-content"><div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Авторизовались через ваш сервис" data-en="Authorized via your service">Авторизовались через ваш сервис</h2></div><div id="enterpriseUsersList"></div></div></div>
+            </div>
+            <!-- WEBHOOKS -->
+            <div class="d2-section" id="sec-webhooks">
+                <div class="d2-topbar"><h1>Webhooks</h1><div class="d2-topbar-actions"><button class="d2-btn d2-btn-primary d2-btn-sm" onclick="addWebhook()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span data-ru="Добавить" data-en="Add">Добавить</span></button></div></div>
+                <div class="d2-content">
+                    <div class="d2-panel"><div class="d2-panel-head"><h2>Webhooks</h2></div><p class="d2-panel-desc" data-ru="Получайте уведомления о событиях в реальном времени." data-en="Receive real-time event notifications.">Получайте уведомления о событиях в реальном времени.</p><div id="webhooksList"></div></div>
+                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="События" data-en="Events">События</h2></div><div style="overflow-x:auto"><table class="d2-table"><thead><tr><th data-ru="Событие" data-en="Event">Событие</th><th data-ru="Описание" data-en="Description">Описание</th></tr></thead><tbody><tr><td class="mono">user.login</td><td data-ru="Авторизация" data-en="Login">Авторизация</td></tr><tr><td class="mono">user.register</td><td data-ru="Регистрация" data-en="Registration">Регистрация</td></tr><tr><td class="mono">user.2fa.enabled</td><td data-ru="2FA включена" data-en="2FA enabled">2FA включена</td></tr><tr><td class="mono">key.created</td><td data-ru="API ключ создан" data-en="API key created">API ключ создан</td></tr><tr><td class="mono">key.revoked</td><td data-ru="API ключ отозван" data-en="API key revoked">API ключ отозван</td></tr></tbody></table></div></div>
+                </div>
+            </div>
+            <!-- ENTERPRISE SETTINGS -->
+            <div class="d2-section" id="sec-ent-settings">
+                <div class="d2-topbar"><h1 data-ru="Настройки интеграции" data-en="Integration Settings">Настройки интеграции</h1></div>
+                <div class="d2-content">
+                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Язык системы" data-en="System Language">Язык системы</h2></div><p class="d2-panel-desc" data-ru="Язык TOKEN PAY ID для ваших пользователей при API-вызовах." data-en="TOKEN PAY ID language for your users during API calls.">Язык TOKEN PAY ID для ваших пользователей при API-вызовах.</p><div class="d2-field" style="max-width:320px"><label data-ru="Язык по умолчанию" data-en="Default language">Язык по умолчанию</label><select id="entLangSelect" onchange="saveEntLanguage(this.value)"><option value="ru">Русский</option><option value="en">English</option></select></div></div>
+                    <div class="d2-panel"><div class="d2-panel-head"><h2>Callback URL</h2></div><p class="d2-panel-desc" data-ru="URL перенаправления после авторизации." data-en="Redirect URL after authorization.">URL перенаправления после авторизации.</p><div class="d2-field" style="max-width:500px"><label>Redirect URI</label><input type="url" id="entRedirectUri" placeholder="https://yoursite.com/callback"></div><button class="d2-btn d2-btn-primary d2-btn-sm" onclick="saveEntSettings()" data-ru="Сохранить" data-en="Save">Сохранить</button></div>
+                </div>
+            </div>
+            <!-- ADMIN USERS -->
+            <div class="d2-section" id="sec-admin-users">
+                <div class="d2-topbar"><h1 data-ru="Пользователи" data-en="Users">Пользователи</h1><div class="d2-topbar-actions"><div style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" width="16" height="16" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" id="adminUserSearch" placeholder="" oninput="filterAdminUsers(this.value)" style="padding:7px 12px 7px 32px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font-size:.8rem;width:180px;font-family:inherit;outline:none"></div></div></div>
+                <div class="d2-content"><div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Все пользователи" data-en="All Users">Все пользователи</h2></div><div style="overflow-x:auto"><div id="adminUsersList"></div></div><div style="margin-top:12px;text-align:center"><button class="d2-btn d2-btn-secondary d2-btn-sm" id="adminUsersMore" onclick="loadAdminUsers(true)" style="display:none" data-ru="Загрузить ещё" data-en="Load more">Загрузить ещё</button></div></div></div>
+            </div>
+            <!-- ADMIN ACTIVITY -->
+            <div class="d2-section" id="sec-admin-activity">
+                <div class="d2-topbar"><h1 data-ru="Глобальный журнал" data-en="Global Log">Глобальный журнал</h1></div>
+                <div class="d2-content"><div class="d2-tabs"><button class="d2-tab active" onclick="filterAdminActivity('all',this)" data-ru="Все" data-en="All">Все</button><button class="d2-tab" onclick="filterAdminActivity('login',this)" data-ru="Входы" data-en="Logins">Входы</button><button class="d2-tab" onclick="filterAdminActivity('failed',this)" data-ru="Ошибки" data-en="Errors">Ошибки</button><button class="d2-tab" onclick="filterAdminActivity('security',this)" data-ru="Безопасность" data-en="Security">Безопасность</button></div><div class="d2-panel"><div id="adminActivityList"></div></div></div>
+            </div>
+            <!-- ADMIN SYSTEM -->
+            <div class="d2-section" id="sec-admin-system">
+                <div class="d2-topbar"><h1 data-ru="Система" data-en="System">Система</h1></div>
+                <div class="d2-content"><div class="d2-grid" id="adminSystemStats"></div><div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Сервер" data-en="Server">Сервер</h2></div><div id="adminServerInfo"></div></div><div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Роли" data-en="Roles">Роли</h2></div><div id="adminRolesBreakdown"></div></div><div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Регистрации за неделю" data-en="Registrations this week">Регистрации за неделю</h2></div><div id="adminRegsChart"></div></div></div>
+            </div>
+            <!-- ADMIN ENTERPRISE APPLICATIONS -->
+            <div class="d2-section" id="sec-admin-enterprise">
+                <div class="d2-topbar"><h1 data-ru="Заявки предприятий" data-en="Enterprise Applications">Заявки предприятий</h1></div>
+                <div class="d2-content">
+                    <div class="d2-tabs">
+                        <button class="d2-tab active" onclick="loadEntApps('pending',this)" data-ru="Ожидающие" data-en="Pending">Ожидающие</button>
+                        <button class="d2-tab" onclick="loadEntApps('approved',this)" data-ru="Одобренные" data-en="Approved">Одобренные</button>
+                        <button class="d2-tab" onclick="loadEntApps('rejected',this)" data-ru="Отклонённые" data-en="Rejected">Отклонённые</button>
+                    </div>
+                    <div class="d2-panel"><div id="entAppsList"></div></div>
+                </div>
+            </div>
+            <!-- ACTIVITY -->
+            <div class="d2-section" id="sec-activity">
+                <div class="d2-topbar"><h1 data-ru="Активность" data-en="Activity">Активность</h1></div>
+                <div class="d2-content"><div class="d2-tabs"><button class="d2-tab active" onclick="filterActivity('all',this)" data-ru="Все" data-en="All">Все</button><button class="d2-tab" onclick="filterActivity('auth',this)" data-ru="Авторизации" data-en="Logins">Авторизации</button><button class="d2-tab" onclick="filterActivity('api',this)">API</button><button class="d2-tab" onclick="filterActivity('security',this)" data-ru="Безопасность" data-en="Security">Безопасность</button></div><div class="d2-panel"><div id="fullActivity"></div></div></div>
+            </div>
+            <!-- SECURITY -->
+            <div class="d2-section" id="sec-security">
+                <div class="d2-topbar"><h1 data-ru="Безопасность" data-en="Security">Безопасность</h1></div>
+                <div class="d2-content">
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Двухфакторная аутентификация" data-en="Two-Factor Authentication">Двухфакторная аутентификация</h2></div>
+                        <p class="d2-panel-desc" data-ru="Google Authenticator или аналогичное TOTP-приложение." data-en="Google Authenticator or similar TOTP app.">Google Authenticator или аналогичное TOTP-приложение.</p>
+                        <div id="twoFactorStatus"></div>
+                        <div id="twoFactorSetup" style="display:none;margin-top:16px">
+                            <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:24px">
+                                <p style="font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:12px"><span data-ru="1. Отсканируйте QR-код:" data-en="1. Scan QR code:">1. Отсканируйте QR-код:</span></p>
+                                <div style="text-align:center;margin:16px 0"><img id="qrImage" style="border-radius:12px;background:#fff;padding:8px" width="180" height="180"></div>
+                                <p style="font-size:.75rem;color:rgba(255,255,255,.3);margin-bottom:4px"><span data-ru="Или ключ вручную:" data-en="Or manual key:">Или ключ вручную:</span></p>
+                                <div style="background:rgba(0,0,0,.3);padding:10px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:rgba(255,255,255,.7);margin-bottom:16px;word-break:break-all;border:1px solid rgba(255,255,255,.06)" id="totpSecretDisplay"></div>
+                                <p style="font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:8px"><span data-ru="2. Введите 6-значный код:" data-en="2. Enter 6-digit code:">2. Введите 6-значный код:</span></p>
+                                <div style="display:flex;gap:8px;align-items:center;max-width:280px">
+                                    <input type="text" id="totpVerifyCode" placeholder="000 000" maxlength="7" autocomplete="one-time-code" style="text-align:center;font-size:1.1rem;letter-spacing:4px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;outline:none;width:160px;font-family:'JetBrains Mono',monospace">
+                                    <button class="d2-btn d2-btn-primary d2-btn-sm" onclick="verify2FACode()">OK</button>
+                                </div>
+                                <div id="totpError" style="color:rgba(255,100,100,.8);font-size:.78rem;margin-top:8px;display:none"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d2-panel"><div class="d2-panel-head"><h2>Email</h2></div><div id="emailVerifyStatus"></div></div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Смена пароля" data-en="Change Password">Смена пароля</h2></div>
+                        <form onsubmit="return changePassword(event)" style="max-width:380px">
+                            <div class="d2-field"><label data-ru="Текущий пароль" data-en="Current password">Текущий пароль</label><input type="password" id="currentPass" placeholder=""></div>
+                            <div class="d2-field"><label data-ru="Новый пароль" data-en="New password">Новый пароль</label><input type="password" id="newPass" placeholder=""></div>
+                            <button type="submit" class="d2-btn d2-btn-primary d2-btn-sm" data-ru="Обновить" data-en="Update">Обновить</button>
+                        </form>
+                    </div>
+                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Удаление аккаунта" data-en="Delete Account">Удаление аккаунта</h2></div><p class="d2-panel-desc" data-ru="Необратимое действие. Все данные будут удалены навсегда." data-en="Irreversible action. All data will be permanently deleted.">Необратимое действие. Все данные будут удалены навсегда.</p><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="if(confirm(L('Удалить аккаунт? Это необратимо.','Delete account? This is irreversible.'))){localStorage.clear();window.location.href='/'}" data-ru="Удалить" data-en="Delete">Удалить</button></div>
+                </div>
+            </div>
+            <!-- SETTINGS -->
+            <div class="d2-section" id="sec-settings">
+                <div class="d2-topbar"><h1 data-ru="Настройки" data-en="Settings">Настройки</h1></div>
+                <div class="d2-content">
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Профиль" data-en="Profile">Профиль</h2></div>
+                        <form onsubmit="return saveProfile(event)" style="max-width:460px">
+                            <div class="d2-field"><label data-ru="Имя" data-en="Name">Имя</label><input type="text" id="settingsName" placeholder=""></div>
+                            <div class="d2-field" id="companyField" style="display:none"><label data-ru="Компания" data-en="Company">Компания</label><input type="text" id="settingsCompany" placeholder="" disabled></div>
+                            <div class="d2-field"><label>Email</label><input type="email" id="settingsEmail" disabled><div class="d2-hint" data-ru="Email нельзя изменить" data-en="Email cannot be changed">Email нельзя изменить</div></div>
+                            <div class="d2-field"><label data-ru="ID аккаунта" data-en="Account ID">ID аккаунта</label><input type="text" id="settingsId" disabled style="font-family:'JetBrains Mono',monospace;font-size:.8rem"></div>
+                            <div class="d2-field"><label data-ru="Тип аккаунта" data-en="Account type">Тип аккаунта</label><input type="text" id="settingsRole" disabled></div>
+                            <div class="d2-field"><label data-ru="Язык" data-en="Language">Язык</label><select id="settingsLang" onchange="saveLang(this.value)"><option value="ru">Русский</option><option value="en">English</option></select></div>
+                            <div class="d2-field"><label data-ru="Тема" data-en="Theme">Тема</label><select id="settingsTheme" onchange="saveTheme(this.value)"><option value="dark" data-ru="Тёмная" data-en="Dark">Тёмная</option><option value="light" data-ru="Светлая" data-en="Light">Светлая</option></select></div>
+                            <button type="submit" class="d2-btn d2-btn-primary d2-btn-sm" data-ru="Сохранить" data-en="Save">Сохранить</button>
+                        </form>
+                    </div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Данные" data-en="Data">Данные</h2></div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="exportData()" data-ru="Экспорт данных" data-en="Export data">Экспорт данных</button>
+                            <button class="d2-btn d2-btn-danger d2-btn-sm" onclick="logout()" data-ru="Выйти" data-en="Logout">Выйти</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    const API = '';
+    let user = JSON.parse(localStorage.getItem('tpid_user') || sessionStorage.getItem('tpid_user') || 'null');
+    let token = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
+    let refreshToken = localStorage.getItem('tpid_refresh') || sessionStorage.getItem('tpid_refresh');
+    let _refreshing = null;
+    if (!user || !token) window.location.href = '/login';
+    let isEnterprise = user && (user.role === 'enterprise');
+    let isAdmin = user && (user.role === 'admin');
+
+    // ===== i18n =====
+    const _lang = localStorage.getItem('tp_lang') || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ru');
+    function L(ru, en) { return _lang === 'en' ? en : ru; }
+    document.title = L('Личный кабинет — TOKEN PAY ID', 'Dashboard — TOKEN PAY ID');
+    function applyLang() {
+        const attr = 'data-' + _lang;
+        document.querySelectorAll('[data-ru][data-en]').forEach(el => {
+            const val = el.getAttribute(attr);
+            if (val !== null) {
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = val;
+                else el.textContent = val;
+            }
+        });
+        const search = document.getElementById('adminUserSearch');
+        if (search) search.placeholder = L('Поиск...', 'Search...');
+    }
+    applyLang();
+
+    function _doFetch(path, opts) {
+        return fetch(API + path, { ...opts, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, ...(opts.headers||{}) } });
+    }
+    function _tryRefresh() {
+        if (_refreshing) return _refreshing;
+        if (!refreshToken) { localStorage.clear(); sessionStorage.clear(); window.location.href = '/login'; return Promise.reject(); }
+        _refreshing = fetch('/api/v1/auth/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: refreshToken }) })
+            .then(r => r.json()).then(d => {
+                _refreshing = null;
+                if (!d.accessToken) throw new Error('no_token');
+                token = d.accessToken;
+                const store = localStorage.getItem('tpid_token') ? localStorage : sessionStorage;
+                store.setItem('tpid_token', token); store.setItem('tp_token', token);
+            }).catch(() => { _refreshing = null; localStorage.clear(); sessionStorage.clear(); window.location.href = '/login'; });
+        return _refreshing;
+    }
+    function api(path, opts = {}) {
+        return _doFetch(path, opts).then(r => {
+            if (r.status === 401) return _tryRefresh().then(() => _doFetch(path, opts)).then(r2 => { if(r2.status===401){localStorage.clear();sessionStorage.clear();window.location.href='/login';} return r2.json(); });
+            return r.json();
+        });
+    }
+
+    function toast(msg) {
+        const el = document.createElement('div');
+        el.className = 'd2-toast';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(10px)'; el.style.transition = 'all .3s'; setTimeout(() => el.remove(), 300); }, 2500);
+    }
+
+    function toggleMobileMenu() {
+        const side = document.getElementById('dashSide');
+        const overlay = document.getElementById('sideOverlay');
+        side.classList.toggle('open');
+        overlay.classList.toggle('open');
+    }
+
+    // ===== SIDEBAR =====
+    function buildSidebar() {
+        const nav = document.getElementById('sideNav');
+        const items = [];
+        const ico = {
+            overview: '<svg viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="1" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="10" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="10" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>',
+            users: '<svg viewBox="0 0 18 18" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M1 16c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5"/><path d="M13 5a3 3 0 010 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+            keys: '<svg viewBox="0 0 18 18" fill="none"><path d="M11 1l6 6-8 8-6-6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M1 17l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="13" cy="5" r="1" fill="currentColor"/></svg>',
+            activity: '<svg viewBox="0 0 18 18" fill="none"><polyline points="1,12 5,6 9,10 13,3 17,8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            system: '<svg viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M6 12V8M9 12V6M12 12V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+            sessions: '<svg viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 14v2M12 14v2M4 16h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+            apps: '<svg viewBox="0 0 18 18" fill="none"><rect x="1" y="3" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 7l2 2 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            security: '<svg viewBox="0 0 18 18" fill="none"><path d="M9 1L2 4v5c0 4.42 3 8.28 7 9 4-.72 7-4.58 7-9V4L9 1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            settings: '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.34 3.34l1.42 1.42M13.24 13.24l1.42 1.42M3.34 14.66l1.42-1.42M13.24 4.76l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+            webhooks: '<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M9 1v3M9 14v3M1 9h3M14 9h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+            integration: '<svg viewBox="0 0 18 18" fill="none"><path d="M3 9a6 6 0 0112 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 3v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/></svg>'
+        };
+
+        items.push({ id:'overview', icon:ico.overview, label:L('Обзор','Overview') });
+
+        if (isAdmin) {
+            nav.innerHTML = '<div class="d2-nav-label">'+L('Администрирование','Administration')+'</div>';
+            items.push({ id:'admin-users', icon:ico.users, label:L('Пользователи','Users') });
+            items.push({ id:'admin-enterprise', icon:ico.integration, label:L('Заявки','Applications') });
+            items.push({ id:'api-keys', icon:ico.keys, label:L('API ключи','API Keys') });
+            items.push({ id:'admin-activity', icon:ico.activity, label:L('Журнал','Log') });
+            items.push({ id:'admin-system', icon:ico.system, label:L('Система','System') });
+        } else if (isEnterprise) {
+            nav.innerHTML = '<div class="d2-nav-label">'+L('Предприятие','Enterprise')+'</div>';
+            items.push({ id:'api-keys', icon:ico.keys, label:L('API ключи','API Keys') });
+            items.push({ id:'ent-users', icon:ico.users, label:L('Пользователи','Users') });
+            items.push({ id:'webhooks', icon:ico.webhooks, label:'Webhooks' });
+            items.push({ id:'ent-settings', icon:ico.integration, label:L('Интеграция','Integration') });
+        } else {
+            nav.innerHTML = '<div class="d2-nav-label">'+L('Аккаунт','Account')+'</div>';
+            items.push({ id:'sessions', icon:ico.sessions, label:L('Устройства','Devices') });
+            items.push({ id:'apps', icon:ico.apps, label:L('Сервисы','Services') });
+        }
+
+        items.push({ id:'_sep', label:'' });
+        items.push({ id:'activity', icon:ico.activity, label:L('Активность','Activity') });
+        items.push({ id:'security', icon:ico.security, label:L('Безопасность','Security') });
+        items.push({ id:'settings', icon:ico.settings, label:L('Настройки','Settings') });
+
+        nav.innerHTML += items.map((it, i) => {
+            if (it.id === '_sep') return '<div class="d2-nav-label">'+L('Общее','General')+'</div>';
+            return `<button class="d2-nav-item${i===0?' active':''}" data-section="${it.id}">${it.icon} ${it.label}</button>`;
+        }).join('');
+
+        nav.querySelectorAll('.d2-nav-item').forEach(btn => {
+            btn.addEventListener('click', () => switchSection(btn.dataset.section));
+        });
+    }
+
+    function initUserData() {
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userEmail').textContent = user.email || '';
+        document.getElementById('userAvatar').textContent = (user.name || 'U').substring(0, 2).toUpperCase();
+        document.getElementById('settingsName').value = user.name || '';
+        document.getElementById('settingsEmail').value = user.email || '';
+        document.getElementById('settingsId').value = user.id || '';
+        document.getElementById('settingsRole').value = isEnterprise ? 'Enterprise' : isAdmin ? L('Администратор','Administrator') : L('Пользователь','User');
+        if (isEnterprise && user.company_name) {
+            document.getElementById('companyField').style.display = '';
+            document.getElementById('settingsCompany').value = user.company_name;
+        }
+        if (user.locale) {
+            const langSel = document.getElementById('settingsLang');
+            if (langSel) langSel.value = user.locale;
+        }
+        if (user.theme) {
+            const themeSel = document.getElementById('settingsTheme');
+            if (themeSel) themeSel.value = user.theme;
+        }
+    }
+
+    function refreshUserData() {
+        return api('/api/v1/users/me').then(d => {
+            if (d.id) { user = d; localStorage.setItem('tpid_user', JSON.stringify(d)); isEnterprise = d.role==='enterprise'; isAdmin = d.role==='admin'; initUserData(); }
+            return d;
+        }).catch(() => user);
+    }
+
+    function buildOverview() {
+        const stats = document.getElementById('overviewStats');
+        const actions = document.getElementById('overviewActions');
+        if (isAdmin) {
+            document.getElementById('overviewTitle').textContent = L('Панель администратора','Admin Panel');
+            actions.innerHTML = '<a href="/docs" class="d2-btn d2-btn-secondary d2-btn-sm">'+L('Документация','Docs')+'</a>';
+            stats.innerHTML = `
+                <div class="d2-stat"><div class="d2-stat-label">${L('Пользователи','Users')}</div><div class="d2-stat-val" id="statTotalUsers">-</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Входы 24ч','Logins 24h')}</div><div class="d2-stat-val" id="statLogins24">-</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Регистрации 24ч','Signups 24h')}</div><div class="d2-stat-val" id="statRegs24">-</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Сессии','Sessions')}</div><div class="d2-stat-val" id="statSessions">-</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Неудачные входы','Failed logins')}</div><div class="d2-stat-val" id="statFailed24">-</div><div class="d2-stat-hint" id="statFailedHint"></div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('API ключи','API Keys')}</div><div class="d2-stat-val" id="statAdminKeys">-</div></div>`;
+            api('/api/v1/admin/system').then(d => {
+                document.getElementById('statTotalUsers').textContent = d.users?.total ?? '-';
+                document.getElementById('statLogins24').textContent = d.activity?.logins_24h ?? '-';
+                document.getElementById('statRegs24').textContent = d.activity?.registrations_24h ?? '-';
+                document.getElementById('statSessions').textContent = d.sessions?.active ?? '-';
+                document.getElementById('statFailed24').textContent = d.activity?.failed_logins_24h ?? '-';
+                const f = d.activity?.failed_logins_24h||0;
+                document.getElementById('statFailedHint').textContent = f>10?L('Внимание','Warning'):L('Норма','Normal');
+                document.getElementById('statFailedHint').className = 'd2-stat-hint '+(f>10?'warn':'ok');
+                document.getElementById('statAdminKeys').textContent = d.keys?.active ?? '-';
+            }).catch(()=>{});
+        } else if (isEnterprise) {
+            document.getElementById('overviewTitle').textContent = L('Панель управления','Control Panel');
+            actions.innerHTML = '<a href="/docs" class="d2-btn d2-btn-secondary d2-btn-sm">'+L('Документация','Docs')+'</a>';
+            stats.innerHTML = `
+                <div class="d2-stat"><div class="d2-stat-label">${L('API запросы (24ч)','API Requests (24h)')}</div><div class="d2-stat-val" id="statRequests">0</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Ключи','Keys')}</div><div class="d2-stat-val" id="statKeys">0</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Пользователи','Users')}</div><div class="d2-stat-val" id="statUsers">0</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">Uptime</div><div class="d2-stat-val">99.9%</div><div class="d2-stat-hint ok">${L('Стабильно','Stable')}</div></div>`;
+            document.getElementById('overviewChartPanel').style.display='';
+            drawChart();
+            api('/api/v1/enterprise/stats').then(d => {
+                if (d.connected_users!==undefined) document.getElementById('statUsers').textContent=d.connected_users;
+                if (d.active_keys!==undefined) document.getElementById('statKeys').textContent=d.active_keys;
+                if (d.auth_requests_24h!==undefined) document.getElementById('statRequests').textContent=d.auth_requests_24h.toLocaleString(_lang==='en'?'en-US':'ru-RU');
+            }).catch(()=>{});
+        } else {
+            document.getElementById('overviewTitle').textContent = L('Мой аккаунт','My Account');
+            const created = user.created_at ? new Date(user.created_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU') : '--';
+            const lastLogin = user.last_login ? new Date(user.last_login).toLocaleDateString(_lang==='en'?'en-US':'ru-RU') : '--';
+            const vText = user.email_verified ? L('Подтверждён','Verified') : L('Не подтверждён','Not verified');
+            const vBadge = user.email_verified ? 'd2-badge-ok' : 'd2-badge-off';
+            const tText = user.two_factor_enabled ? L('Включена','Enabled') : L('Отключена','Disabled');
+            const tBadge = user.two_factor_enabled ? 'd2-badge-ok' : 'd2-badge-off';
+            stats.innerHTML = `
+                <div class="d2-stat"><div class="d2-stat-label">Email</div><div class="d2-stat-val" style="font-size:1rem"><span class="d2-badge ${vBadge}">${vText}</span></div></div>
+                <div class="d2-stat"><div class="d2-stat-label">2FA</div><div class="d2-stat-val" style="font-size:1rem"><span class="d2-badge ${tBadge}">${tText}</span></div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Регистрация','Registered')}</div><div class="d2-stat-val" style="font-size:1rem">${created}</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Последний вход','Last login')}</div><div class="d2-stat-val" style="font-size:1rem">${lastLogin}</div></div>`;
+        }
+    }
+
+    function switchSection(name) {
+        document.querySelectorAll('.d2-nav-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.d2-section').forEach(s => s.classList.remove('active'));
+        const btn = document.querySelector(`.d2-nav-item[data-section="${name}"]`);
+        const sec = document.getElementById('sec-' + name);
+        if (btn) btn.classList.add('active');
+        if (sec) sec.classList.add('active');
+        document.getElementById('dashSide').classList.remove('open');
+        document.getElementById('sideOverlay').classList.remove('open');
+    }
+
+    // ===== SESSIONS =====
+    function loadSessions() {
+        api('/api/v1/users/sessions').then(d => {
+            const el = document.getElementById('sessionsList');
+            if (!d.sessions||!d.sessions.length) { el.innerHTML='<div class="d2-empty"><p>'+L('Нет активных сессий','No active sessions')+'</p></div>'; return; }
+            el.innerHTML = d.sessions.map((s,i) => {
+                const time = new Date(s.last_active).toLocaleString(_lang==='en'?'en-US':'ru-RU');
+                return `<div class="d2-row">
+                    <div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+                    <div class="d2-row-info"><div class="d2-row-title">${s.device||L('Неизвестно','Unknown')} ${i===0?'<span class="d2-badge d2-badge-ok">'+L('Текущая','Current')+'</span>':''}</div><div class="d2-row-sub">${s.ip||'—'} · ${time}</div></div>
+                    <div class="d2-row-actions">${i>0?`<button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeSession('${s.id}',this)">${L('Завершить','Revoke')}</button>`:''}</div>
+                </div>`;
+            }).join('');
+        }).catch(()=>{ document.getElementById('sessionsList').innerHTML='<div class="d2-empty"><p>'+L('Ошибка загрузки','Loading error')+'</p></div>'; });
+    }
+    function revokeSession(id,btn) { api('/api/v1/users/sessions/'+id,{method:'DELETE'}).then(()=>{btn.closest('.d2-row').remove();toast(L('Сессия завершена','Session revoked'))}); }
+    function revokeAllSessions() { if(!confirm(L('Завершить все сессии?','Revoke all sessions?')))return; api('/api/v1/auth/logout',{method:'POST',body:JSON.stringify({})}).then(()=>loadSessions()); }
+
+    // ===== CONNECTED APPS =====
+    function loadConnectedApps() {
+        api('/api/v1/users/connected-apps').then(d => {
+            const el = document.getElementById('connectedAppsList');
+            if (!d.apps||!d.apps.length) { el.innerHTML='<div class="d2-empty"><p>'+L('Нет подключённых сервисов','No connected services')+'</p></div>'; return; }
+            el.innerHTML = d.apps.map(a => `<div class="d2-row">
+                <div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="18" rx="3"/><path d="M8 7h8M8 11h5"/></svg></div>
+                <div class="d2-row-info"><div class="d2-row-title">${a.app_name||a.company_name||L('Приложение','Application')}</div><div class="d2-row-sub">${a.scopes||'profile'} · ${new Date(a.authorized_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU')}</div></div>
+                <div class="d2-row-actions"><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeApp('${a.id}',this)">${L('Отключить','Disconnect')}</button></div>
+            </div>`).join('');
+        }).catch(()=>{});
+    }
+    function revokeApp(id,btn) { if(!confirm(L('Отключить?','Disconnect?')))return; api('/api/v1/users/connected-apps/'+id,{method:'DELETE'}).then(()=>{btn.closest('.d2-row').remove();toast(L('Отключено','Disconnected'))}); }
+
+    // ===== API KEYS =====
+    function loadKeys() {
+        api('/api/v1/keys').then(d => {
+            const el=document.getElementById('apiKeysList'); const keys=d.keys||[];
+            const statEl=document.getElementById('statKeys'); if(statEl) statEl.textContent=keys.filter(k=>k.status==='active').length;
+            if (!keys.length) { el.innerHTML='<div class="d2-empty"><p>'+L('Нет ключей. Создайте первый.','No keys. Create your first one.')+'</p></div>'; return; }
+            el.innerHTML = keys.map(k => `<div class="d2-row">
+                <div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zM15.5 8.5L19 5"/></svg></div>
+                <div class="d2-row-info"><div class="d2-row-title">${k.name} <span class="d2-badge ${k.status==='active'?'d2-badge-ok':'d2-badge-off'}">${k.status==='active'?L('Активен','Active'):L('Отозван','Revoked')}</span></div><div class="d2-row-sub">pk: ${k.public_key} · sk: ${k.secret_prefix}...</div></div>
+                <div class="d2-row-actions"><button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="copyKey('${k.public_key}',this)">${L('Копировать','Copy')}</button>${k.status==='active'?`<button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeKey('${k.id}')">${L('Отозвать','Revoke')}</button>`:''}</div>
+            </div>`).join('');
+        }).catch(()=>{});
+    }
+    function createApiKey() { const name=prompt(L('Название ключа:','Key name:'),'Production Key'); if(!name)return; api('/api/v1/keys',{method:'POST',body:JSON.stringify({name})}).then(d=>{ if(d.secret_key){alert(L('Секретный ключ (сохраните!):\n\n','Secret key (save it!):\n\n')+d.secret_key+L('\n\nПоказывается один раз!','\n\nShown only once!'));} loadKeys();toast(L('Ключ создан','Key created'));}); }
+    function revokeKey(id) { if(!confirm(L('Отозвать ключ?','Revoke key?')))return; api('/api/v1/keys/'+id,{method:'DELETE'}).then(()=>{loadKeys();toast(L('Ключ отозван','Key revoked'));}); }
+    function copyKey(text,btn) { navigator.clipboard.writeText(text).then(()=>{const o=btn.textContent;btn.textContent='OK!';setTimeout(()=>btn.textContent=o,1200);}); }
+
+    // ===== ENTERPRISE =====
+    function loadEnterpriseUsers() {
+        api('/api/v1/enterprise/users').then(d => {
+            const el=document.getElementById('enterpriseUsersList');
+            if (!d.users||!d.users.length) { el.innerHTML='<div class="d2-empty"><p>'+L('Нет пользователей','No users')+'</p></div>'; return; }
+            el.innerHTML='<div style="overflow-x:auto"><table class="d2-table"><thead><tr><th>'+L('Имя','Name')+'</th><th>Email</th><th>'+L('Права','Scopes')+'</th><th>'+L('Дата','Date')+'</th></tr></thead><tbody>'+d.users.map(u=>`<tr><td>${u.name}</td><td class="mono">${u.email}</td><td>${u.scopes||'profile'}</td><td>${new Date(u.authorized_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU')}</td></tr>`).join('')+'</tbody></table></div>';
+        }).catch(()=>{});
+    }
+    function saveEntLanguage(val) { api('/api/v1/users/me',{method:'PUT',body:JSON.stringify({locale:val})}).then(()=>toast(L('Язык сохранён','Language saved'))); }
+    function loadEntSettings() {
+        api('/api/v1/enterprise/settings').then(d => {
+            const el = document.getElementById('entRedirectUri');
+            if (el && d.callback_url) el.value = d.callback_url;
+        }).catch(()=>{});
+    }
+    function saveEntSettings() {
+        const url = (document.getElementById('entRedirectUri')||{}).value || '';
+        api('/api/v1/enterprise/settings', { method:'PUT', body: JSON.stringify({ callback_url: url }) })
+            .then(() => toast(L('Настройки сохранены','Settings saved')))
+            .catch(() => toast(L('Ошибка сохранения','Save error')));
+    }
+    function saveLang(val) { api('/api/v1/users/me',{method:'PUT',body:JSON.stringify({locale:val})}).then(()=>toast(L('Язык сохранён','Language saved'))); }
+    function saveTheme(val) {
+        api('/api/v1/users/me',{method:'PUT',body:JSON.stringify({theme:val})}).then(()=>{
+            document.body.classList.toggle('light', val==='light');
+            user.theme = val;
+            localStorage.setItem('tpid_user', JSON.stringify(user));
+            localStorage.setItem('tp_theme', val);
+            toast(L('Тема сохранена','Theme saved'));
+        });
+    }
+
+    // ===== ACTIVITY =====
+    function loadActivity() {
+        api('/api/v1/users/activity?limit=50').then(d => {
+            const list=d.activity||[];
+            const render = items => items.map(a => {
+                const t=new Date(a.created_at);
+                const ts=t.toLocaleDateString(_lang==='en'?'en-US':'ru-RU')+' '+t.toLocaleTimeString(_lang==='en'?'en-US':'ru-RU',{hour:'2-digit',minute:'2-digit'});
+                const dotClass = a.status==='error'?'error':a.status==='warning'?'warning':a.status==='success'?'success':'info';
+                return `<div class="d2-activity" data-type="${a.type||''}"><div class="d2-activity-dot ${dotClass}"></div><div><div class="d2-activity-title">${a.title}</div><div class="d2-activity-meta">${ts}${a.ip?' · '+a.ip:''}</div></div></div>`;
+            }).join('');
+            const recent=document.getElementById('recentActivity');
+            const full=document.getElementById('fullActivity');
+            if(recent) recent.innerHTML=list.length?render(list.slice(0,5)):'<div class="d2-empty"><p>'+L('Нет активности','No activity')+'</p></div>';
+            if(full) full.innerHTML=list.length?render(list):'<div class="d2-empty"><p>'+L('Нет активности','No activity')+'</p></div>';
+        }).catch(()=>{});
+    }
+    function filterActivity(type,btn) {
+        btn.closest('.d2-tabs').querySelectorAll('.d2-tab').forEach(t=>t.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('#fullActivity .d2-activity').forEach(item => {
+            if(type==='all'){item.style.display='';return;}
+            const t=item.dataset.type||'';
+            const show=(type==='auth'&&(t.includes('login')||t.includes('register')))||(type==='api'&&(t.includes('key')||t.includes('api')))||(type==='security'&&(t.includes('2fa')||t.includes('password')));
+            item.style.display=show?'':'none';
+        });
+    }
+
+    // ===== CHART =====
+    function drawChart() {
+        const canvas=document.getElementById('requestsChart');
+        if(!canvas||!canvas.offsetParent)return;
+        const ctx=canvas.getContext('2d'); const dpr=window.devicePixelRatio||1;
+        const rect=canvas.parentElement.getBoundingClientRect();
+        canvas.width=rect.width*dpr; canvas.height=rect.height*dpr; ctx.scale(dpr,dpr);
+        const w=rect.width,h=rect.height,pad={t:20,r:20,b:30,l:50};
+        const data=Array.from({length:24},(_,i)=>({hour:i,val:Math.floor(Math.random()*800+200)}));
+        const max=Math.max(...data.map(d=>d.val))*1.1;
+        ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+        for(let i=0;i<=4;i++){const y=pad.t+((h-pad.t-pad.b)/4)*i;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();}
+        ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=2;ctx.lineJoin='round';ctx.beginPath();
+        data.forEach((d,i)=>{const x=pad.l+((w-pad.l-pad.r)/(data.length-1))*i;const y=pad.t+(1-d.val/max)*(h-pad.t-pad.b);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+        ctx.stroke();
+        const lx=pad.l+(w-pad.l-pad.r);ctx.lineTo(lx,h-pad.b);ctx.lineTo(pad.l,h-pad.b);ctx.closePath();
+        const grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);grad.addColorStop(0,'rgba(255,255,255,0.06)');grad.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=grad;ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='10px JetBrains Mono,monospace';ctx.textAlign='center';
+        for(let i=0;i<data.length;i+=4){const x=pad.l+((w-pad.l-pad.r)/(data.length-1))*i;ctx.fillText(data[i].hour+':00',x,h-8);}
+        const el=document.getElementById('statRequests');if(el)el.textContent=data.reduce((s,d)=>s+d.val,0).toLocaleString(_lang==='en'?'en-US':'ru-RU');
+    }
+
+    // ===== 2FA =====
+    function renderSecurity() {
+        const u=JSON.parse(localStorage.getItem('tpid_user')||sessionStorage.getItem('tpid_user')||'{}');
+        const el=document.getElementById('twoFactorStatus');
+        if(u.two_factor_enabled) {
+            el.innerHTML='<span class="d2-badge d2-badge-ok" style="margin-right:12px">'+L('Включена','Enabled')+'</span><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="disable2FA()">'+L('Отключить','Disable')+'</button>';
+            document.getElementById('twoFactorSetup').style.display='none';
+        } else {
+            el.innerHTML='<button class="d2-btn d2-btn-primary d2-btn-sm" onclick="setup2FA()">'+L('Включить 2FA','Enable 2FA')+'</button>';
+        }
+        const ev=document.getElementById('emailVerifyStatus');
+        ev.innerHTML=u.email_verified?'<span class="d2-badge d2-badge-ok">'+L('Email подтверждён','Email verified')+'</span>':'<p style="font-size:.82rem;color:rgba(255,255,255,.4);margin-bottom:12px">'+L('Email не подтверждён.','Email not verified.')+'</p><button class="d2-btn d2-btn-primary d2-btn-sm" onclick="resendVerification()">'+L('Отправить письмо','Send email')+'</button>';
+    }
+    function setup2FA() { api('/api/v1/auth/2fa/setup',{method:'POST',body:'{}'}).then(d=>{if(d.error){alert(d.error.message);return;} document.getElementById('twoFactorSetup').style.display='';document.getElementById('qrImage').src=d.qr_image_url;document.getElementById('totpSecretDisplay').textContent=d.secret;}).catch(e=>alert(L('Ошибка','Error'))); }
+    function verify2FACode() {
+        const code=document.getElementById('totpVerifyCode').value.replace(/\s/g,'');
+        if(!/^\d{6}$/.test(code)){document.getElementById('totpError').textContent=L('Введите 6 цифр','Enter 6 digits');document.getElementById('totpError').style.display='';return;}
+        api('/api/v1/auth/2fa/enable',{method:'POST',body:JSON.stringify({code})}).then(d=>{
+            if(d.error){document.getElementById('totpError').textContent=d.error.message;document.getElementById('totpError').style.display='';return;}
+            const u=JSON.parse(localStorage.getItem('tpid_user')||'{}');u.two_factor_enabled=true;localStorage.setItem('tpid_user',JSON.stringify(u));
+            document.getElementById('twoFactorSetup').style.display='none';renderSecurity();toast(L('2FA включена','2FA enabled'));
+        });
+    }
+    function disable2FA() { const p=prompt(L('Пароль:','Password:')); if(!p)return; api('/api/v1/auth/2fa/disable',{method:'POST',body:JSON.stringify({password:p})}).then(d=>{if(d.error){alert(d.error.message);return;} const u=JSON.parse(localStorage.getItem('tpid_user')||'{}');u.two_factor_enabled=false;localStorage.setItem('tpid_user',JSON.stringify(u));renderSecurity();toast(L('2FA отключена','2FA disabled'));}); }
+    function resendVerification() { api('/api/v1/auth/resend-verification',{method:'POST',body:'{}'}).then(d=>{toast(d.success?L('Письмо отправлено','Email sent'):L('Ошибка','Error'))}); }
+    function changePassword(e) { e.preventDefault(); const c=document.getElementById('currentPass').value,n=document.getElementById('newPass').value; if(!c||!n){toast(L('Заполните оба поля','Fill in both fields'));return false;} api('/api/v1/auth/change-password',{method:'POST',body:JSON.stringify({current_password:c,new_password:n})}).then(d=>{if(d.error){toast(d.error.message);return;} toast(L('Пароль изменён','Password changed'));setTimeout(()=>logout(),1500);});return false; }
+    function addWebhook() { const url=prompt('URL webhook:'); if(!url)return; const el=document.getElementById('webhooksList'); el.innerHTML+=`<div class="d2-row"><div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M1 12h6M17 12h6"/></svg></div><div class="d2-row-info"><div class="d2-row-title">Custom Webhook <span class="d2-badge d2-badge-ok">${L('Активен','Active')}</span></div><div class="d2-row-sub">${url}</div></div><div class="d2-row-actions"><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="this.closest('.d2-row').remove();toast(L('Удалён','Deleted'))">${L('Удалить','Delete')}</button></div></div>`; toast(L('Webhook добавлен','Webhook added')); }
+    function saveProfile(e) { e.preventDefault(); const name=document.getElementById('settingsName').value; api('/api/v1/users/me',{method:'PUT',body:JSON.stringify({name})}).then(d=>{if(d.error){toast(d.error.message);return;} const u=JSON.parse(localStorage.getItem('tpid_user')||'{}');u.name=name;localStorage.setItem('tpid_user',JSON.stringify(u));document.getElementById('userName').textContent=name;document.getElementById('userAvatar').textContent=name.substring(0,2).toUpperCase();toast(L('Сохранено','Saved'));}); return false; }
+    function exportData() { const blob=new Blob([JSON.stringify({user},null,2)],{type:'application/json'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tokenpay-id-export.json';a.click();toast(L('Экспортировано','Exported')); }
+    function logout() { api('/api/v1/auth/logout',{method:'POST',body:JSON.stringify({})}).catch(()=>{}); localStorage.removeItem('tpid_user');localStorage.removeItem('tpid_token');localStorage.removeItem('tpid_refresh');sessionStorage.clear();window.location.href='/'; }
+
+    // ===== ADMIN =====
+    let adminUsersCache=[],adminUsersOffset=0;
+    function loadAdminUsers(more) {
+        if(!isAdmin)return; if(!more)adminUsersOffset=0;
+        api('/api/v1/admin/users?limit=50&offset='+adminUsersOffset).then(d=>{
+            const users=d.users||[]; if(!more)adminUsersCache=users; else adminUsersCache=adminUsersCache.concat(users);
+            adminUsersOffset+=users.length; renderAdminUsers(adminUsersCache);
+            document.getElementById('adminUsersMore').style.display=users.length>=50?'':'none';
+        }).catch(()=>{});
+    }
+    function renderAdminUsers(users) {
+        const el=document.getElementById('adminUsersList');
+        if(!users.length){el.innerHTML='<div class="d2-empty"><p>'+L('Нет пользователей','No users')+'</p></div>';return;}
+        el.innerHTML='<table class="d2-table"><thead><tr><th>'+L('Имя','Name')+'</th><th>Email</th><th>'+L('Роль','Role')+'</th><th>Email</th><th>2FA</th><th>'+L('Дата','Date')+'</th><th></th></tr></thead><tbody>'+
+            users.map(u=>{
+                const created=u.created_at?new Date(u.created_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU'):'-';
+                const roleBadge=u.role==='admin'?'d2-badge-info':u.role==='enterprise'?'d2-badge-warn':'d2-badge-off';
+                const roleLabel=u.role==='admin'?L('Админ','Admin'):u.role==='enterprise'?'Enterprise':'User';
+                return `<tr data-email="${(u.email||'').toLowerCase()}" data-name="${(u.name||'').toLowerCase()}">
+                    <td>${u.name||'-'}</td><td class="mono">${u.email}</td>
+                    <td><span class="d2-badge ${roleBadge}">${roleLabel}</span></td>
+                    <td>${u.email_verified?'<span class="d2-badge d2-badge-ok">OK</span>':'<span class="d2-badge d2-badge-off">'+L('Нет','No')+'</span>'}</td>
+                    <td>${u.two_factor_enabled?'<span class="d2-badge d2-badge-ok">'+L('Да','Yes')+'</span>':'<span style="color:rgba(255,255,255,.2)">-</span>'}</td>
+                    <td style="font-size:.75rem">${created}</td>
+                    <td style="white-space:nowrap"><select onchange="changeUserRole('${u.id}',this.value)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#fff;font-size:.72rem;padding:3px 6px;cursor:pointer;font-family:inherit"><option value="user" ${u.role==='user'?'selected':''}>User</option><option value="enterprise" ${u.role==='enterprise'?'selected':''}>Enterprise</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select>
+                    <button class="d2-btn d2-btn-danger d2-btn-sm" style="margin-left:4px" onclick="deleteAdminUser('${u.id}','${u.email}',this)">X</button></td></tr>`;
+            }).join('')+'</tbody></table>';
+    }
+    function filterAdminUsers(q) { q=q.toLowerCase(); document.querySelectorAll('#adminUsersList tbody tr').forEach(tr=>{const e=tr.dataset.email||'',n=tr.dataset.name||'';tr.style.display=(!q||e.includes(q)||n.includes(q))?'':'none';}); }
+    function changeUserRole(uid,role) { api('/api/v1/admin/users/'+uid,{method:'PUT',body:JSON.stringify({role})}).then(d=>{if(d.error){toast(d.error.message);loadAdminUsers();}else toast(L('Роль изменена','Role changed'));}).catch(()=>{}); }
+    function deleteAdminUser(uid,email,btn) { if(!confirm(L('Удалить','Delete')+' '+email+'?'))return; api('/api/v1/admin/users/'+uid,{method:'DELETE'}).then(d=>{if(d.success){btn.closest('tr').remove();toast(L('Удалён','Deleted'));}else toast(d.error?.message||L('Ошибка','Error'));}).catch(()=>{}); }
+    function loadAdminActivity() {
+        if(!isAdmin)return;
+        api('/api/v1/admin/activity?limit=200').then(d=>{
+            const list=d.activity||[]; const el=document.getElementById('adminActivityList');
+            if(!list.length){el.innerHTML='<div class="d2-empty"><p>'+L('Нет активности','No activity')+'</p></div>';return;}
+            el.innerHTML=list.map(a=>{
+                const t=new Date(a.created_at);const ts=t.toLocaleDateString(_lang==='en'?'en-US':'ru-RU')+' '+t.toLocaleTimeString(_lang==='en'?'en-US':'ru-RU',{hour:'2-digit',minute:'2-digit'});
+                const dot=a.status==='error'?'error':a.status==='warning'?'warning':a.status==='success'?'success':'info';
+                const userLabel=a.email?`<span class="mono" style="font-size:.7rem;opacity:.4;margin-left:6px">${a.email}</span>`:'';
+                return `<div class="d2-activity" data-type="${a.type||''}"><div class="d2-activity-dot ${dot}"></div><div><div class="d2-activity-title">${a.title}${userLabel}</div><div class="d2-activity-meta">${ts}${a.ip?' · '+a.ip:''} · ${a.type||''}</div></div></div>`;
+            }).join('');
+        }).catch(()=>{});
+    }
+    function filterAdminActivity(type,btn) {
+        btn.closest('.d2-tabs').querySelectorAll('.d2-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+        document.querySelectorAll('#adminActivityList .d2-activity').forEach(item=>{if(type==='all'){item.style.display='';return;}const t=item.dataset.type||'';const show=(type==='login'&&t.includes('login'))||(type==='failed'&&(t.includes('failed')||t.includes('error')))||(type==='security'&&(t.includes('2fa')||t.includes('password')));item.style.display=show?'':'none';});
+    }
+    function loadAdminSystem() {
+        if(!isAdmin)return;
+        api('/api/v1/admin/system').then(d=>{
+            document.getElementById('adminSystemStats').innerHTML=`
+                <div class="d2-stat"><div class="d2-stat-label">${L('Пользователи','Users')}</div><div class="d2-stat-val">${d.users?.total??'-'}</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Подтв. email','Verified email')}</div><div class="d2-stat-val">${d.users?.verified??'-'}</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">2FA</div><div class="d2-stat-val">${d.users?.two_factor??'-'}</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">Enterprise</div><div class="d2-stat-val">${d.users?.enterprise??'-'}</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Ключи','Keys')}</div><div class="d2-stat-val">${d.keys?.active??'-'}</div></div>
+                <div class="d2-stat"><div class="d2-stat-label">${L('Активность (7д)','Activity (7d)')}</div><div class="d2-stat-val">${d.activity?.last_7d??'-'}</div></div>`;
+            const srv=d.server||{};const uptimeH=Math.floor((srv.uptime||0)/3600);const memMB=Math.round((srv.memory?.rss||0)/1024/1024);
+            document.getElementById('adminServerInfo').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">${[['Uptime',uptimeH+L('ч','h')],[L('Память','Memory'),memMB+'MB'],['Node',srv.node_version||'-'],['OAuth',d.oauth?.connected_apps??'-']].map(([l,v])=>`<div style="padding:12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid rgba(255,255,255,.04)"><div style="font-size:.65rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px">${l}</div><div style="font-size:.95rem;font-weight:600;color:#fff;margin-top:4px">${v}</div></div>`).join('')}</div>`;
+            const roles=d.users?.roles||[];
+            document.getElementById('adminRolesBreakdown').innerHTML=roles.map(r=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03)"><span style="font-size:.82rem;color:rgba(255,255,255,.5)">${r.role==='admin'?L('Админ','Admin'):r.role==='enterprise'?'Enterprise':'User'}</span><span style="font-size:.88rem;font-weight:600;color:#fff">${r.count}</span></div>`).join('')||'<p style="color:rgba(255,255,255,.2);font-size:.8rem">'+L('Нет данных','No data')+'</p>';
+            const regs=d.registrations_chart||[];
+            document.getElementById('adminRegsChart').innerHTML=regs.length?regs.map(r=>{const date=new Date(r.date).toLocaleDateString(_lang==='en'?'en-US':'ru-RU',{day:'numeric',month:'short'});return`<div style="display:flex;align-items:center;gap:12px;padding:5px 0"><span style="font-size:.75rem;color:rgba(255,255,255,.3);min-width:55px">${date}</span><div style="flex:1;height:5px;background:rgba(255,255,255,.03);border-radius:3px;overflow:hidden"><div style="height:100%;background:rgba(255,255,255,.35);border-radius:3px;width:${Math.min(100,r.count*20)}%"></div></div><span style="font-size:.8rem;font-weight:600;color:#fff;min-width:20px;text-align:right">${r.count}</span></div>`;}).join(''):'<p style="color:rgba(255,255,255,.2);font-size:.8rem">'+L('Нет данных','No data')+'</p>';
+        }).catch(()=>{});
+    }
+
+    // ===== ENTERPRISE APPLICATIONS (ADMIN) =====
+    function loadEntApps(status='pending',btn) {
+        if(!isAdmin)return;
+        if(btn){btn.closest('.d2-tabs').querySelectorAll('.d2-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');}
+        api('/api/v1/admin/enterprise/applications?status='+status).then(d=>{
+            const apps=d.applications||[];
+            const el=document.getElementById('entAppsList');
+            if(!apps.length){el.innerHTML='<div class="d2-empty"><p>'+L('Нет заявок','No applications')+'</p></div>';return;}
+            el.innerHTML=apps.map(a=>{
+                const date=new Date(a.created_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU',{day:'numeric',month:'short',year:'numeric'});
+                const isPending=a.status==='pending';
+                return `<div class="d2-row" data-app-id="${a.id}">
+                    <div class="d2-row-icon"><svg viewBox="0 0 18 18" fill="none" width="16" height="16"><rect x="2" y="2" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M6 9h6M9 6v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                    <div class="d2-row-info">
+                        <div class="d2-row-title">${a.company_name} <span class="d2-badge ${a.status==='approved'?'d2-badge-ok':a.status==='rejected'?'d2-badge-danger':'d2-badge-warn'}">${a.status}</span></div>
+                        <div class="d2-row-sub">${a.user_name} · ${a.email} · ${date}${a.website?' · '+a.website:''}${a.inn?' · '+L('ИНН','TIN')+': '+a.inn:''}</div>
+                        ${a.description?'<div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:4px">'+a.description.substring(0,200)+'</div>':''}
+                        ${a.review_note?'<div style="font-size:.72rem;color:rgba(255,200,100,.5);margin-top:4px">'+L('Комментарий','Comment')+': '+a.review_note+'</div>':''}
+                    </div>
+                    <div class="d2-row-actions">${isPending?`
+                        <button class="d2-btn d2-btn-primary d2-btn-sm" onclick="reviewEntApp('${a.id}','approve')">${L('Одобрить','Approve')}</button>
+                        <button class="d2-btn d2-btn-danger d2-btn-sm" onclick="reviewEntApp('${a.id}','reject')">${L('Отклонить','Reject')}</button>`:''}
+                    </div>
+                </div>`;
+            }).join('');
+        }).catch(()=>{document.getElementById('entAppsList').innerHTML='<div class="d2-empty"><p>'+L('Ошибка загрузки','Loading error')+'</p></div>';});
+    }
+    function reviewEntApp(id,action) {
+        let review_note='';
+        if(action==='reject'){review_note=prompt(L('Причина отклонения (необязательно):','Rejection reason (optional):'),'')||'';}
+        if(action==='approve'&&!confirm(L('Одобрить заявку? Пользователь получит роль Enterprise и API ключи.','Approve? User will get Enterprise role and API keys.')))return;
+        api('/api/v1/admin/enterprise/applications/'+id,{method:'PUT',body:JSON.stringify({action,review_note})}).then(d=>{
+            if(d.success){
+                loadEntApps('pending');
+                if(d.public_key)alert(L('Enterprise одобрен!','Enterprise approved!')+'\nPublic Key: '+d.public_key+'\nSecret Key: '+d.secret_key);
+            }
+        }).catch(()=>alert(L('Ошибка','Error')));
+    }
+
+    // ===== INIT =====
+    buildSidebar();
+    if(!isEnterprise&&!isAdmin){document.querySelectorAll('#sec-activity .d2-tab').forEach(t=>{if(t.textContent.trim()==='API')t.style.display='none';});}
+    initUserData(); buildOverview(); loadActivity(); renderSecurity();
+    if(isAdmin){loadKeys();loadAdminUsers();loadAdminActivity();loadAdminSystem();loadEntApps('pending');}
+    else if(isEnterprise){loadKeys();loadEnterpriseUsers();loadEntSettings();}
+    else{loadSessions();loadConnectedApps();}
+    refreshUserData().then(()=>{buildOverview();renderSecurity();});
+    window.addEventListener('resize',drawChart);
+
+    // ===== STAR BACKGROUND =====
+    (function(){
+        const canvas=document.getElementById('d2-stars');
+        if(!canvas)return;
+        const ctx=canvas.getContext('2d');
+        let stars=[];
+        function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;initStars();}
+        function initStars(){
+            const n=Math.min(140,Math.floor(window.innerWidth*window.innerHeight/8000));
+            stars=[];
+            for(let i=0;i<n;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,o:Math.random()*0.5+0.1,dx:(Math.random()-.5)*.35,dy:(Math.random()-.5)*.35});
+        }
+        function draw(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            stars.forEach(s=>{
+                s.x+=s.dx; s.y+=s.dy;
+                if(s.x<0||s.x>canvas.width)s.dx*=-1;
+                if(s.y<0||s.y>canvas.height)s.dy*=-1;
+                ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+                ctx.fillStyle='rgba(255,255,255,'+s.o+')';ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize',resize);
+        resize();draw();
+    })();
+    </script>
+</body>
+</html>

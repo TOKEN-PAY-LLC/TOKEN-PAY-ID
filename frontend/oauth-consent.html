@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Авторизация — TOKEN PAY ID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Comfortaa', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .consent-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+        }
+        .consent-logo {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+        }
+        .consent-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .consent-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .consent-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 28px;
+        }
+        .consent-app {
+            background: #0d0d0d;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .consent-app-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .consent-app-owner {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .consent-scope {
+            text-align: left;
+            margin-bottom: 28px;
+        }
+        .consent-scope-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .consent-scope-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+        .consent-scope-item svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: #4ade80;
+        }
+        .consent-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .consent-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Comfortaa', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .consent-btn-deny {
+            background: #1a1a1a;
+            color: #999;
+            border: 1px solid #333;
+        }
+        .consent-btn-deny:hover { background: #222; color: #fff; }
+        .consent-btn-allow {
+            background: #fff;
+            color: #000;
+        }
+        .consent-btn-allow:hover { background: #e0e0e0; }
+        .consent-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .consent-login-notice {
+            margin-top: 16px;
+            font-size: 0.78rem;
+            color: #666;
+        }
+        .consent-login-notice a {
+            color: #aaa;
+            text-decoration: underline;
+        }
+        .consent-error {
+            background: #1a0505;
+            border: 1px solid #3a0a0a;
+            border-radius: 10px;
+            padding: 14px;
+            color: #f87171;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .consent-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0d0d0d;
+            border: 1px solid #1a1a1a;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 20px;
+        }
+        .consent-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .consent-user-info { text-align: left; }
+        .consent-user-name { font-size: 0.85rem; font-weight: 600; color: #fff; }
+        .consent-user-email { font-size: 0.75rem; color: #666; }
+
+        /* Light theme */
+        body.light { background: #f5f5f7; color: #333; }
+        body.light .consent-card { background: #fff; border-color: rgba(0,0,0,.08); box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+        body.light .consent-title { color: #111; }
+        body.light .consent-subtitle { color: #888; }
+        body.light .consent-app { background: #f8f8fa; border-color: rgba(0,0,0,.06); }
+        body.light .consent-app-name { color: #111; }
+        body.light .consent-app-owner { color: #888; }
+        body.light .consent-scope-title { color: #888; }
+        body.light .consent-scope-item { color: #555; }
+        body.light .consent-scope-item svg { color: #16a34a; }
+        body.light .consent-btn-deny { background: rgba(0,0,0,.04); color: #666; border-color: rgba(0,0,0,.1); }
+        body.light .consent-btn-deny:hover { background: rgba(0,0,0,.08); color: #111; }
+        body.light .consent-btn-allow { background: #111; color: #fff; }
+        body.light .consent-btn-allow:hover { background: #222; }
+        body.light .consent-error { background: rgba(239,68,68,.04); border-color: rgba(239,68,68,.12); color: #dc2626; }
+        body.light .consent-user { background: #f8f8fa; border-color: rgba(0,0,0,.06); }
+        body.light .consent-user-avatar { background: rgba(0,0,0,.06); color: #111; }
+        body.light .consent-user-name { color: #111; }
+        body.light .consent-user-email { color: #888; }
+        body.light .consent-login-notice { color: #888; }
+        body.light .consent-login-notice a { color: #555; }
+        body.light .consent-logo img { filter: invert(1) brightness(.15); }
+
+        @media(max-width:480px) {
+            .consent-card { padding: 28px 24px; border-radius: 16px; }
+            .consent-title { font-size: 1.1rem; }
+        }
+    </style>
+    <script src="theme-init.js?v=20260316b"></script>
+</head>
+<body>
+    <div class="consent-card">
+        <div class="consent-logo">
+            <img src="tokenpay-logo.png" alt="TOKEN PAY">
+        </div>
+        <div class="consent-title">Вход через TOKEN PAY</div>
+        <div class="consent-subtitle">Приложение запрашивает доступ к вашему аккаунту</div>
+
+        <div class="consent-error" id="errorBox"></div>
+
+        <div class="consent-user" id="userBox" style="display:none">
+            <div class="consent-user-avatar" id="userAvatar">—</div>
+            <div class="consent-user-info">
+                <div class="consent-user-name" id="userName"></div>
+                <div class="consent-user-email" id="userEmail"></div>
+            </div>
+        </div>
+
+        <div class="consent-app">
+            <div class="consent-app-name" id="appName">Загрузка...</div>
+            <div class="consent-app-owner" id="appOwner"></div>
+        </div>
+
+        <div class="consent-scope">
+            <div class="consent-scope-title">Запрашиваемые разрешения</div>
+            <div class="consent-scope-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Имя и email
+            </div>
+            <div class="consent-scope-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Статус верификации
+            </div>
+        </div>
+
+        <div class="consent-actions">
+            <button class="consent-btn consent-btn-deny" id="denyBtn" onclick="deny()">Отклонить</button>
+            <button class="consent-btn consent-btn-allow" id="allowBtn" onclick="approve()">Разрешить</button>
+        </div>
+
+        <div class="consent-login-notice" id="loginNotice">
+            Нет аккаунта? <a href="/register">Зарегистрируйтесь</a>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api/v1';
+        const params = new URLSearchParams(window.location.search);
+        const clientId = params.get('client_id');
+        const redirectUri = params.get('redirect_uri');
+        const scope = params.get('scope') || 'profile';
+        const state = params.get('state') || '';
+        const appName = params.get('app_name') || 'Неизвестное приложение';
+        const ownerName = params.get('owner_name') || '';
+
+        document.getElementById('appName').textContent = appName;
+        document.getElementById('appOwner').textContent = ownerName ? `от ${ownerName}` : '';
+
+        let token = localStorage.getItem('tp_token');
+
+        function showError(msg) {
+            const box = document.getElementById('errorBox');
+            box.textContent = msg;
+            box.style.display = 'block';
+        }
+
+        async function loadUser() {
+            if (!token) {
+                // Redirect to login, then come back
+                const returnUrl = encodeURIComponent(window.location.href);
+                window.location.href = `login?redirect=${returnUrl}`;
+                return;
+            }
+            try {
+                const resp = await fetch(`${API}/users/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!resp.ok) {
+                    localStorage.removeItem('tp_token');
+                    const returnUrl = encodeURIComponent(window.location.href);
+                    window.location.href = `login?redirect=${returnUrl}`;
+                    return;
+                }
+                const user = await resp.json();
+                document.getElementById('userBox').style.display = 'flex';
+                document.getElementById('userAvatar').textContent = (user.name || '?')[0].toUpperCase();
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('loginNotice').innerHTML =
+                    `Войти как другой пользователь? <a href="login?redirect=${encodeURIComponent(window.location.href)}">Сменить аккаунт</a>`;
+            } catch (e) {
+                showError('Ошибка загрузки профиля');
+            }
+        }
+
+        async function approve() {
+            const btn = document.getElementById('allowBtn');
+            btn.disabled = true;
+            btn.textContent = 'Авторизация...';
+            try {
+                const resp = await fetch(`${API}/oauth/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ client_id: clientId, redirect_uri: redirectUri, scope, state })
+                });
+                const data = await resp.json();
+                if (!resp.ok) {
+                    showError(data.error?.message || 'Ошибка авторизации');
+                    btn.disabled = false;
+                    btn.textContent = 'Разрешить';
+                    return;
+                }
+                // Redirect back to client app with the code
+                window.location.href = data.redirect_url;
+            } catch (e) {
+                showError('Ошибка сети');
+                btn.disabled = false;
+                btn.textContent = 'Разрешить';
+            }
+        }
+
+        function deny() {
+            if (redirectUri) {
+                const url = new URL(redirectUri);
+                url.searchParams.set('error', 'access_denied');
+                url.searchParams.set('error_description', 'User denied the request');
+                if (state) url.searchParams.set('state', state);
+                window.location.href = url.toString();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        loadUser();
+    </script>
+</body>
+</html>
