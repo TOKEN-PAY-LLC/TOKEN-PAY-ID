@@ -1,0 +1,1128 @@
+openapi: 3.0.3
+info:
+  title: TOKEN PAY ID API
+  description: |
+    Unified identity and authentication platform by TOKEN PAY LLC.
+    
+    ## Authentication
+    
+    Use a JWT Bearer token (from login/OAuth) or an API key (`tpid_sk_...`) 
+    in the `Authorization: Bearer <token>` header.
+    
+    ## Base URL
+    
+    `https://tokenpay.space`
+  version: "1.0.0"
+  contact:
+    name: TOKEN PAY LLC
+    url: https://tokenpay.space/docs
+    email: info@tokenpay.space
+  license:
+    name: Proprietary
+    url: https://github.com/TOKEN-PAY-LLC/TOKEN-PAY-ID/blob/main/LICENSE
+
+servers:
+  - url: https://tokenpay.space
+    description: Production
+
+tags:
+  - name: auth
+    description: Authentication and registration
+  - name: user
+    description: User profile and session management
+  - name: oauth
+    description: OAuth 2.0 and OpenID Connect
+  - name: keys
+    description: API key management
+  - name: enterprise
+    description: Enterprise integration
+  - name: system
+    description: Health and utilities
+
+paths:
+
+  # ── HEALTH ──────────────────────────────────────────────────────────────────
+
+  /api/v1/health:
+    get:
+      tags: [system]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  # ── AUTH ────────────────────────────────────────────────────────────────────
+
+  /api/v1/auth/send-code:
+    post:
+      tags: [auth]
+      summary: Send email verification code
+      operationId: sendCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, type]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                type:
+                  type: string
+                  enum: [register, login]
+                name:
+                  type: string
+                  description: Required for register type
+                lang:
+                  type: string
+                  enum: [ru, en]
+                  default: ru
+      responses:
+        "200":
+          description: Code sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        "429":
+          $ref: '#/components/responses/RateLimit'
+
+  /api/v1/auth/register:
+    post:
+      tags: [auth]
+      summary: Register a new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name, email_code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                name:
+                  type: string
+                  minLength: 2
+                email_code:
+                  type: string
+                  description: 6-digit code from email
+                lang:
+                  type: string
+                  enum: [ru, en]
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "422":
+          $ref: '#/components/responses/Validation'
+        "409":
+          description: Email already registered
+
+  /api/v1/auth/login:
+    post:
+      tags: [auth]
+      summary: Login with email and password
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                email_code:
+                  type: string
+                  description: Required if account uses email verification
+                two_factor_code:
+                  type: string
+                  description: TOTP code if 2FA is enabled
+                lang:
+                  type: string
+                  enum: [ru, en]
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "202":
+          description: Additional verification required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [needs_code, needs_2fa]
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        "200":
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout and revoke session
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /api/v1/auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: Send password reset code
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                lang:
+                  type: string
+                  enum: [ru, en]
+      responses:
+        "200":
+          description: Reset code sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        "429":
+          $ref: '#/components/responses/RateLimit'
+
+  /api/v1/auth/reset-password:
+    post:
+      tags: [auth]
+      summary: Reset password with code
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code, new_password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                  description: 6-digit reset code from email
+                new_password:
+                  type: string
+                  minLength: 8
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        "400":
+          description: Invalid or expired code
+
+  # ── USER ────────────────────────────────────────────────────────────────────
+
+  /api/v1/users/me:
+    get:
+      tags: [user]
+      summary: Get current user
+      operationId: getMe
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [user]
+      summary: Update user profile
+      operationId: updateMe
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                locale:
+                  type: string
+                  enum: [ru, en]
+                theme:
+                  type: string
+                  enum: [dark, light]
+      responses:
+        "200":
+          description: Updated user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/users/activity:
+    get:
+      tags: [user]
+      summary: Get user activity log
+      operationId: getActivity
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: type
+          in: query
+          schema:
+            type: string
+            description: Filter by event type
+      responses:
+        "200":
+          description: Activity log entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  activity:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ActivityEntry'
+
+  /api/v1/users/sessions:
+    get:
+      tags: [user]
+      summary: List active sessions (devices)
+      operationId: getSessions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+
+  /api/v1/users/sessions/{id}:
+    delete:
+      tags: [user]
+      summary: Revoke a session
+      operationId: revokeSession
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /api/v1/users/connected-apps:
+    get:
+      tags: [user]
+      summary: List connected applications
+      operationId: getConnectedApps
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Connected applications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apps:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConnectedApp'
+
+  /api/v1/users/connected-apps/{id}:
+    delete:
+      tags: [user]
+      summary: Revoke app access
+      operationId: revokeConnectedApp
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Access revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  # ── API KEYS ─────────────────────────────────────────────────────────────────
+
+  /api/v1/keys:
+    get:
+      tags: [keys]
+      summary: List API keys
+      operationId: listKeys
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: API key list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+    post:
+      tags: [keys]
+      summary: Create a new API key pair
+      operationId: createKey
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+      responses:
+        "201":
+          description: Key pair created (secret shown only once)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyWithSecret'
+
+  /api/v1/keys/{id}:
+    delete:
+      tags: [keys]
+      summary: Revoke an API key
+      operationId: revokeKey
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Key revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  # ── OAUTH ────────────────────────────────────────────────────────────────────
+
+  /api/v1/oauth/authorize:
+    get:
+      tags: [oauth]
+      summary: Authorization endpoint
+      operationId: authorize
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+          example: tpid_pk_...
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [code]
+        - name: scope
+          in: query
+          schema:
+            type: string
+            default: profile email
+          example: openid profile email
+        - name: state
+          in: query
+          schema:
+            type: string
+          description: CSRF protection token
+        - name: code_challenge
+          in: query
+          schema:
+            type: string
+          description: PKCE challenge (BASE64URL(SHA256(verifier)))
+        - name: code_challenge_method
+          in: query
+          schema:
+            type: string
+            enum: [S256, plain]
+      responses:
+        "302":
+          description: Redirect to login or consent page
+
+  /api/v1/oauth/token:
+    post:
+      tags: [oauth]
+      summary: Token endpoint
+      operationId: token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AuthCodeGrant'
+                - $ref: '#/components/schemas/RefreshTokenGrant'
+      responses:
+        "200":
+          description: Token response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthTokenResponse'
+        "400":
+          description: Invalid grant or parameters
+
+  /api/v1/oauth/userinfo:
+    get:
+      tags: [oauth]
+      summary: UserInfo endpoint (OIDC)
+      operationId: userinfo
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User claims
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OIDCUserInfo'
+
+  /api/v1/oauth/revoke:
+    post:
+      tags: [oauth]
+      summary: Revoke an OAuth token
+      operationId: revokeToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+      responses:
+        "200":
+          description: Token revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /.well-known/openid-configuration:
+    get:
+      tags: [oauth]
+      summary: OpenID Connect discovery document
+      operationId: oidcDiscovery
+      responses:
+        "200":
+          description: OIDC configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OIDCDiscovery'
+
+  /.well-known/jwks.json:
+    get:
+      tags: [oauth]
+      summary: JSON Web Key Set
+      operationId: jwks
+      responses:
+        "200":
+          description: Public keys for JWT verification
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: object
+
+  # ── ENTERPRISE ───────────────────────────────────────────────────────────────
+
+  /api/v1/enterprise/apply:
+    post:
+      tags: [enterprise]
+      summary: Apply for enterprise account
+      operationId: applyEnterprise
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [company_name, website, description]
+              properties:
+                company_name:
+                  type: string
+                website:
+                  type: string
+                  format: uri
+                description:
+                  type: string
+      responses:
+        "200":
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /api/v1/enterprise/application:
+    get:
+      tags: [enterprise]
+      summary: Get enterprise application status
+      operationId: getApplication
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Application status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [pending, approved, rejected, none]
+                  company_name:
+                    type: string
+                  applied_at:
+                    type: string
+                    format: date-time
+
+  /api/v1/enterprise/users:
+    get:
+      tags: [enterprise]
+      summary: List users who authorized your app
+      operationId: getEnterpriseUsers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Connected users list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EnterpriseUser'
+
+  /api/v1/enterprise/stats:
+    get:
+      tags: [enterprise]
+      summary: Enterprise usage statistics
+      operationId: getEnterpriseStats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseStats'
+
+  /api/v1/enterprise/settings:
+    get:
+      tags: [enterprise]
+      summary: Get integration settings
+      operationId: getEnterpriseSettings
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Enterprise settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseSettings'
+    put:
+      tags: [enterprise]
+      summary: Update integration settings
+      operationId: updateEnterpriseSettings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                callback_url:
+                  type: string
+                  format: uri
+                  description: OAuth redirect URI
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseSettings'
+
+# ── COMPONENTS ─────────────────────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token or API secret key (tpid_sk_...)
+
+  schemas:
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: tpid_usr_abc123def456
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [user, enterprise, admin]
+        email_verified:
+          type: boolean
+        two_factor_enabled:
+          type: boolean
+        locale:
+          type: string
+          enum: [ru, en]
+        theme:
+          type: string
+          enum: [dark, light]
+        created_at:
+          type: string
+          format: date-time
+        last_login:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+          description: JWT access token (expires in 1 hour)
+        refreshToken:
+          type: string
+          description: Refresh token (expires in 30 days)
+        token_type:
+          type: string
+          example: Bearer
+
+    OAuthTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    OIDCUserInfo:
+      type: object
+      properties:
+        sub:
+          type: string
+          description: User ID
+        email:
+          type: string
+        email_verified:
+          type: boolean
+        name:
+          type: string
+        preferred_username:
+          type: string
+
+    OIDCDiscovery:
+      type: object
+      properties:
+        issuer:
+          type: string
+          example: https://tokenpay.space
+        authorization_endpoint:
+          type: string
+        token_endpoint:
+          type: string
+        userinfo_endpoint:
+          type: string
+        jwks_uri:
+          type: string
+        response_types_supported:
+          type: array
+          items:
+            type: string
+        grant_types_supported:
+          type: array
+          items:
+            type: string
+        code_challenge_methods_supported:
+          type: array
+          items:
+            type: string
+        scopes_supported:
+          type: array
+          items:
+            type: string
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+        device:
+          type: string
+          example: Chrome (desktop)
+        ip:
+          type: string
+        last_active:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        is_current:
+          type: boolean
+
+    ConnectedApp:
+      type: object
+      properties:
+        id:
+          type: string
+        app_name:
+          type: string
+        scopes:
+          type: string
+        authorized_at:
+          type: string
+          format: date-time
+        last_used:
+          type: string
+          format: date-time
+
+    ActivityEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          example: login
+        title:
+          type: string
+        status:
+          type: string
+          enum: [success, warning, error, info]
+        ip:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        public_key:
+          type: string
+        status:
+          type: string
+          enum: [active, revoked]
+        created_at:
+          type: string
+          format: date-time
+        last_used:
+          type: string
+          format: date-time
+          nullable: true
+
+    ApiKeyWithSecret:
+      allOf:
+        - $ref: '#/components/schemas/ApiKey'
+        - type: object
+          properties:
+            secret_key:
+              type: string
+              description: Shown only once — store it securely
+
+    EnterpriseUser:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        scopes:
+          type: string
+        authorized_at:
+          type: string
+          format: date-time
+
+    EnterpriseStats:
+      type: object
+      properties:
+        connected_users:
+          type: integer
+        active_keys:
+          type: integer
+        recent_auths:
+          type: integer
+          description: Authorizations in last 24 hours
+
+    EnterpriseSettings:
+      type: object
+      properties:
+        callback_url:
+          type: string
+          nullable: true
+        company_name:
+          type: string
+        website:
+          type: string
+
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            status:
+              type: integer
+
+    AuthCodeGrant:
+      type: object
+      required: [grant_type, code, client_id, client_secret, redirect_uri]
+      properties:
+        grant_type:
+          type: string
+          enum: [authorization_code]
+        code:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        redirect_uri:
+          type: string
+        code_verifier:
+          type: string
+          description: PKCE verifier
+
+    RefreshTokenGrant:
+      type: object
+      required: [grant_type, refresh_token, client_id, client_secret]
+      properties:
+        grant_type:
+          type: string
+          enum: [refresh_token]
+        refresh_token:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: unauthorized
+              message: Missing or invalid token
+              status: 401
+
+    Validation:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: validation_error
+              message: Invalid request parameters
+              status: 422
+
+    RateLimit:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: rate_limit
+              message: Too many requests, please wait
+              status: 429

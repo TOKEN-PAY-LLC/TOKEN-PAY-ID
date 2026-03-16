@@ -1,0 +1,12 @@
+{
+  "name": "tokenpay-id-nodejs-example",
+  "version": "1.0.0",
+  "description": "TOKEN PAY ID OAuth 2.0 integration example for Node.js",
+  "main": "oauth-flow.js",
+  "scripts": { "start": "node oauth-flow.js" },
+  "dependencies": {
+    "express": "^4.18.0",
+    "@tokenpay/id": "^1.0.0"
+  },
+  "engines": { "node": ">=14" }
+}

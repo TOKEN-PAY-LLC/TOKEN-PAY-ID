@@ -1,0 +1,32 @@
+PROPRIETARY LICENSE
+
+Copyright (c) 2025 TOKEN PAY LLC
+All Rights Reserved.
+
+NOTICE: This repository contains integration materials (SDKs, documentation,
+and examples) for the TOKEN PAY ID platform. The following terms apply:
+
+PERMITTED:
+- Use the provided SDKs and examples to integrate TOKEN PAY ID into your
+  applications.
+- Copy, modify, and distribute SDK code as part of your own application.
+- Reference this documentation for integration purposes.
+
+PROHIBITED:
+- Reverse engineering, decompiling, or attempting to reconstruct the
+  TOKEN PAY ID platform, API server, or any proprietary systems.
+- Reselling, white-labeling, or redistributing the TOKEN PAY ID service
+  or any substantial part of its functionality as your own product.
+- Removing or altering any copyright, trademark, or proprietary notices.
+- Using the TOKEN PAY LLC name, logo, or trademarks without written
+  permission.
+
+DISCLAIMER:
+THE SDK AND DOCUMENTATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.
+TOKEN PAY LLC SHALL NOT BE LIABLE FOR ANY DAMAGES ARISING FROM THE USE OF
+THIS INTEGRATION MATERIAL.
+
+For all inquiries: info@tokenpay.space
+
+TOKEN PAY LLC
+https://tokenpay.space
