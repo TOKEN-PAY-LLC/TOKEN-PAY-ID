@@ -29,7 +29,7 @@
             <div class="docs-side-logo">
                 <a href="/"><img src="tokenpay-logo.png" alt="TOKEN PAY"></a>
             </div>
-            <div class="docs-side-title">API Reference v1.0</div>
+            <div class="docs-side-title">API Reference v2.1</div>
 
             <div class="docs-side-group">
                 <div class="docs-side-group-title">Начало работы</div>
@@ -45,8 +45,20 @@
                 <a class="docs-side-link" href="#oauth-token" onclick="scrollToSection('oauth-token',this)">
                     <span class="method method-post">POST</span> /oauth/token
                 </a>
+                <a class="docs-side-link" href="#oauth-userinfo" onclick="scrollToSection('oauth-userinfo',this)">
+                    <span class="method method-get">GET</span> /oauth/userinfo
+                </a>
                 <a class="docs-side-link" href="#oauth-revoke" onclick="scrollToSection('oauth-revoke',this)">
                     <span class="method method-post">POST</span> /oauth/revoke
+                </a>
+                <a class="docs-side-link" href="#oauth-cancel" onclick="scrollToSection('oauth-cancel',this)">
+                    <span class="method method-post">POST</span> /oauth/cancel
+                </a>
+                <a class="docs-side-link" href="#oauth-deny" onclick="scrollToSection('oauth-deny',this)">
+                    <span class="method method-post">POST</span> /oauth/deny
+                </a>
+                <a class="docs-side-link" href="#oauth-branding" onclick="scrollToSection('oauth-branding',this)">
+                    <span class="method method-get">GET</span> /oauth/branding
                 </a>
             </div>
 
@@ -105,10 +117,23 @@
             </div>
 
             <div class="docs-side-group">
+                <div class="docs-side-group-title">Widget SDK v1.2</div>
+                <a class="docs-side-link" href="#widget-quickstart" onclick="scrollToSection('widget-quickstart',this)">Быстрый старт</a>
+                <a class="docs-side-link" href="#widget-buttons" onclick="scrollToSection('widget-buttons',this)">Кнопки (3 варианта)</a>
+                <a class="docs-side-link" href="#widget-oauth" onclick="scrollToSection('widget-oauth',this)">OAuth Popup</a>
+                <a class="docs-side-link" href="#widget-api" onclick="scrollToSection('widget-api',this)">Программный API</a>
+            </div>
+
+            <div class="docs-side-group">
                 <div class="docs-side-group-title">SDK</div>
                 <a class="docs-side-link" href="#sdk-js" onclick="scrollToSection('sdk-js',this)">JavaScript</a>
                 <a class="docs-side-link" href="#sdk-python" onclick="scrollToSection('sdk-python',this)">Python</a>
                 <a class="docs-side-link" href="#sdk-go" onclick="scrollToSection('sdk-go',this)">Go</a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">Changelog</div>
+                <a class="docs-side-link" href="#changelog" onclick="scrollToSection('changelog',this)">v2.1.0</a>
             </div>
         </aside>
 
@@ -224,13 +249,30 @@ X-RateLimit-Reset: <span class="num">1678886400</span></pre>
                 <p>Перенаправьте пользователя на страницу авторизации:</p>
                 <div class="docs-code">
                     <div class="docs-code-header"><span class="docs-code-lang">URL</span></div>
-                    <pre>https://id.tokenpay.space/oauth/authorize?
+                    <pre>https://id.tokenpay.space/api/v1/oauth/authorize?
   client_id=<span class="str">tpid_pk_your_public_key</span>&
   redirect_uri=<span class="str">https://yourapp.com/callback</span>&
   response_type=<span class="str">code</span>&
   scope=<span class="str">profile email</span>&
-  state=<span class="str">random_csrf_token</span></pre>
+  state=<span class="str">random_csrf_token</span>&
+  prompt=<span class="str">login</span>&
+  code_challenge=<span class="str">SHA256_HASH</span>&
+  code_challenge_method=<span class="str">S256</span></pre>
                 </div>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">client_id</td><td class="param-type">string</td><td><span class="param-req">required</span> — Публичный ключ</td></tr>
+                        <tr><td class="param-name">redirect_uri</td><td class="param-type">string</td><td><span class="param-req">required</span> — URL для редиректа</td></tr>
+                        <tr><td class="param-name">response_type</td><td class="param-type">string</td><td><span class="param-req">required</span> — Только <code class="mono">code</code></td></tr>
+                        <tr><td class="param-name">scope</td><td class="param-type">string</td><td>Запрашиваемые разрешения (по умолч. <code class="mono">profile</code>)</td></tr>
+                        <tr><td class="param-name">state</td><td class="param-type">string</td><td>CSRF-токен (рекомендуется)</td></tr>
+                        <tr><td class="param-name">prompt</td><td class="param-type">string</td><td><code class="mono">login</code> — принудительная переавторизация, <code class="mono">consent</code>, <code class="mono">none</code></td></tr>
+                        <tr><td class="param-name">login_hint</td><td class="param-type">string</td><td>Email для предзаполнения формы входа</td></tr>
+                        <tr><td class="param-name">code_challenge</td><td class="param-type">string</td><td>PKCE challenge (рекомендуется для SPA/мобильных)</td></tr>
+                        <tr><td class="param-name">code_challenge_method</td><td class="param-type">string</td><td><code class="mono">S256</code> или <code class="mono">plain</code></td></tr>
+                    </tbody>
+                </table>
 
                 <h3>Шаг 2: Обмен кода на токен</h3>
                 <p>После авторизации пользователь будет перенаправлен на ваш <code class="mono">redirect_uri</code> с параметром <code class="mono">code</code>. Обменяйте его на access_token:</p>
@@ -301,6 +343,101 @@ X-RateLimit-Reset: <span class="num">1678886400</span></pre>
                         <tr><td class="param-name">token_type_hint</td><td class="param-type">string</td><td><code class="mono">access_token</code> или <code class="mono">refresh_token</code></td></tr>
                     </tbody>
                 </table>
+            </section>
+
+            <section id="oauth-userinfo">
+                <h3>GET /oauth/userinfo</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/oauth/userinfo</span>
+                </div>
+                <p>Получить профиль пользователя по OAuth access token. Возвращает данные в зависимости от запрошенного scope.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">cURL</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">curl</span> -X GET https://tokenpay.space/api/v1/oauth/userinfo \
+  -H <span class="str">"Authorization: Bearer ACCESS_TOKEN"</span></pre>
+                </div>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"id"</span>: <span class="str">"tpid_usr_a1b2c3d4e5f6"</span>,
+  <span class="str">"email"</span>: <span class="str">"user@example.com"</span>,
+  <span class="str">"name"</span>: <span class="str">"Иван"</span>,
+  <span class="str">"role"</span>: <span class="str">"user"</span>,
+  <span class="str">"email_verified"</span>: <span class="kw">true</span>,
+  <span class="str">"locale"</span>: <span class="str">"ru"</span>,
+  <span class="str">"theme"</span>: <span class="str">"dark"</span>,
+  <span class="str">"telegram_linked"</span>: <span class="kw">true</span>,
+  <span class="str">"cupol_balance"</span>: <span class="num">150</span>,
+  <span class="str">"cupol_subscription_active"</span>: <span class="kw">true</span>,
+  <span class="str">"created_at"</span>: <span class="str">"2026-01-15T12:00:00Z"</span>
+}</pre>
+                </div>
+            </section>
+
+            <section id="oauth-cancel">
+                <h3>POST /oauth/cancel</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/oauth/cancel</span>
+                </div>
+                <p>Уведомить enterprise о том, что пользователь закрыл окно согласия (вызывается автоматически через <code class="mono">sendBeacon</code>). Запускает webhook <code class="mono">user.oauth_cancel</code>.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">client_id</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">reason</td><td class="param-type">string</td><td>Причина: <code class="mono">window_closed</code>, <code class="mono">user_cancel</code></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="oauth-deny">
+                <h3>POST /oauth/deny</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/oauth/deny</span>
+                </div>
+                <p>Пользователь явно отклонил запрос на авторизацию. Запускает webhook <code class="mono">user.oauth_deny</code> и перенаправляет с ошибкой <code class="mono">access_denied</code>.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">client_id</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">redirect_uri</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">state</td><td class="param-type">string</td><td>Передаётся обратно в redirect</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="oauth-branding">
+                <h3>GET /oauth/branding</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/oauth/branding</span>
+                </div>
+                <p>Получить конфигурацию кнопок, иконки и готовый код для интеграции виджета TOKEN PAY ID. Не требует аутентификации.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK (сокращённо)</span></div>
+                    <pre>{
+  <span class="str">"provider"</span>: <span class="str">"TOKEN PAY ID"</span>,
+  <span class="str">"widget_url"</span>: <span class="str">"https://tokenpay.space/sdk/tpid-widget.js"</span>,
+  <span class="str">"widget_version"</span>: <span class="str">"1.2.0"</span>,
+  <span class="str">"icon"</span>: { <span class="str">"shield_svg"</span>: <span class="str">"&lt;svg ...&gt;"</span> },
+  <span class="str">"buttons"</span>: {
+    <span class="str">"standard"</span>: { <span class="str">"label"</span>: <span class="str">"Войти через TOKEN PAY"</span>, ... },
+    <span class="str">"icon"</span>: { <span class="str">"shape"</span>: <span class="str">"circle"</span>, ... },
+    <span class="str">"logo"</span>: { <span class="str">"background"</span>: <span class="str">"transparent"</span>, ... }
+  },
+  <span class="str">"integration"</span>: {
+    <span class="str">"quick_start"</span>: <span class="str">"&lt;script src=... data-client-id=...&gt;"</span>,
+    <span class="str">"oauth_popup"</span>: <span class="str">"TPID.loginWithOAuth().then(...);"</span>
+  },
+  <span class="str">"themes"</span>: [<span class="str">"dark"</span>, <span class="str">"light"</span>, <span class="str">"auto"</span>],
+  <span class="str">"languages"</span>: [<span class="str">"ru"</span>, <span class="str">"en"</span>]
+}</pre>
+                </div>
             </section>
 
             <section id="users-me">
@@ -574,52 +711,179 @@ X-RateLimit-Reset: <span class="num">1678886400</span></pre>
                         <tr><td class="param-name">session.created</td><td>Новая сессия</td></tr>
                         <tr><td class="param-name">session.revoked</td><td>Сессия завершена</td></tr>
                         <tr><td class="param-name">token.refreshed</td><td>Токен обновлён</td></tr>
+                        <tr><td class="param-name">user.oauth_connect</td><td>Пользователь одобрил OAuth авторизацию</td></tr>
+                        <tr><td class="param-name">user.oauth_cancel</td><td>Пользователь закрыл окно OAuth</td></tr>
+                        <tr><td class="param-name">user.oauth_deny</td><td>Пользователь отклонил OAuth запрос</td></tr>
                     </tbody>
                 </table>
             </section>
 
-            <section id="sdk-js">
-                <h2>SDK — JavaScript (Кнопка входа)</h2>
-                <p>Подключите скрипт с CDN и добавьте кнопку <strong>«Войти через TOKEN PAY»</strong> на ваш сайт за 3 строки.</p>
+            <section id="widget-quickstart">
+                <h2>Widget SDK v1.2 — Быстрый старт</h2>
+                <p>Виджет TOKEN PAY ID предоставляет три варианта кнопок для интеграции: стандартная, круглая иконка и прозрачный логотип. Все кнопки автоматически работают с OAuth 2.0 + PKCE.</p>
 
                 <div class="docs-callout docs-callout-info">
-                    <strong>CDN:</strong> <code class="mono">https://tokenpay.space/sdk/tokenpay-auth.js</code>
+                    <strong>CDN:</strong> <code class="mono">https://tokenpay.space/sdk/tpid-widget.js</code><br>
+                    <small style="color:var(--text-muted)">Версия 1.2.0 — автообновления, без кэширования.</small>
                 </div>
 
-                <h3>1. Подключение и рендер кнопки</h3>
+                <h3>Минимальная интеграция (1 строка)</h3>
                 <div class="docs-code">
                     <div class="docs-code-header">
                         <span class="docs-code-lang">HTML</span>
                         <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
                     </div>
-                    <pre><span class="cm">&lt;!-- Контейнер для кнопки --&gt;</span>
-&lt;div id=<span class="str">"tokenpay-login"</span>&gt;&lt;/div&gt;
+                    <pre>&lt;script src=<span class="str">"https://tokenpay.space/sdk/tpid-widget.js"</span>
+        data-client-id=<span class="str">"tpid_pk_ваш_ключ"</span>&gt;&lt;/script&gt;</pre>
+                </div>
+                <p>Виджет автоматически создаст кнопку «Войти через TOKEN PAY» на странице.</p>
+            </section>
 
-<span class="cm">&lt;!-- Подключение SDK --&gt;</span>
-&lt;script src=<span class="str">"https://tokenpay.space/sdk/tokenpay-auth.js"</span>&gt;&lt;/script&gt;
-&lt;script&gt;
-  TokenPayAuth.init({
-    clientId: <span class="str">'tpid_pk_ваш_публичный_ключ'</span>,
-    redirectUri: <span class="str">'https://ваш-сайт.com/callback'</span>,
-    scope: <span class="str">'profile'</span>,
-    locale: <span class="str">'ru'</span>,       <span class="cm">// 'ru' | 'en'</span>
-    theme: <span class="str">'dark'</span>,       <span class="cm">// 'dark' | 'light'</span>
-    size: <span class="str">'large'</span>,       <span class="cm">// 'small' | 'medium' | 'large'</span>
-    onSuccess: <span class="kw">function</span>(data) {
-      console.log(<span class="str">'Код авторизации:'</span>, data.code);
-      <span class="cm">// Отправьте data.code на ваш сервер для обмена на токен</span>
-    },
-    onError: <span class="kw">function</span>(err) {
-      console.error(<span class="str">'Ошибка:'</span>, err);
-    }
-  });
+            <section id="widget-buttons">
+                <h3>Три варианта кнопок</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Вариант</th><th>Атрибут</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">standard</td><td><code class="mono">data-tpid-button="standard"</code></td><td>Полная кнопка с иконкой щита + текст «Войти через TOKEN PAY». Подходит для основных CTA.</td></tr>
+                        <tr><td class="param-name">icon</td><td><code class="mono">data-tpid-button="icon"</code></td><td>Круглая кнопка с иконкой щита. Идеально для навбара рядом с Google/Apple.</td></tr>
+                        <tr><td class="param-name">logo</td><td><code class="mono">data-tpid-button="logo"</code></td><td>Кнопка без фона — только логотип + текст. Для минималистичного дизайна.</td></tr>
+                    </tbody>
+                </table>
 
-  <span class="cm">// Отрисовать кнопку</span>
-  TokenPayAuth.renderButton(<span class="str">'#tokenpay-login'</span>);
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTML — Все 3 варианта</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="cm">&lt;!-- Стандартная кнопка --&gt;</span>
+&lt;div data-tpid-button=<span class="str">"standard"</span>&gt;&lt;/div&gt;
+
+<span class="cm">&lt;!-- Круглая иконка --&gt;</span>
+&lt;div data-tpid-button=<span class="str">"icon"</span>&gt;&lt;/div&gt;
+
+<span class="cm">&lt;!-- Логотип без фона --&gt;</span>
+&lt;div data-tpid-button=<span class="str">"logo"</span>&gt;&lt;/div&gt;</pre>
+                </div>
+            </section>
+
+            <section id="widget-oauth">
+                <h3>OAuth Popup Flow (Promise API)</h3>
+                <p>Метод <code class="mono">TPID.loginWithOAuth()</code> открывает popup, проводит OAuth flow и возвращает <code class="mono">Promise</code> с authorization code.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">JavaScript</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre>TPID.loginWithOAuth({ prompt: <span class="str">'login'</span> })
+  .then(<span class="kw">function</span>(result) {
+    console.log(<span class="str">'Auth code:'</span>, result.code);
+    console.log(<span class="str">'State:'</span>, result.state);
+    <span class="cm">// Отправьте code на ваш сервер для обмена на токен</span>
+  })
+  .catch(<span class="kw">function</span>(err) {
+    console.error(<span class="str">'OAuth error:'</span>, err);
+  });</pre>
+                </div>
+                <div class="docs-callout docs-callout-info">
+                    <strong>prompt=login</strong> гарантирует, что пользователь увидит форму входа, даже если уже авторизован. Это решает проблему «залогиненного админа».
+                </div>
+            </section>
+
+            <section id="widget-api">
+                <h3>Программный API (TPID)</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Метод</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">TPID.init(opts)</td><td>Инициализация с clientId, redirectUri, onSuccess, onError, lang, autoButton</td></tr>
+                        <tr><td class="param-name">TPID.open()</td><td>Открыть окно авторизации (redirect flow)</td></tr>
+                        <tr><td class="param-name">TPID.loginWithOAuth(opts)</td><td>OAuth popup flow → Promise&lt;{code, state}&gt;</td></tr>
+                        <tr><td class="param-name">TPID.renderButton(el, opts)</td><td>Рендер стандартной кнопки в контейнер</td></tr>
+                        <tr><td class="param-name">TPID.renderIconButton(el, opts)</td><td>Рендер круглой иконки</td></tr>
+                        <tr><td class="param-name">TPID.renderLogoButton(el, opts)</td><td>Рендер прозрачной кнопки-логотипа</td></tr>
+                        <tr><td class="param-name">TPID.version</td><td>Текущая версия виджета (<code class="mono">1.2.0</code>)</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="sdk-js">
+                <h2>SDK — JavaScript (Legacy tpid-auth.js)</h2>
+                <p>Устаревший виджет. Рекомендуется использовать новый <a href="#widget-quickstart">Widget SDK v1.2</a> (<code class="mono">tpid-widget.js</code>).</p>
+
+                <div class="docs-callout docs-callout-info">
+                    <strong>CDN (auto-sync):</strong> <code class="mono">https://tokenpay.space/sdk/tpid-auth.js</code><br>
+                    <small style="color:var(--text-muted)">Обновления автоматически доходят до интеграторов — файл не кэшируется.</small>
+                </div>
+
+                <h3>Два типа кнопок</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Тип</th><th>Вид</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">icon</td><td><code class="mono">data-mode="icon"</code></td><td>Круглая иконка (щит TOKEN PAY) — как у Google/Apple. Размеры: 36×36 / 44×44 / 54×54 px</td></tr>
+                        <tr><td class="param-name">logo</td><td><code class="mono">data-mode="logo"</code></td><td>Прямоугольная кнопка с иконкой + текст «Войти через TOKEN PAY». Min/max ширина ограничена.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>1. Быстрое подключение (data-атрибуты)</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTML — Кнопка LOGO (прямоугольная)</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="cm">&lt;!-- Прямоугольная кнопка с текстом --&gt;</span>
+&lt;script src=<span class="str">"https://tokenpay.space/sdk/tpid-auth.js"</span>
+        data-client-id=<span class="str">"tpid_pk_ваш_ключ"</span>
+        data-redirect-uri=<span class="str">"https://ваш-сайт.com/callback"</span>
+        data-mode=<span class="str">"logo"</span>
+        data-theme=<span class="str">"dark"</span>
+        data-size=<span class="str">"medium"</span>
+        data-lang=<span class="str">"ru"</span>&gt;
+&lt;/script&gt;</pre>
+                </div>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTML — Кнопка ICON (круглая)</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="cm">&lt;!-- Круглая иконка --&gt;</span>
+&lt;script src=<span class="str">"https://tokenpay.space/sdk/tpid-auth.js"</span>
+        data-client-id=<span class="str">"tpid_pk_ваш_ключ"</span>
+        data-redirect-uri=<span class="str">"https://ваш-сайт.com/callback"</span>
+        data-mode=<span class="str">"icon"</span>
+        data-theme=<span class="str">"light"</span>
+        data-size=<span class="str">"large"</span>&gt;
 &lt;/script&gt;</pre>
                 </div>
 
-                <h3>2. Обмен кода на токен (серверная сторона)</h3>
+                <h3>2. Программный API</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">JavaScript</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="cm">// Инициализация</span>
+TokenPayAuth.init({
+  clientId: <span class="str">'tpid_pk_ваш_ключ'</span>,
+  redirectUri: <span class="str">'https://ваш-сайт.com/callback'</span>,
+  theme: <span class="str">'dark'</span>,
+  lang: <span class="str">'ru'</span>,
+  onSuccess: <span class="kw">function</span>(data) {
+    console.log(<span class="str">'Код:'</span>, data.code);
+  }
+});
+
+<span class="cm">// Рендер кнопки в контейнер</span>
+TokenPayAuth.renderButton(<span class="str">'#my-container'</span>, {
+  mode: <span class="str">'logo'</span>,    <span class="cm">// 'icon' | 'logo'</span>
+  theme: <span class="str">'dark'</span>,   <span class="cm">// 'dark' | 'light' | 'auto'</span>
+  size: <span class="str">'medium'</span>,  <span class="cm">// 'small' | 'medium' | 'large'</span>
+  lang: <span class="str">'ru'</span>
+});
+
+<span class="cm">// Или запуск OAuth вручную</span>
+TokenPayAuth.startAuth();</pre>
+                </div>
+
+                <h3>3. Обмен кода на токен (серверная сторона)</h3>
                 <div class="docs-code">
                     <div class="docs-code-header">
                         <span class="docs-code-lang">cURL</span>
@@ -632,11 +896,12 @@ X-RateLimit-Reset: <span class="num">1678886400</span></pre>
     "code": "tpid_code_...",
     "client_id": "tpid_pk_...",
     "client_secret": "tpid_sk_...",
-    "redirect_uri": "https://ваш-сайт.com/callback"
+    "redirect_uri": "https://ваш-сайт.com/callback",
+    "code_verifier": "PKCE_VERIFIER"
   }'</span></pre>
                 </div>
 
-                <h3>3. Получение профиля пользователя</h3>
+                <h3>4. Получение профиля пользователя</h3>
                 <div class="docs-code">
                     <div class="docs-code-header">
                         <span class="docs-code-lang">cURL</span>
@@ -656,18 +921,28 @@ X-RateLimit-Reset: <span class="num">1678886400</span></pre>
 }</pre>
                 </div>
 
-                <h3>Параметры init()</h3>
+                <h3>Параметры</h3>
                 <table class="docs-params">
-                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <thead><tr><th>Параметр / Атрибут</th><th>Тип</th><th>Описание</th></tr></thead>
                     <tbody>
-                        <tr><td class="param-name">clientId</td><td class="param-type">string</td><td><span class="param-req">required</span> — Публичный ключ API (<code class="mono">tpid_pk_...</code>)</td></tr>
-                        <tr><td class="param-name">redirectUri</td><td class="param-type">string</td><td><span class="param-req">required</span> — URL для редиректа после авторизации</td></tr>
-                        <tr><td class="param-name">scope</td><td class="param-type">string</td><td>Разрешения (по умолчанию <code class="mono">profile</code>)</td></tr>
-                        <tr><td class="param-name">locale</td><td class="param-type">string</td><td>Язык: <code class="mono">ru</code> или <code class="mono">en</code></td></tr>
-                        <tr><td class="param-name">theme</td><td class="param-type">string</td><td>Тема: <code class="mono">dark</code> или <code class="mono">light</code></td></tr>
-                        <tr><td class="param-name">size</td><td class="param-type">string</td><td>Размер: <code class="mono">small</code>, <code class="mono">medium</code>, <code class="mono">large</code></td></tr>
-                        <tr><td class="param-name">onSuccess</td><td class="param-type">function</td><td>Callback при успешной авторизации <code class="mono">({code, state}) => {}</code></td></tr>
+                        <tr><td class="param-name">clientId / data-client-id</td><td class="param-type">string</td><td><span class="param-req">required</span> — Публичный ключ API (<code class="mono">tpid_pk_...</code>)</td></tr>
+                        <tr><td class="param-name">redirectUri / data-redirect-uri</td><td class="param-type">string</td><td><span class="param-req">required</span> — URL для редиректа после авторизации</td></tr>
+                        <tr><td class="param-name">mode / data-mode</td><td class="param-type">string</td><td>Тип кнопки: <code class="mono">icon</code> (круглая) или <code class="mono">logo</code> (прямоугольная, по умолчанию)</td></tr>
+                        <tr><td class="param-name">theme / data-theme</td><td class="param-type">string</td><td>Тема: <code class="mono">dark</code> (белая кнопка), <code class="mono">light</code> (тёмная кнопка), <code class="mono">auto</code></td></tr>
+                        <tr><td class="param-name">size / data-size</td><td class="param-type">string</td><td>Размер: <code class="mono">small</code> (36px), <code class="mono">medium</code> (44px), <code class="mono">large</code> (54px)</td></tr>
+                        <tr><td class="param-name">lang / data-lang</td><td class="param-type">string</td><td>Язык: <code class="mono">ru</code> или <code class="mono">en</code></td></tr>
+                        <tr><td class="param-name">scope / data-scope</td><td class="param-type">string</td><td>OAuth scope (по умолчанию <code class="mono">openid email profile</code>)</td></tr>
+                        <tr><td class="param-name">onSuccess</td><td class="param-type">function</td><td>Callback: <code class="mono">({code, state, type}) => {}</code></td></tr>
                         <tr><td class="param-name">onError</td><td class="param-type">function</td><td>Callback при ошибке</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Ограничения размеров</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Режим</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">icon</td><td>36×36 px</td><td>44×44 px</td><td>54×54 px</td></tr>
+                        <tr><td class="param-name">logo</td><td>h:36, w:180–320 px</td><td>h:44, w:220–400 px</td><td>h:54, w:260–480 px</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -743,6 +1018,34 @@ is_valid = client.verify_webhook(
     fmt.Println(result.UserID) <span class="cm">// tpid_usr_...</span>
 }</pre>
                 </div>
+            </section>
+
+            <section id="changelog">
+                <h2>Changelog</h2>
+                <h3>v2.1.0 — 18 марта 2026</h3>
+                <p><strong>OAuth 2.0</strong></p>
+                <p>— Добавлена поддержка <code class="mono">prompt=login</code> для принудительной переавторизации<br>
+                — Добавлена поддержка <code class="mono">login_hint</code> для предзаполнения email<br>
+                — Исправлен баг BUG-01: при OAuth входе показывался admin аккаунт вместо пользователя<br>
+                — Добавлена повторная валидация <code class="mono">redirect_uri</code> в <code class="mono">/oauth/approve</code><br>
+                — Новый эндпойнт: <code class="mono">GET /oauth/branding</code> — конфигурация кнопок и интеграционный код</p>
+
+                <p><strong>Widget SDK v1.2.0</strong></p>
+                <p>— 3 варианта кнопок: standard, icon (круглая), logo (прозрачная)<br>
+                — Inline SVG иконка щита — без внешних зависимостей<br>
+                — Новый метод <code class="mono">TPID.loginWithOAuth()</code> — OAuth popup flow с Promise API<br>
+                — Автоматический рендер кнопок через <code class="mono">data-tpid-button</code> атрибуты<br>
+                — Поддержка тем dark/light/auto</p>
+
+                <p><strong>Безопасность</strong></p>
+                <p>— Удалены hardcoded fallback-пароли из конфигурации<br>
+                — Consent page очищает токены при <code class="mono">prompt=login</code><br>
+                — Login page: <code class="mono">force=1</code> параметр полностью сбрасывает сессию</p>
+
+                <p><strong>API</strong></p>
+                <p>— OpenID Discovery обновлён: <code class="mono">branding_endpoint</code>, <code class="mono">prompt_values_supported</code><br>
+                — SDK версия обновлена до 1.2.0<br>
+                — API версия обновлена до 2.1.0</p>
             </section>
 
             <div style="margin-top:80px;padding:40px;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;text-align:center">

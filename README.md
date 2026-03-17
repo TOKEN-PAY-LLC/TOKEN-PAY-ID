@@ -218,6 +218,12 @@ curl https://tokenpay.space/api/v1/health
 
 ---
 
+## Contributors
+
+- **Ivan Chernykh** — Lead Developer, Architecture & Implementation
+
+---
+
 ## License
 
 Copyright © 2025 TOKEN PAY LLC. All rights reserved.

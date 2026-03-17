@@ -12,7 +12,9 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css?v=20260316d">
     <script src="theme-init.js?v=20260316d"></script>
+    <script src="captcha.js?v=20260316d"></script>
     <style>
+    body{background:radial-gradient(ellipse at 20% 30%,#0c0c1e 0%,#060608 50%,#000 100%)!important}
     .d2{display:flex;min-height:100vh;min-height:100dvh;overflow-x:hidden;width:100%}
     .d2-side{width:260px;background:rgba(8,8,10,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-right:1px solid rgba(255,255,255,.06);padding:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1)}
     .d2-side-logo{padding:24px 24px 20px;border-bottom:1px solid rgba(255,255,255,.04)}
@@ -21,11 +23,12 @@
     .d2-side-nav::-webkit-scrollbar{width:3px}
     .d2-side-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
     .d2-nav-label{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.2);padding:16px 12px 6px;font-weight:700}
-    .d2-side-nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;font-size:.83rem;color:rgba(255,255,255,.4);cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);margin-bottom:1px;border:none;background:none;font-family:inherit;width:100%;text-align:left;position:relative}
-    .d2-side-nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.75)}
-    .d2-side-nav-item.active{background:rgba(255,255,255,.08);color:#fff;box-shadow:inset 2px 0 0 rgba(255,255,255,.5);font-weight:600}
-    .d2-nav-item svg{width:17px;height:17px;opacity:.5;flex-shrink:0}
-    .d2-nav-item.active svg{opacity:.9}
+    .d2-nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;font-size:.83rem;color:rgba(255,255,255,.4);cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);margin-bottom:1px;border:none;background:none;font-family:inherit;width:100%;text-align:left;position:relative}
+    .d2-nav-item:hover{background:rgba(255,255,255,.055);color:rgba(255,255,255,.8)}
+    .d2-nav-item.active{background:rgba(255,255,255,.09);color:#fff;box-shadow:inset 3px 0 0 rgba(255,255,255,.55);font-weight:600}
+    .d2-nav-item svg{width:17px;height:17px;opacity:.45;flex-shrink:0;transition:opacity .18s}
+    .d2-nav-item:hover svg{opacity:.75}
+    .d2-nav-item.active svg{opacity:.95}
     .d2-side-footer{padding:16px;border-top:1px solid rgba(255,255,255,.04);margin-top:auto}
     .d2-user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;transition:all .15s}
     .d2-user-card:hover{background:rgba(255,255,255,.04)}
@@ -113,6 +116,20 @@
     .d2-field input::placeholder{color:rgba(255,255,255,.15)}
     .d2-field .d2-hint{font-size:.7rem;color:rgba(255,255,255,.2);margin-top:6px}
     .d2-field select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+    .d2-select{-webkit-appearance:none;appearance:none;color-scheme:dark;background:#0d0d0f;border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.75);font-size:.73rem;padding:5px 26px 5px 10px;cursor:pointer;font-family:inherit;outline:none;transition:border-color .15s,background .15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.35)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+    .d2-select:hover{border-color:rgba(255,255,255,.22);background-color:#141416;color:#fff}
+    .d2-select:focus{border-color:rgba(255,255,255,.28);background-color:#141416;color:#fff}
+    .d2-select option{background:#111113;color:#fff}
+    .cdd{position:relative;display:inline-block;user-select:none;min-width:90px}
+    .cdd-btn{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 10px;background:#0d0d0f;border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.75);font-size:.73rem;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap;outline:none}
+    .cdd-btn:hover,.cdd.open .cdd-btn{border-color:rgba(255,255,255,.22);background:#141416;color:#fff}
+    .cdd-btn svg{width:10px;height:10px;flex-shrink:0;opacity:.5;transition:transform .15s}
+    .cdd.open .cdd-btn svg{transform:rotate(180deg);opacity:.8}
+    .cdd-list{position:absolute;top:calc(100% + 4px);left:0;min-width:100%;background:#111113;border:1px solid rgba(255,255,255,.12);border-radius:8px;z-index:9999;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.7);animation:cddIn .12s ease}
+    @keyframes cddIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+    .cdd-opt{padding:8px 14px;font-size:.75rem;color:rgba(255,255,255,.65);cursor:pointer;transition:background .1s,color .1s;font-family:inherit;white-space:nowrap}
+    .cdd-opt:hover{background:rgba(255,255,255,.06);color:#fff}
+    .cdd-opt.selected{color:#fff;background:rgba(255,255,255,.08);font-weight:600}
     .d2-mobile-bar{display:none;position:sticky;top:0;z-index:101;padding:14px 20px;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);align-items:center;justify-content:center}
     .d2-mobile-bar img{height:18px}
     .d2-mobile-toggle{position:absolute;left:16px;top:50%;transform:translateY(-50%);background:none;border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.5);cursor:pointer;padding:7px;display:flex;align-items:center;justify-content:center;transition:all .15s}
@@ -205,8 +222,8 @@
     }
     </style>
 </head>
-<body>
-    <canvas id="d2-stars" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35"></canvas>
+<body><script>document.body.style.visibility='hidden';</script>
+    <canvas id="d2-stars" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.75"></canvas>
     <div class="d2" style="position:relative;z-index:1">
         <div class="d2-mobile-bar">
             <button class="d2-mobile-toggle" onclick="toggleMobileMenu()">
@@ -272,18 +289,59 @@
             </div>
             <!-- WEBHOOKS -->
             <div class="d2-section" id="sec-webhooks">
-                <div class="d2-topbar"><h1>Webhooks</h1><div class="d2-topbar-actions"><button class="d2-btn d2-btn-primary d2-btn-sm" onclick="addWebhook()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span data-ru="Добавить" data-en="Add">Добавить</span></button></div></div>
+                <div class="d2-topbar"><h1>Webhooks</h1><div class="d2-topbar-actions"><button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="testWebhook()" id="testWebhookBtn" data-ru="Тест" data-en="Test">Тест</button></div></div>
                 <div class="d2-content">
-                    <div class="d2-panel"><div class="d2-panel-head"><h2>Webhooks</h2></div><p class="d2-panel-desc" data-ru="Получайте уведомления о событиях в реальном времени." data-en="Receive real-time event notifications.">Получайте уведомления о событиях в реальном времени.</p><div id="webhooksList"></div></div>
-                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="События" data-en="Events">События</h2></div><div style="overflow-x:auto"><table class="d2-table"><thead><tr><th data-ru="Событие" data-en="Event">Событие</th><th data-ru="Описание" data-en="Description">Описание</th></tr></thead><tbody><tr><td class="mono">user.login</td><td data-ru="Авторизация" data-en="Login">Авторизация</td></tr><tr><td class="mono">user.register</td><td data-ru="Регистрация" data-en="Registration">Регистрация</td></tr><tr><td class="mono">user.2fa.enabled</td><td data-ru="2FA включена" data-en="2FA enabled">2FA включена</td></tr><tr><td class="mono">key.created</td><td data-ru="API ключ создан" data-en="API key created">API ключ создан</td></tr><tr><td class="mono">key.revoked</td><td data-ru="API ключ отозван" data-en="API key revoked">API ключ отозван</td></tr></tbody></table></div></div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="URL вебхука" data-en="Webhook URL">Webhook URL</h2></div>
+                        <p class="d2-panel-desc" data-ru="TPID будет отправлять POST-запросы с JSON при каждом событии." data-en="TPID will send POST requests with JSON payload on each event.">ТПИД будет отправлять POST-запросы с JSON при каждом событии.</p>
+                        <div class="d2-field" style="max-width:520px">
+                            <label>Endpoint URL</label>
+                            <input type="url" id="webhookUrl" placeholder="https://yoursite.com/webhooks/tpid">
+                        </div>
+                        <button class="d2-btn d2-btn-primary d2-btn-sm" onclick="saveWebhookSettings()" data-ru="Сохранить" data-en="Save">Сохранить</button>
+                    </div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Подпись (Signing Secret)" data-en="Signing Secret">Подпись (Signing Secret)</h2></div>
+                        <p class="d2-panel-desc" data-ru="Используйте значение заголовка X-TPID-Signature для верификации запросов." data-en="Use the X-TPID-Signature header value to verify request authenticity.">Используйте X-TPID-Signature для верификации.</p>
+                        <div id="webhookSecretRow" style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                            <code id="webhookSecretVal" style="font-family:monospace;font-size:.78rem;color:rgba(255,255,255,.4);background:rgba(255,255,255,.04);padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.07)" data-ru="не установлен" data-en="not set">не установлен</code>
+                        </div>
+                        <button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="rotateWebhookSecret()" data-ru="Сгенерировать секрет" data-en="Generate secret">Сгенерировать секрет</button>
+                    </div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="События" data-en="Events">События</h2></div>
+                        <div style="overflow-x:auto"><table class="d2-table"><thead><tr><th data-ru="Событие" data-en="Event">Событие</th><th data-ru="Описание" data-en="Description">Описание</th></tr></thead><tbody>
+                            <tr><td class="mono">user.oauth_connect</td><td data-ru="Пользователь авторизовал приложение" data-en="User authorized your app">Пользователь авторизовал приложение</td></tr>
+                            <tr><td class="mono">user.unlink</td><td data-ru="Пользователь отвязал приложение" data-en="User revoked app access">Пользователь отвязал приложение</td></tr>
+                            <tr><td class="mono">key.created</td><td data-ru="API ключ создан" data-en="API key created">API ключ создан</td></tr>
+                            <tr><td class="mono">key.revoked</td><td data-ru="API ключ отозван" data-en="API key revoked">API ключ отозван</td></tr>
+                            <tr><td class="mono">test</td><td data-ru="Тестовое событие" data-en="Test event">Тестовое событие</td></tr>
+                        </tbody></table></div>
+                    </div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Журнал доставок" data-en="Delivery Log">Журнал доставок</h2><button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="loadWebhookDeliveries()" style="margin-left:auto" data-ru="Обновить" data-en="Refresh">Обновить</button></div>
+                        <div id="webhookDeliveries"><div class="d2-empty"><p data-ru="Загрузка..." data-en="Loading..."></p></div></div>
+                    </div>
                 </div>
             </div>
             <!-- ENTERPRISE SETTINGS -->
             <div class="d2-section" id="sec-ent-settings">
                 <div class="d2-topbar"><h1 data-ru="Настройки интеграции" data-en="Integration Settings">Настройки интеграции</h1></div>
                 <div class="d2-content">
-                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Язык системы" data-en="System Language">Язык системы</h2></div><p class="d2-panel-desc" data-ru="Язык TOKEN PAY ID для ваших пользователей при API-вызовах." data-en="TOKEN PAY ID language for your users during API calls.">Язык TOKEN PAY ID для ваших пользователей при API-вызовах.</p><div class="d2-field" style="max-width:320px"><label data-ru="Язык по умолчанию" data-en="Default language">Язык по умолчанию</label><select id="entLangSelect" onchange="saveEntLanguage(this.value)"><option value="ru">Русский</option><option value="en">English</option></select></div></div>
-                    <div class="d2-panel"><div class="d2-panel-head"><h2>Callback URL</h2></div><p class="d2-panel-desc" data-ru="URL перенаправления после авторизации." data-en="Redirect URL after authorization.">URL перенаправления после авторизации.</p><div class="d2-field" style="max-width:500px"><label>Redirect URI</label><input type="url" id="entRedirectUri" placeholder="https://yoursite.com/callback"></div><button class="d2-btn d2-btn-primary d2-btn-sm" onclick="saveEntSettings()" data-ru="Сохранить" data-en="Save">Сохранить</button></div>
+                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Язык системы" data-en="System Language">Язык системы</h2></div><p class="d2-panel-desc" data-ru="Язык TOKEN PAY ID для ваших пользователей при API-вызовах." data-en="TOKEN PAY ID language for your users during API calls.">Язык TOKEN PAY ID для ваших пользователей при API-вызовах.</p><div class="d2-field" style="max-width:320px"><label data-ru="Язык по умолчанию" data-en="Default language">Язык по умолчанию</label><div id="entLangSelectWrap" style="width:100%"></div></div></div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Redirect URIs" data-en="Redirect URIs">Redirect URIs</h2></div>
+                        <p class="d2-panel-desc" data-ru="Разрешённые URI для OAuth-перенаправлений, по одному на строке." data-en="Allowed OAuth redirect URIs, one per line.">Разрешённые URI для OAuth, по одному на строке.</p>
+                        <div class="d2-field" style="max-width:520px">
+                            <label>Redirect URIs</label>
+                            <textarea id="entRedirectUris" rows="4" placeholder="https://yoursite.com/callback&#10;https://yoursite.com/auth" style="width:100%;resize:vertical;font-family:monospace;font-size:.82rem"></textarea>
+                        </div>
+                        <div class="d2-field" style="max-width:520px;margin-top:12px">
+                            <label>Default Callback URL</label>
+                            <input type="url" id="entRedirectUri" placeholder="https://yoursite.com/callback">
+                        </div>
+                        <button class="d2-btn d2-btn-primary d2-btn-sm" onclick="saveEntSettings()" data-ru="Сохранить" data-en="Save">Сохранить</button>
+                    </div>
                 </div>
             </div>
             <!-- ADMIN USERS -->
@@ -311,6 +369,41 @@
                         <button class="d2-tab" onclick="loadEntApps('rejected',this)" data-ru="Отклонённые" data-en="Rejected">Отклонённые</button>
                     </div>
                     <div class="d2-panel"><div id="entAppsList"></div></div>
+                </div>
+            </div>
+            <!-- ADMIN CAPTCHA -->
+            <div class="d2-section" id="sec-admin-captcha">
+                <div class="d2-topbar"><h1 data-ru="Настройки капчи" data-en="Captcha Settings">Настройки капчи</h1></div>
+                <div class="d2-content">
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Режим работы" data-en="Mode">Режим работы</h2></div>
+                        <p class="d2-panel-desc" data-ru="Автоматически показывать капчу подозрительным пользователям или всегда." data-en="Show captcha automatically to suspicious users, always, or never.">Автоматически показывать капчу подозрительным пользователям или всегда.</p>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+                            <button class="d2-btn d2-btn-secondary d2-btn-sm captcha-mode-btn" data-mode="auto" onclick="setCaptchaMode('auto',this)" data-ru="Авто (по поведению)" data-en="Auto (by behavior)">Авто (по поведению)</button>
+                            <button class="d2-btn d2-btn-secondary d2-btn-sm captcha-mode-btn" data-mode="always" onclick="setCaptchaMode('always',this)" data-ru="Всегда" data-en="Always">Всегда</button>
+                            <button class="d2-btn d2-btn-secondary d2-btn-sm captcha-mode-btn" data-mode="off" onclick="setCaptchaMode('off',this)" data-ru="Выкл" data-en="Off">Выкл</button>
+                        </div>
+                        <div class="d2-field" style="max-width:260px">
+                            <label data-ru="Порог авто-режима (балл подозрения, 1–10)" data-en="Auto threshold (suspicion score, 1–10)">Порог авто-режима (1–10)</label>
+                            <input type="number" id="captchaThreshold" min="1" max="10" value="3" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-family:inherit;font-size:.88rem;padding:10px 14px;width:100%;outline:none">
+                        </div>
+                        <button class="d2-btn d2-btn-primary d2-btn-sm" onclick="saveCaptchaConfig()" data-ru="Сохранить настройки" data-en="Save Settings">Сохранить настройки</button>
+                    </div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Изображения для паззла" data-en="Puzzle Images">Изображения для паззла</h2></div>
+                        <p class="d2-panel-desc" data-ru="Загружайте фоновые изображения для капчи (PNG/JPG, до 1 МБ). Если не загружено — используется встроенный фон." data-en="Upload background images for captcha puzzle (PNG/JPG, up to 1 MB). Built-in fallback if none uploaded.">Загружайте фоновые изображения для капчи.</p>
+                        <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+                            <input type="file" id="captchaImgInput" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleCaptchaImgUpload(this)">
+                            <button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="document.getElementById('captchaImgInput').click()" data-ru="Загрузить изображение" data-en="Upload Image">Загрузить изображение</button>
+                            <span style="font-size:.72rem;color:rgba(255,255,255,.25)" data-ru="Максимум 20 изображений · PNG/JPG/WebP · до 1 МБ" data-en="Max 20 images · PNG/JPG/WebP · up to 1 MB">Максимум 20 · до 1 МБ</span>
+                        </div>
+                        <div id="captchaImagesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px"></div>
+                    </div>
+                    <div class="d2-panel">
+                        <div class="d2-panel-head"><h2 data-ru="Предпросмотр" data-en="Preview">Предпросмотр</h2></div>
+                        <p class="d2-panel-desc" data-ru="Посмотрите как выглядит капча для пользователей." data-en="See how the captcha looks for users.">Посмотрите как выглядит капча для пользователей.</p>
+                        <button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="previewCaptcha()" data-ru="Открыть предпросмотр" data-en="Preview Captcha">Открыть предпросмотр</button>
+                    </div>
                 </div>
             </div>
             <!-- ACTIVITY -->
@@ -350,7 +443,7 @@
                             <button type="submit" class="d2-btn d2-btn-primary d2-btn-sm" data-ru="Обновить" data-en="Update">Обновить</button>
                         </form>
                     </div>
-                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Удаление аккаунта" data-en="Delete Account">Удаление аккаунта</h2></div><p class="d2-panel-desc" data-ru="Необратимое действие. Все данные будут удалены навсегда." data-en="Irreversible action. All data will be permanently deleted.">Необратимое действие. Все данные будут удалены навсегда.</p><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="if(confirm(L('Удалить аккаунт? Это необратимо.','Delete account? This is irreversible.'))){localStorage.clear();window.location.href='/'}" data-ru="Удалить" data-en="Delete">Удалить</button></div>
+                    <div class="d2-panel"><div class="d2-panel-head"><h2 data-ru="Удаление аккаунта" data-en="Delete Account">Удаление аккаунта</h2></div><p class="d2-panel-desc" data-ru="Необратимое действие. Все данные будут удалены навсегда." data-en="Irreversible action. All data will be permanently deleted.">Необратимое действие. Все данные будут удалены навсегда.</p><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="if(confirm(L('Удалить аккаунт? Это необратимо.','Delete account? This is irreversible.'))){api('/api/v1/users/me',{method:'DELETE'}).then(()=>{localStorage.clear();sessionStorage.clear();window.location.href='/'}).catch(()=>{localStorage.clear();sessionStorage.clear();window.location.href='/'})}" data-ru="Удалить" data-en="Delete">Удалить</button></div>
                 </div>
             </div>
             <!-- SETTINGS -->
@@ -365,8 +458,8 @@
                             <div class="d2-field"><label>Email</label><input type="email" id="settingsEmail" disabled><div class="d2-hint" data-ru="Email нельзя изменить" data-en="Email cannot be changed">Email нельзя изменить</div></div>
                             <div class="d2-field"><label data-ru="ID аккаунта" data-en="Account ID">ID аккаунта</label><input type="text" id="settingsId" disabled style="font-family:'JetBrains Mono',monospace;font-size:.8rem"></div>
                             <div class="d2-field"><label data-ru="Тип аккаунта" data-en="Account type">Тип аккаунта</label><input type="text" id="settingsRole" disabled></div>
-                            <div class="d2-field"><label data-ru="Язык" data-en="Language">Язык</label><select id="settingsLang" onchange="saveLang(this.value)"><option value="ru">Русский</option><option value="en">English</option></select></div>
-                            <div class="d2-field"><label data-ru="Тема" data-en="Theme">Тема</label><select id="settingsTheme" onchange="saveTheme(this.value)"><option value="dark" data-ru="Тёмная" data-en="Dark">Тёмная</option><option value="light" data-ru="Светлая" data-en="Light">Светлая</option></select></div>
+                            <div class="d2-field"><label data-ru="Язык" data-en="Language">Язык</label><div id="settingsLangWrap" style="width:100%"></div></div>
+                            <div class="d2-field"><label data-ru="Тема" data-en="Theme">Тема</label><div id="settingsThemeWrap" style="width:100%"></div></div>
                             <button type="submit" class="d2-btn d2-btn-primary d2-btn-sm" data-ru="Сохранить" data-en="Save">Сохранить</button>
                         </form>
                     </div>
@@ -384,11 +477,23 @@
 
     <script>
     const API = '';
+    // ===== URL params (from CUPOL and other integrators) =====
+    (function(){
+        try {
+            var p = new URLSearchParams(window.location.search);
+            var t = p.get('theme') || p.get('color_scheme');
+            var l = p.get('lang') || p.get('locale');
+            if (t === 'light' || t === 'dark') { document.body.classList.toggle('light', t === 'light'); localStorage.setItem('tp_theme', t); }
+            if (l === 'ru' || l === 'en') localStorage.setItem('tp_lang', l);
+        } catch(e) {}
+    })();
     let user = JSON.parse(localStorage.getItem('tpid_user') || sessionStorage.getItem('tpid_user') || 'null');
     let token = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
     let refreshToken = localStorage.getItem('tpid_refresh') || sessionStorage.getItem('tpid_refresh');
     let _refreshing = null;
-    if (!user || !token) window.location.href = '/login';
+    let _settingsLangVal = 'ru', _settingsThemeVal = 'dark', _entLangVal = 'ru';
+    if (!user || !token) { window.location.href = '/login'; }
+    else { document.body.style.visibility = ''; }
     let isEnterprise = user && (user.role === 'enterprise');
     let isAdmin = user && (user.role === 'admin');
 
@@ -432,7 +537,24 @@
             return r.json();
         });
     }
+    // Proactive silent token refresh every 50 minutes
+    (function _scheduleSilentRefresh() {
+        setTimeout(function tick() {
+            if (!refreshToken) return;
+            fetch('/api/v1/auth/refresh', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ refresh_token: refreshToken }) })
+                .then(r => r.json()).then(d => {
+                    if (d.accessToken) {
+                        token = d.accessToken;
+                        const store = localStorage.getItem('tpid_token') ? localStorage : sessionStorage;
+                        store.setItem('tpid_token', token); store.setItem('tp_token', token);
+                        if (d.refreshToken) { refreshToken = d.refreshToken; store.setItem('tpid_refresh', refreshToken); }
+                    }
+                }).catch(() => {});
+            setTimeout(tick, 50 * 60 * 1000);
+        }, 50 * 60 * 1000);
+    })();
 
+    function _e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     function toast(msg) {
         const el = document.createElement('div');
         el.className = 'd2-toast';
@@ -475,6 +597,7 @@
             items.push({ id:'api-keys', icon:ico.keys, label:L('API ключи','API Keys') });
             items.push({ id:'admin-activity', icon:ico.activity, label:L('Журнал','Log') });
             items.push({ id:'admin-system', icon:ico.system, label:L('Система','System') });
+            items.push({ id:'admin-captcha', icon:'<svg viewBox="0 0 18 18" fill="none"><path d="M9 2L2 5v4.5C2 13.1 5 16.1 9 17c4-0.9 7-3.9 7-7.5V5L9 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 9.5l2 2 4-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>', label:L('Капча','Captcha') });
         } else if (isEnterprise) {
             nav.innerHTML = '<div class="d2-nav-label">'+L('Предприятие','Enterprise')+'</div>';
             items.push({ id:'api-keys', icon:ico.keys, label:L('API ключи','API Keys') });
@@ -514,13 +637,33 @@
             document.getElementById('companyField').style.display = '';
             document.getElementById('settingsCompany').value = user.company_name;
         }
-        if (user.locale) {
-            const langSel = document.getElementById('settingsLang');
-            if (langSel) langSel.value = user.locale;
+        // Language custom dropdown
+        const langWrap = document.getElementById('settingsLangWrap');
+        if (langWrap) {
+            langWrap.innerHTML = '';
+            _settingsLangVal = user.locale || _lang || 'ru';
+            const langDd = cddCreate(
+                [{value:'ru',label:'Русский'},{value:'en',label:'English'}],
+                _settingsLangVal,
+                v => { _settingsLangVal = v; saveLang(v); }
+            );
+            langDd.style.width = '100%';
+            langDd.querySelector('.cdd-btn').style.width = '100%';
+            langWrap.appendChild(langDd);
         }
-        if (user.theme) {
-            const themeSel = document.getElementById('settingsTheme');
-            if (themeSel) themeSel.value = user.theme;
+        // Theme custom dropdown
+        const themeWrap = document.getElementById('settingsThemeWrap');
+        if (themeWrap) {
+            themeWrap.innerHTML = '';
+            _settingsThemeVal = user.theme || 'dark';
+            const themeDd = cddCreate(
+                [{value:'dark',label:L('Тёмная','Dark')},{value:'light',label:L('Светлая','Light')}],
+                _settingsThemeVal,
+                v => { _settingsThemeVal = v; saveTheme(v); }
+            );
+            themeDd.style.width = '100%';
+            themeDd.querySelector('.cdd-btn').style.width = '100%';
+            themeWrap.appendChild(themeDd);
         }
     }
 
@@ -595,6 +738,17 @@
         if (sec) sec.classList.add('active');
         document.getElementById('dashSide').classList.remove('open');
         document.getElementById('sideOverlay').classList.remove('open');
+        // Lazy-load section data
+        if (name === 'webhooks') { loadWebhookSettings(); loadWebhookDeliveries(); }
+        if (name === 'ent-settings') { loadEntSettings(); }
+        if (name === 'ent-users') { loadEnterpriseUsers(); }
+        if (name === 'sessions') { loadSessions(); }
+        if (name === 'apps') { loadConnectedApps(); }
+        if (name === 'activity') { loadActivity(); }
+        if (name === 'api-keys') { loadKeys(); }
+        if (name === 'admin-users') { loadAdminUsers(); }
+        if (name === 'admin-activity') { loadAdminActivity(); }
+        if (name === 'security') { renderSecurity(); }
     }
 
     // ===== SESSIONS =====
@@ -606,8 +760,8 @@
                 const time = new Date(s.last_active).toLocaleString(_lang==='en'?'en-US':'ru-RU');
                 return `<div class="d2-row">
                     <div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
-                    <div class="d2-row-info"><div class="d2-row-title">${s.device||L('Неизвестно','Unknown')} ${i===0?'<span class="d2-badge d2-badge-ok">'+L('Текущая','Current')+'</span>':''}</div><div class="d2-row-sub">${s.ip||'—'} · ${time}</div></div>
-                    <div class="d2-row-actions">${i>0?`<button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeSession('${s.id}',this)">${L('Завершить','Revoke')}</button>`:''}</div>
+                    <div class="d2-row-info"><div class="d2-row-title">${_e(s.device)||L('Неизвестно','Unknown')} ${i===0?'<span class="d2-badge d2-badge-ok">'+L('Текущая','Current')+'</span>':''}</div><div class="d2-row-sub">${_e(s.ip)||'—'} · ${time}</div></div>
+                    <div class="d2-row-actions">${i>0?`<button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeSession('${_e(s.id)}',this)">${L('Завершить','Revoke')}</button>`:''}</div>
                 </div>`;
             }).join('');
         }).catch(()=>{ document.getElementById('sessionsList').innerHTML='<div class="d2-empty"><p>'+L('Ошибка загрузки','Loading error')+'</p></div>'; });
@@ -622,8 +776,8 @@
             if (!d.apps||!d.apps.length) { el.innerHTML='<div class="d2-empty"><p>'+L('Нет подключённых сервисов','No connected services')+'</p></div>'; return; }
             el.innerHTML = d.apps.map(a => `<div class="d2-row">
                 <div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="18" rx="3"/><path d="M8 7h8M8 11h5"/></svg></div>
-                <div class="d2-row-info"><div class="d2-row-title">${a.app_name||a.company_name||L('Приложение','Application')}</div><div class="d2-row-sub">${a.scopes||'profile'} · ${new Date(a.authorized_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU')}</div></div>
-                <div class="d2-row-actions"><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeApp('${a.id}',this)">${L('Отключить','Disconnect')}</button></div>
+                <div class="d2-row-info"><div class="d2-row-title">${_e(a.app_name||a.company_name)||L('Приложение','Application')}</div><div class="d2-row-sub">${_e(a.scopes)||'profile'} · ${new Date(a.authorized_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU')}</div></div>
+                <div class="d2-row-actions"><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeApp('${_e(a.id)}',this)">${L('Отключить','Disconnect')}</button></div>
             </div>`).join('');
         }).catch(()=>{});
     }
@@ -635,37 +789,135 @@
             const el=document.getElementById('apiKeysList'); const keys=d.keys||[];
             const statEl=document.getElementById('statKeys'); if(statEl) statEl.textContent=keys.filter(k=>k.status==='active').length;
             if (!keys.length) { el.innerHTML='<div class="d2-empty"><p>'+L('Нет ключей. Создайте первый.','No keys. Create your first one.')+'</p></div>'; return; }
-            el.innerHTML = keys.map(k => `<div class="d2-row">
+            el.innerHTML = keys.map(k => {
+                const now=new Date();
+                const expired=k.expires_at&&new Date(k.expires_at)<now;
+                const expireSoon=k.expires_at&&!expired&&(new Date(k.expires_at)-now)<7*86400000;
+                let statusBadge=k.status==='active'&&!expired?'<span class="d2-badge d2-badge-ok">'+L('Активен','Active')+'</span>':k.status==='revoked'?'<span class="d2-badge d2-badge-off">'+L('Отозван','Revoked')+'</span>':'<span class="d2-badge d2-badge-danger">'+L('Истёк','Expired')+'</span>';
+                let expireBadge='';
+                if(k.expires_at&&k.status==='active'&&!expired)expireBadge=`<span class="d2-badge ${expireSoon?'d2-badge-warn':'d2-badge-info'}">${L('до','until')} ${new Date(k.expires_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU')}</span>`;
+                else if(!k.expires_at&&k.status==='active')expireBadge='<span class="d2-badge d2-badge-off">'+L('Бессрочный','Permanent')+'</span>';
+                return `<div class="d2-row">
                 <div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zM15.5 8.5L19 5"/></svg></div>
-                <div class="d2-row-info"><div class="d2-row-title">${k.name} <span class="d2-badge ${k.status==='active'?'d2-badge-ok':'d2-badge-off'}">${k.status==='active'?L('Активен','Active'):L('Отозван','Revoked')}</span></div><div class="d2-row-sub">pk: ${k.public_key} · sk: ${k.secret_prefix}...</div></div>
-                <div class="d2-row-actions"><button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="copyKey('${k.public_key}',this)">${L('Копировать','Copy')}</button>${k.status==='active'?`<button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeKey('${k.id}')">${L('Отозвать','Revoke')}</button>`:''}</div>
-            </div>`).join('');
+                <div class="d2-row-info"><div class="d2-row-title">${_e(k.name)} ${statusBadge} ${expireBadge}</div><div class="d2-row-sub">pk: ${_e(k.public_key)} · sk: ${_e(k.secret_prefix)}... · ${L('создан','created')} ${new Date(k.created_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU')}</div></div>
+                <div class="d2-row-actions"><button class="d2-btn d2-btn-secondary d2-btn-sm" onclick="copyKey('${_e(k.public_key)}',this)">${L('Копировать pk','Copy pk')}</button>${k.status==='active'&&!expired?`<button class="d2-btn d2-btn-danger d2-btn-sm" onclick="revokeKey('${_e(k.id)}')">${L('Отозвать','Revoke')}</button>`:''}</div>
+            </div>`;
+            }).join('');
         }).catch(()=>{});
     }
-    function createApiKey() { const name=prompt(L('Название ключа:','Key name:'),'Production Key'); if(!name)return; api('/api/v1/keys',{method:'POST',body:JSON.stringify({name})}).then(d=>{ if(d.secret_key){alert(L('Секретный ключ (сохраните!):\n\n','Secret key (save it!):\n\n')+d.secret_key+L('\n\nПоказывается один раз!','\n\nShown only once!'));} loadKeys();toast(L('Ключ создан','Key created'));}); }
+    function createApiKey() {
+        const name=prompt(L('Название ключа:','Key name:'), L('Основной','Production'));
+        if(!name||!name.trim())return;
+        const expInput=prompt(L('Срок действия (дней, пусто = бессрочный):','Expiry in days (empty = permanent):'),'');
+        let expires_in_days=null;
+        if(expInput!==null&&expInput.trim()!==''){
+            expires_in_days=parseInt(expInput);
+            if(isNaN(expires_in_days)||expires_in_days<1){toast(L('Неверный срок','Invalid expiry'));return;}
+        }
+        api('/api/v1/keys',{method:'POST',body:JSON.stringify({name:name.trim(),expires_in_days})}).then(d=>{
+            if(d.error){toast(d.error.message);return;}
+            if(d.secret_key){
+                const msg=L('Секретный ключ (сохраните, показывается ОДИН РАЗ!):\n\n','Secret key (save it — shown ONCE!):\n\n')+d.secret_key+(expires_in_days?L('\n\nСрок: '+expires_in_days+' дн.','\n\nExpires in: '+expires_in_days+' days'):'');
+                alert(msg);
+            }
+            loadKeys();toast(L('Ключ создан','Key created'));
+        });
+    }
     function revokeKey(id) { if(!confirm(L('Отозвать ключ?','Revoke key?')))return; api('/api/v1/keys/'+id,{method:'DELETE'}).then(()=>{loadKeys();toast(L('Ключ отозван','Key revoked'));}); }
-    function copyKey(text,btn) { navigator.clipboard.writeText(text).then(()=>{const o=btn.textContent;btn.textContent='OK!';setTimeout(()=>btn.textContent=o,1200);}); }
+    function copyKey(text,btn) { navigator.clipboard.writeText(text).then(()=>{const o=btn.textContent;btn.textContent='✓';setTimeout(()=>btn.textContent=o,1200);}).catch(()=>{toast(L('Скопируйте вручную:','Copy manually:')+' '+text);}); }
 
     // ===== ENTERPRISE =====
     function loadEnterpriseUsers() {
         api('/api/v1/enterprise/users').then(d => {
             const el=document.getElementById('enterpriseUsersList');
             if (!d.users||!d.users.length) { el.innerHTML='<div class="d2-empty"><p>'+L('Нет пользователей','No users')+'</p></div>'; return; }
-            el.innerHTML='<div style="overflow-x:auto"><table class="d2-table"><thead><tr><th>'+L('Имя','Name')+'</th><th>Email</th><th>'+L('Права','Scopes')+'</th><th>'+L('Дата','Date')+'</th></tr></thead><tbody>'+d.users.map(u=>`<tr><td>${u.name}</td><td class="mono">${u.email}</td><td>${u.scopes||'profile'}</td><td>${new Date(u.authorized_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU')}</td></tr>`).join('')+'</tbody></table></div>';
+            el.innerHTML='<div style="overflow-x:auto"><table class="d2-table"><thead><tr><th>'+L('Имя','Name')+'</th><th>Email</th><th>'+L('Права','Scopes')+'</th><th>'+L('Дата','Date')+'</th></tr></thead><tbody>'+d.users.map(u=>`<tr><td>${_e(u.name)}</td><td class="mono">${_e(u.email)}</td><td>${_e(u.scopes)||'profile'}</td><td>${new Date(u.authorized_at).toLocaleDateString(_lang==='en'?'en-US':'ru-RU')}</td></tr>`).join('')+'</tbody></table></div>';
         }).catch(()=>{});
     }
     function saveEntLanguage(val) { api('/api/v1/users/me',{method:'PUT',body:JSON.stringify({locale:val})}).then(()=>toast(L('Язык сохранён','Language saved'))); }
     function loadEntSettings() {
         api('/api/v1/enterprise/settings').then(d => {
-            const el = document.getElementById('entRedirectUri');
-            if (el && d.callback_url) el.value = d.callback_url;
+            const cbEl = document.getElementById('entRedirectUri');
+            if (cbEl && d.callback_url) cbEl.value = d.callback_url;
+            const urisEl = document.getElementById('entRedirectUris');
+            if (urisEl && d.allowed_redirect_uris) urisEl.value = d.allowed_redirect_uris.join('\n');
         }).catch(()=>{});
+        const wrap = document.getElementById('entLangSelectWrap');
+        if (wrap && !wrap.querySelector('.cdd')) {
+            _entLangVal = user.locale || 'ru';
+            const dd = cddCreate(
+                [{value:'ru',label:'Русский'},{value:'en',label:'English'}],
+                _entLangVal,
+                v => { _entLangVal = v; saveEntLanguage(v); }
+            );
+            dd.style.width = '100%';
+            dd.querySelector('.cdd-btn').style.width = '100%';
+            wrap.appendChild(dd);
+        }
     }
     function saveEntSettings() {
         const url = (document.getElementById('entRedirectUri')||{}).value || '';
+        const urisRaw = (document.getElementById('entRedirectUris')||{}).value || '';
+        const uris = urisRaw.split('\n').map(s=>s.trim()).filter(Boolean);
         api('/api/v1/enterprise/settings', { method:'PUT', body: JSON.stringify({ callback_url: url }) })
+            .then(() => api('/api/v1/enterprise/webhook', { method:'PUT', body: JSON.stringify({ allowed_redirect_uris: uris }) }))
             .then(() => toast(L('Настройки сохранены','Settings saved')))
             .catch(() => toast(L('Ошибка сохранения','Save error')));
+    }
+    function loadWebhookSettings() {
+        api('/api/v1/enterprise/webhook').then(d => {
+            const urlEl = document.getElementById('webhookUrl');
+            if (urlEl) urlEl.value = d.webhook_url || '';
+            const secEl = document.getElementById('webhookSecretVal');
+            if (secEl) {
+                secEl.textContent = d.has_secret
+                    ? (L('Установлен (скрыт)', 'Set (hidden)'))
+                    : (L('не установлен', 'not set'));
+                secEl.style.color = d.has_secret ? 'rgba(255,255,255,.65)' : 'rgba(255,255,255,.3)';
+            }
+        }).catch(()=>{});
+    }
+    function saveWebhookSettings() {
+        const url = (document.getElementById('webhookUrl')||{}).value || '';
+        api('/api/v1/enterprise/webhook', { method:'PUT', body: JSON.stringify({ webhook_url: url }) })
+            .then(() => toast(L('Webhook сохранён','Webhook saved')))
+            .catch(() => toast(L('Ошибка сохранения','Save error')));
+    }
+    function rotateWebhookSecret() {
+        if (!confirm(L('Сгенерировать новый секрет? Старый станет недействительным.','Generate a new secret? The old one will be invalidated.'))) return;
+        api('/api/v1/enterprise/webhook/rotate-secret', { method:'POST', body:'{}' }).then(d => {
+            if (d.secret) {
+                const secEl = document.getElementById('webhookSecretVal');
+                if (secEl) { secEl.textContent = d.secret; secEl.style.color = 'rgba(255,210,80,.9)'; }
+                toast(L('Секрет сгенерирован — скопируйте его сейчас!','Secret generated — copy it now!'));
+            }
+        }).catch(() => toast(L('Ошибка','Error')));
+    }
+    function testWebhook() {
+        api('/api/v1/enterprise/webhook/test', { method:'POST', body:'{}' })
+            .then(() => { toast(L('Тест отправлен','Test sent')); setTimeout(loadWebhookDeliveries, 1500); })
+            .catch(e => toast(e.message || L('Ошибка','Error')));
+    }
+    function loadWebhookDeliveries() {
+        const el = document.getElementById('webhookDeliveries');
+        if (!el) return;
+        api('/api/v1/enterprise/webhook/deliveries?limit=30').then(d => {
+            if (!d.deliveries || !d.deliveries.length) {
+                el.innerHTML = '<div class="d2-empty"><p>' + L('Нет доставок','No deliveries yet') + '</p></div>';
+                return;
+            }
+            el.innerHTML = '<div style="overflow-x:auto"><table class="d2-table"><thead><tr><th>Event</th><th>Status</th><th data-ru="Время" data-en="Time">'+L('Время','Time')+'</th><th data-ru="Ответ" data-en="Response">'+L('Ответ','Response')+'</th></tr></thead><tbody>' +
+                d.deliveries.map(del => {
+                    const ok = del.status_code >= 200 && del.status_code < 300;
+                    const statusDot = ok
+                        ? '<span style="color:#4caf78">●</span>'
+                        : '<span style="color:#e05a5a">●</span>';
+                    const ts = new Date(del.delivered_at).toLocaleString(_lang==='en'?'en-US':'ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'2-digit'});
+                    const errText = del.error ? (' <span style="color:rgba(255,120,120,.8);font-size:.75rem">' + _e(del.error.substring(0,60)) + '</span>') : '';
+                    return '<tr><td class="mono">' + _e(del.event) + '</td><td>' + statusDot + ' ' + _e(del.status_code||'ERR') + '</td><td style="font-size:.78rem">' + ts + '</td><td>' + del.duration_ms + 'ms' + errText + '</td></tr>';
+                }).join('') +
+                '</tbody></table></div>';
+        }).catch(()=>{ if(el) el.innerHTML='<div class="d2-empty"><p>'+L('Ошибка загрузки','Load error')+'</p></div>'; });
     }
     function saveLang(val) { api('/api/v1/users/me',{method:'PUT',body:JSON.stringify({locale:val})}).then(()=>toast(L('Язык сохранён','Language saved'))); }
     function saveTheme(val) {
@@ -686,7 +938,7 @@
                 const t=new Date(a.created_at);
                 const ts=t.toLocaleDateString(_lang==='en'?'en-US':'ru-RU')+' '+t.toLocaleTimeString(_lang==='en'?'en-US':'ru-RU',{hour:'2-digit',minute:'2-digit'});
                 const dotClass = a.status==='error'?'error':a.status==='warning'?'warning':a.status==='success'?'success':'info';
-                return `<div class="d2-activity" data-type="${a.type||''}"><div class="d2-activity-dot ${dotClass}"></div><div><div class="d2-activity-title">${a.title}</div><div class="d2-activity-meta">${ts}${a.ip?' · '+a.ip:''}</div></div></div>`;
+                return `<div class="d2-activity" data-type="${_e(a.type||'')}"><div class="d2-activity-dot ${dotClass}"></div><div><div class="d2-activity-title">${_e(a.title)}</div><div class="d2-activity-meta">${ts}${a.ip?' · '+_e(a.ip):''}</div></div></div>`;
             }).join('');
             const recent=document.getElementById('recentActivity');
             const full=document.getElementById('fullActivity');
@@ -754,7 +1006,7 @@
     function disable2FA() { const p=prompt(L('Пароль:','Password:')); if(!p)return; api('/api/v1/auth/2fa/disable',{method:'POST',body:JSON.stringify({password:p})}).then(d=>{if(d.error){alert(d.error.message);return;} const u=JSON.parse(localStorage.getItem('tpid_user')||'{}');u.two_factor_enabled=false;localStorage.setItem('tpid_user',JSON.stringify(u));renderSecurity();toast(L('2FA отключена','2FA disabled'));}); }
     function resendVerification() { api('/api/v1/auth/resend-verification',{method:'POST',body:'{}'}).then(d=>{toast(d.success?L('Письмо отправлено','Email sent'):L('Ошибка','Error'))}); }
     function changePassword(e) { e.preventDefault(); const c=document.getElementById('currentPass').value,n=document.getElementById('newPass').value; if(!c||!n){toast(L('Заполните оба поля','Fill in both fields'));return false;} api('/api/v1/auth/change-password',{method:'POST',body:JSON.stringify({current_password:c,new_password:n})}).then(d=>{if(d.error){toast(d.error.message);return;} toast(L('Пароль изменён','Password changed'));setTimeout(()=>logout(),1500);});return false; }
-    function addWebhook() { const url=prompt('URL webhook:'); if(!url)return; const el=document.getElementById('webhooksList'); el.innerHTML+=`<div class="d2-row"><div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M1 12h6M17 12h6"/></svg></div><div class="d2-row-info"><div class="d2-row-title">Custom Webhook <span class="d2-badge d2-badge-ok">${L('Активен','Active')}</span></div><div class="d2-row-sub">${url}</div></div><div class="d2-row-actions"><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="this.closest('.d2-row').remove();toast(L('Удалён','Deleted'))">${L('Удалить','Delete')}</button></div></div>`; toast(L('Webhook добавлен','Webhook added')); }
+    function addWebhook() { const url=prompt('URL webhook:'); if(!url)return; const el=document.getElementById('webhooksList'); el.innerHTML+=`<div class="d2-row"><div class="d2-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M1 12h6M17 12h6"/></svg></div><div class="d2-row-info"><div class="d2-row-title">Custom Webhook <span class="d2-badge d2-badge-ok">${L('Активен','Active')}</span></div><div class="d2-row-sub">${_e(url)}</div></div><div class="d2-row-actions"><button class="d2-btn d2-btn-danger d2-btn-sm" onclick="this.closest('.d2-row').remove();toast(L('Удалён','Deleted'))">${L('Удалить','Delete')}</button></div></div>`; toast(L('Webhook добавлен','Webhook added')); }
     function saveProfile(e) { e.preventDefault(); const name=document.getElementById('settingsName').value; api('/api/v1/users/me',{method:'PUT',body:JSON.stringify({name})}).then(d=>{if(d.error){toast(d.error.message);return;} const u=JSON.parse(localStorage.getItem('tpid_user')||'{}');u.name=name;localStorage.setItem('tpid_user',JSON.stringify(u));document.getElementById('userName').textContent=name;document.getElementById('userAvatar').textContent=name.substring(0,2).toUpperCase();toast(L('Сохранено','Saved'));}); return false; }
     function exportData() { const blob=new Blob([JSON.stringify({user},null,2)],{type:'application/json'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tokenpay-id-export.json';a.click();toast(L('Экспортировано','Exported')); }
     function logout() { api('/api/v1/auth/logout',{method:'POST',body:JSON.stringify({})}).catch(()=>{}); localStorage.removeItem('tpid_user');localStorage.removeItem('tpid_token');localStorage.removeItem('tpid_refresh');sessionStorage.clear();window.location.href='/'; }
@@ -778,18 +1030,26 @@
                 const roleBadge=u.role==='admin'?'d2-badge-info':u.role==='enterprise'?'d2-badge-warn':'d2-badge-off';
                 const roleLabel=u.role==='admin'?L('Админ','Admin'):u.role==='enterprise'?'Enterprise':'User';
                 return `<tr data-email="${(u.email||'').toLowerCase()}" data-name="${(u.name||'').toLowerCase()}">
-                    <td>${u.name||'-'}</td><td class="mono">${u.email}</td>
+                    <td>${_e(u.name)||'-'}</td><td class="mono">${_e(u.email)}</td>
                     <td><span class="d2-badge ${roleBadge}">${roleLabel}</span></td>
                     <td>${u.email_verified?'<span class="d2-badge d2-badge-ok">OK</span>':'<span class="d2-badge d2-badge-off">'+L('Нет','No')+'</span>'}</td>
                     <td>${u.two_factor_enabled?'<span class="d2-badge d2-badge-ok">'+L('Да','Yes')+'</span>':'<span style="color:rgba(255,255,255,.2)">-</span>'}</td>
                     <td style="font-size:.75rem">${created}</td>
-                    <td style="white-space:nowrap"><select onchange="changeUserRole('${u.id}',this.value)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#fff;font-size:.72rem;padding:3px 6px;cursor:pointer;font-family:inherit"><option value="user" ${u.role==='user'?'selected':''}>User</option><option value="enterprise" ${u.role==='enterprise'?'selected':''}>Enterprise</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select>
-                    <button class="d2-btn d2-btn-danger d2-btn-sm" style="margin-left:4px" onclick="deleteAdminUser('${u.id}','${u.email}',this)">X</button></td></tr>`;
+                    <td style="white-space:nowrap" data-uid="${u.id}" data-role="${u.role}"><!--cdd-->
+                    <button class="d2-btn d2-btn-danger d2-btn-sm" style="margin-left:4px" onclick="deleteAdminUser('${u.id}','${u.email}',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M18 6L6 18M6 6l12 12"/></svg></button></td></tr>`;
             }).join('')+'</tbody></table>';
+        document.querySelectorAll('#adminUsersList td[data-uid]').forEach(td => {
+            const uid = td.dataset.uid, role = td.dataset.role;
+            const dd = cddCreate(
+                [{value:'user',label:'User'},{value:'enterprise',label:'Enterprise'},{value:'admin',label:'Admin'}],
+                role, v => changeUserRole(uid, v)
+            );
+            td.insertBefore(dd, td.firstChild);
+        });
     }
     function filterAdminUsers(q) { q=q.toLowerCase(); document.querySelectorAll('#adminUsersList tbody tr').forEach(tr=>{const e=tr.dataset.email||'',n=tr.dataset.name||'';tr.style.display=(!q||e.includes(q)||n.includes(q))?'':'none';}); }
     function changeUserRole(uid,role) { api('/api/v1/admin/users/'+uid,{method:'PUT',body:JSON.stringify({role})}).then(d=>{if(d.error){toast(d.error.message);loadAdminUsers();}else toast(L('Роль изменена','Role changed'));}).catch(()=>{}); }
-    function deleteAdminUser(uid,email,btn) { if(!confirm(L('Удалить','Delete')+' '+email+'?'))return; api('/api/v1/admin/users/'+uid,{method:'DELETE'}).then(d=>{if(d.success){btn.closest('tr').remove();toast(L('Удалён','Deleted'));}else toast(d.error?.message||L('Ошибка','Error'));}).catch(()=>{}); }
+    function deleteAdminUser(uid,email,btn) { if(!confirm(L('Удалить','Delete')+' '+_e(email)+'?'))return; api('/api/v1/admin/users/'+uid,{method:'DELETE'}).then(d=>{if(d.success){btn.closest('tr').remove();toast(L('Удалён','Deleted'));}else toast(d.error?.message||L('Ошибка','Error'));}).catch(()=>{}); }
     function loadAdminActivity() {
         if(!isAdmin)return;
         api('/api/v1/admin/activity?limit=200').then(d=>{
@@ -798,8 +1058,8 @@
             el.innerHTML=list.map(a=>{
                 const t=new Date(a.created_at);const ts=t.toLocaleDateString(_lang==='en'?'en-US':'ru-RU')+' '+t.toLocaleTimeString(_lang==='en'?'en-US':'ru-RU',{hour:'2-digit',minute:'2-digit'});
                 const dot=a.status==='error'?'error':a.status==='warning'?'warning':a.status==='success'?'success':'info';
-                const userLabel=a.email?`<span class="mono" style="font-size:.7rem;opacity:.4;margin-left:6px">${a.email}</span>`:'';
-                return `<div class="d2-activity" data-type="${a.type||''}"><div class="d2-activity-dot ${dot}"></div><div><div class="d2-activity-title">${a.title}${userLabel}</div><div class="d2-activity-meta">${ts}${a.ip?' · '+a.ip:''} · ${a.type||''}</div></div></div>`;
+                const userLabel=a.email?`<span class="mono" style="font-size:.7rem;opacity:.4;margin-left:6px">${_e(a.email)}</span>`:'';
+                return `<div class="d2-activity" data-type="${_e(a.type||'')}"><div class="d2-activity-dot ${dot}"></div><div><div class="d2-activity-title">${_e(a.title)}${userLabel}</div><div class="d2-activity-meta">${ts}${a.ip?' · '+_e(a.ip):''} · ${_e(a.type)||''}</div></div></div>`;
             }).join('');
         }).catch(()=>{});
     }
@@ -840,10 +1100,10 @@
                 return `<div class="d2-row" data-app-id="${a.id}">
                     <div class="d2-row-icon"><svg viewBox="0 0 18 18" fill="none" width="16" height="16"><rect x="2" y="2" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M6 9h6M9 6v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
                     <div class="d2-row-info">
-                        <div class="d2-row-title">${a.company_name} <span class="d2-badge ${a.status==='approved'?'d2-badge-ok':a.status==='rejected'?'d2-badge-danger':'d2-badge-warn'}">${a.status}</span></div>
-                        <div class="d2-row-sub">${a.user_name} · ${a.email} · ${date}${a.website?' · '+a.website:''}${a.inn?' · '+L('ИНН','TIN')+': '+a.inn:''}</div>
-                        ${a.description?'<div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:4px">'+a.description.substring(0,200)+'</div>':''}
-                        ${a.review_note?'<div style="font-size:.72rem;color:rgba(255,200,100,.5);margin-top:4px">'+L('Комментарий','Comment')+': '+a.review_note+'</div>':''}
+                        <div class="d2-row-title">${_e(a.company_name)} <span class="d2-badge ${a.status==='approved'?'d2-badge-ok':a.status==='rejected'?'d2-badge-danger':'d2-badge-warn'}">${_e(a.status)}</span></div>
+                        <div class="d2-row-sub">${_e(a.user_name)} · ${_e(a.email)} · ${date}${a.website?' · '+_e(a.website):''}${a.inn?' · '+L('ИНН','TIN')+': '+_e(a.inn):''}</div>
+                        ${a.description?'<div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-top:4px">'+_e(a.description.substring(0,200))+'</div>':''}
+                        ${a.review_note?'<div style="font-size:.72rem;color:rgba(255,200,100,.5);margin-top:4px">'+L('Комментарий','Comment')+': '+_e(a.review_note)+'</div>':''}
                     </div>
                     <div class="d2-row-actions">${isPending?`
                         <button class="d2-btn d2-btn-primary d2-btn-sm" onclick="reviewEntApp('${a.id}','approve')">${L('Одобрить','Approve')}</button>
@@ -865,11 +1125,112 @@
         }).catch(()=>alert(L('Ошибка','Error')));
     }
 
+    // ===== CUSTOM DROPDOWN =====
+    function cddCreate(options, currentValue, onChange) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'cdd';
+        const chevron = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>`;
+        const btn = document.createElement('button');
+        btn.className = 'cdd-btn';
+        btn.type = 'button';
+        const current = options.find(o => o.value === currentValue) || options[0];
+        btn.innerHTML = `<span>${current.label}</span>${chevron}`;
+        let list = null;
+        function close() { if(list){list.remove();list=null;} wrapper.classList.remove('open'); }
+        function open() {
+            list = document.createElement('div');
+            list.className = 'cdd-list';
+            options.forEach(opt => {
+                const item = document.createElement('div');
+                item.className = 'cdd-opt' + (opt.value === currentValue ? ' selected' : '');
+                item.textContent = opt.label;
+                item.addEventListener('click', e => {
+                    e.stopPropagation();
+                    currentValue = opt.value;
+                    btn.innerHTML = `<span>${opt.label}</span>${chevron}`;
+                    close();
+                    onChange(opt.value);
+                });
+                list.appendChild(item);
+            });
+            wrapper.appendChild(list);
+            wrapper.classList.add('open');
+        }
+        btn.addEventListener('click', e => { e.stopPropagation(); list ? close() : open(); });
+        wrapper.appendChild(btn);
+        return wrapper;
+    }
+    document.addEventListener('click', () => document.querySelectorAll('.cdd.open').forEach(d => { const l=d.querySelector('.cdd-list'); if(l)l.remove(); d.classList.remove('open'); }));
+
+    // ===== CAPTCHA ADMIN =====
+    let _captchaCfg = { mode: 'auto', auto_threshold: 3 };
+    function loadCaptchaConfig() {
+        if (!isAdmin) return;
+        api('/api/v1/admin/captcha/config').then(d => {
+            _captchaCfg = d;
+            document.querySelectorAll('.captcha-mode-btn').forEach(b => {
+                b.classList.toggle('d2-btn-primary', b.dataset.mode === d.mode);
+                b.classList.toggle('d2-btn-secondary', b.dataset.mode !== d.mode);
+            });
+            const thr = document.getElementById('captchaThreshold');
+            if (thr) thr.value = d.auto_threshold || 3;
+            renderCaptchaImages(d.images || []);
+        }).catch(() => {});
+    }
+    function setCaptchaMode(mode, btn) {
+        _captchaCfg.mode = mode;
+        document.querySelectorAll('.captcha-mode-btn').forEach(b => {
+            b.classList.toggle('d2-btn-primary', b.dataset.mode === mode);
+            b.classList.toggle('d2-btn-secondary', b.dataset.mode !== mode);
+        });
+    }
+    function saveCaptchaConfig() {
+        const thr = parseInt(document.getElementById('captchaThreshold')?.value || 3);
+        api('/api/v1/admin/captcha/config', { method: 'PUT', body: JSON.stringify({ mode: _captchaCfg.mode, auto_threshold: thr }) })
+            .then(d => { if (d.success) toast(L('Настройки капчи сохранены', 'Captcha settings saved')); else toast(d.error?.message || L('Ошибка', 'Error')); })
+            .catch(() => toast(L('Ошибка', 'Error')));
+    }
+    function renderCaptchaImages(images) {
+        const el = document.getElementById('captchaImagesList');
+        if (!el) return;
+        if (!images.length) { el.innerHTML = '<div style="color:rgba(255,255,255,.25);font-size:.75rem;padding:12px 0">' + L('Нет загруженных изображений', 'No uploaded images') + '</div>'; return; }
+        el.innerHTML = images.map(img => {
+            const safeSrc = (typeof img.image === 'string' && (img.image.startsWith('data:image/') || /^https?:\/\//.test(img.image))) ? img.image : '';
+            return `<div style="position:relative;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">
+            <img src="${safeSrc}" style="width:100%;height:70px;object-fit:cover;display:block">
+            <div style="padding:4px 6px;background:rgba(0,0,0,.5);font-size:.62rem;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_e(img.name)}</div>
+            <button onclick="deleteCaptchaImage('${_e(img.id)}')" style="position:absolute;top:4px;right:4px;background:rgba(200,50,50,.8);border:none;border-radius:4px;color:#fff;width:20px;height:20px;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+        </div>`;
+        }).join('');
+    }
+    function handleCaptchaImgUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        if (file.size > 1.2 * 1024 * 1024) { toast(L('Файл слишком большой (макс 1 МБ)', 'File too large (max 1 MB)')); return; }
+        const reader = new FileReader();
+        reader.onload = e => {
+            api('/api/v1/admin/captcha/images', { method: 'POST', body: JSON.stringify({ image: e.target.result, name: file.name }) })
+                .then(d => { if (d.success) { toast(L('Загружено', 'Uploaded')); loadCaptchaConfig(); } else toast(d.error?.message || L('Ошибка', 'Error')); })
+                .catch(() => toast(L('Ошибка', 'Error')));
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    }
+    function deleteCaptchaImage(id) {
+        api('/api/v1/admin/captcha/images/' + id, { method: 'DELETE' })
+            .then(() => { toast(L('Удалено', 'Deleted')); loadCaptchaConfig(); })
+            .catch(() => {});
+    }
+    function previewCaptcha() {
+        if (window.TokenPayCaptcha) TokenPayCaptcha.show().then(() => {}).catch(() => {});
+        else toast(L('captcha.js не загружен', 'captcha.js not loaded'));
+    }
+
     // ===== INIT =====
     buildSidebar();
     if(!isEnterprise&&!isAdmin){document.querySelectorAll('#sec-activity .d2-tab').forEach(t=>{if(t.textContent.trim()==='API')t.style.display='none';});}
     initUserData(); buildOverview(); loadActivity(); renderSecurity();
-    if(isAdmin){loadKeys();loadAdminUsers();loadAdminActivity();loadAdminSystem();loadEntApps('pending');}
+    if(isAdmin){loadKeys();loadAdminUsers();loadAdminActivity();loadAdminSystem();loadEntApps('pending');loadCaptchaConfig();}
     else if(isEnterprise){loadKeys();loadEnterpriseUsers();loadEntSettings();}
     else{loadSessions();loadConnectedApps();}
     refreshUserData().then(()=>{buildOverview();renderSecurity();});
@@ -883,9 +1244,9 @@
         let stars=[];
         function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;initStars();}
         function initStars(){
-            const n=Math.min(140,Math.floor(window.innerWidth*window.innerHeight/8000));
+            const n=Math.min(200,Math.floor(window.innerWidth*window.innerHeight/5000));
             stars=[];
-            for(let i=0;i<n;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,o:Math.random()*0.5+0.1,dx:(Math.random()-.5)*.35,dy:(Math.random()-.5)*.35});
+            for(let i=0;i<n;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.8+0.4,o:Math.random()*0.55+0.2,dx:(Math.random()-.5)*.25,dy:(Math.random()-.5)*.25,twinkle:Math.random()*Math.PI*2});
         }
         function draw(){
             ctx.clearRect(0,0,canvas.width,canvas.height);

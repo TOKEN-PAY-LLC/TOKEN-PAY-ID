@@ -11,6 +11,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css?v=20260316d">
+    <script src="captcha.js?v=20260316d"></script>
 </head>
 <body>
     <canvas id="particles"></canvas>
@@ -34,12 +35,12 @@
                         </div>
                         <div class="auth-field" id="emailField">
                             <label>Email</label>
-                            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
-                            <div class="field-error" data-ru="Введите корректный email" data-en="Enter a valid email">Введите корректный email</div>
+                            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" inputmode="email">
+                            <div class="field-error" id="emailFieldError" data-ru="Введите корректный email" data-en="Enter a valid email">Введите корректный email</div>
                         </div>
-                        <button type="button" class="auth-btn" onclick="goToStep2()" data-ru="Далее" data-en="Next">Далее</button>
+                        <button type="button" class="auth-btn" id="step1Btn" onclick="goToStep2()" data-ru="Далее" data-en="Next">Далее</button>
                         <div class="auth-footer">
-                            <span data-ru="Нет аккаунта?" data-en="No account?">Нет аккаунта?</span> <a href="/register" data-ru="Создать" data-en="Create one">Создать</a>
+                            <span data-ru="Нет аккаунта?" data-en="No account?">Нет аккаунта?</span> <a id="registerLink" href="/register" data-ru="Создать" data-en="Create one">Создать</a>
                         </div>
                     </div>
 
@@ -171,6 +172,23 @@
     <script src="theme-init.js?v=20260316"></script>
     <script src="script.js?v=20260316"></script>
     <script>
+    // FIX BUG-01 & BUG-02: OAuth flow detection — ensure user login, never admin login
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _isOAuth = _urlParams.get('isOAuth') === 'true';
+    const _forceLogin = _urlParams.get('force') === '1';
+    const _loginHint = _urlParams.get('login_hint') || '';
+    if (_isOAuth && window.location.pathname.includes('/admin')) {
+        window.location.href = '/login?isOAuth=true&' + _urlParams.toString();
+    }
+    // force=1 → clear all cached tokens to force fresh login (fixes admin account shown instead of user)
+    if (_forceLogin) {
+        localStorage.removeItem('tpid_token');
+        localStorage.removeItem('tp_token');
+        localStorage.removeItem('tpid_refresh');
+        sessionStorage.removeItem('tpid_token');
+        sessionStorage.removeItem('tpid_refresh');
+    }
+    
     const API = '/api/v1';
     let needs2FA = false;
     let resendTimer = null;
@@ -191,23 +209,101 @@
     function L(ru, en) { return _lang === 'en' ? en : ru; }
     applyLang();
 
-    // ===== Session persistence: redirect if already logged in =====
+    // Preserve redirect param in register link for OAuth flows
     (function() {
-        const token = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
-        if (!token) return;
-        // Quick verify
-        fetch(API + '/auth/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-        }).then(r => r.json()).then(data => {
-            if (data.valid) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const redirectTo = urlParams.get('redirect');
-                window.location.href = redirectTo ? decodeURIComponent(redirectTo) : '/dashboard';
-            }
-        }).catch(() => {});
+        const p = new URLSearchParams(window.location.search);
+        const redirect = p.get('redirect');
+        if (redirect) {
+            const regLink = document.getElementById('registerLink');
+            if (regLink) regLink.href = '/register?redirect=' + encodeURIComponent(redirect);
+        }
     })();
+
+    // ===== Session persistence: redirect if already logged in =====
+    const _redirectTarget = () => {
+        const p = new URLSearchParams(window.location.search);
+        const r = p.get('redirect');
+        if (!r) return '/dashboard';
+        const decoded = decodeURIComponent(r);
+        // Prevent open redirect: only allow relative paths or same-origin URLs
+        if (decoded.startsWith('/') && !decoded.startsWith('//')) return decoded;
+        try { const u = new URL(decoded); if (u.origin === window.location.origin) return decoded; } catch(e) {}
+        return '/dashboard';
+    };
+    (function() {
+        // Skip auto-login when force=1 (user clicked 'Switch account')
+        if (_forceLogin) { _checkLoginHint(); return; }
+        const token = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
+        const refreshTok = localStorage.getItem('tpid_refresh') || sessionStorage.getItem('tpid_refresh');
+        if (token) {
+            fetch(API + '/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) })
+                .then(r => r.json()).then(data => {
+                    if (data.valid) { window.location.href = _redirectTarget(); return; }
+                    // Access token invalid — try refresh token
+                    if (refreshTok) _tryRefresh(refreshTok);
+                    else _checkQuickLogin();
+                }).catch(() => { if (refreshTok) _tryRefresh(refreshTok); else _checkQuickLogin(); });
+        } else if (refreshTok) {
+            _tryRefresh(refreshTok);
+        } else {
+            _checkQuickLogin();
+        }
+    })();
+
+    function _tryRefresh(refreshTok) {
+        fetch(API + '/auth/refresh', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ refresh_token: refreshTok }) })
+            .then(r => r.json()).then(data => {
+                if (data.accessToken) {
+                    const isSession = !!sessionStorage.getItem('tpid_refresh');
+                    const store = isSession ? sessionStorage : localStorage;
+                    store.setItem('tpid_token', data.accessToken);
+                    store.setItem('tp_token', data.accessToken);
+                    if (data.refreshToken) store.setItem('tpid_refresh', data.refreshToken);
+                    window.location.href = _redirectTarget();
+                } else {
+                    _checkQuickLogin();
+                }
+            }).catch(() => _checkQuickLogin());
+    }
+
+    // Pre-fill email from login_hint param
+    function _checkLoginHint() {
+        if (_loginHint) {
+            document.getElementById('loginEmail').value = _loginHint;
+        }
+    }
+
+    // If last login was within 24h — skip password, go straight to code step
+    let _isQuickLogin = false;
+    function _checkQuickLogin() {
+        // Skip quick login when force=1
+        if (_forceLogin) { _checkLoginHint(); return; }
+        const lastLogin = parseInt(localStorage.getItem('tpid_last_login') || '0');
+        const savedUser = (() => { try { return JSON.parse(localStorage.getItem('tpid_user') || 'null'); } catch(e) { return null; } })();
+        if (Date.now() - lastLogin < 24 * 60 * 60 * 1000 && savedUser && savedUser.email) {
+            _isQuickLogin = true;
+            document.getElementById('loginEmail').value = savedUser.email;
+            _goQuickStep();
+        } else {
+            _checkLoginHint();
+        }
+    }
+    async function _goQuickStep() {
+        const email = document.getElementById('loginEmail').value.trim();
+        if (!email) return;
+        // Show a quick-login banner and jump straight to code step
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step3').classList.add('active');
+        document.getElementById('step3EmailText').textContent = email;
+        document.getElementById('emailCode').value = '';
+        // Auto-send code
+        try {
+            await fetch(API + '/auth/send-code', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, type:'login' }) });
+        } catch(e) {}
+        if (resendTimer) clearInterval(resendTimer);
+        resendTimer = startResendTimer('resendCodeBtn');
+        setTimeout(() => document.getElementById('emailCode').focus(), 150);
+    }
 
     // Show banner from URL params
     (function() {
@@ -232,14 +328,18 @@
         }
     })();
 
-    function goToStep2() {
-        const email = document.getElementById('loginEmail').value.trim();
-        if (!email || !email.includes('@')) {
+    async function goToStep2() {
+        const raw = document.getElementById('loginEmail').value.trim();
+        const errEl = document.getElementById('emailFieldError');
+        document.getElementById('emailField').classList.remove('error');
+        errEl.style.display = 'none';
+
+        if (!raw || !raw.includes('@')) {
             document.getElementById('emailField').classList.add('error');
+            errEl.style.display = 'block';
             return;
         }
-        document.getElementById('emailField').classList.remove('error');
-        document.getElementById('step2EmailText').textContent = email;
+        document.getElementById('step2EmailText').textContent = raw;
         document.getElementById('step1').classList.remove('active');
         document.getElementById('step2').classList.add('active');
         setTimeout(() => document.getElementById('loginPassword').focus(), 100);
@@ -252,7 +352,12 @@
     setTimeout(() => document.getElementById('loginEmail').focus(), 200);
     function backToStep2() {
         document.getElementById('step3').classList.remove('active');
-        document.getElementById('step2').classList.add('active');
+        if (_isQuickLogin) {
+            _isQuickLogin = false;
+            document.getElementById('step1').classList.add('active');
+        } else {
+            document.getElementById('step2').classList.add('active');
+        }
     }
     function backToStep3() {
         document.getElementById('step4').classList.remove('active');
@@ -303,7 +408,8 @@
             div.onmouseenter = () => { div.style.background='rgba(255,255,255,.06)'; div.style.borderColor='rgba(255,255,255,.12)'; };
             div.onmouseleave = () => { div.style.background='rgba(255,255,255,.03)'; div.style.borderColor='rgba(255,255,255,.06)'; };
             const initials = (a.name || a.email).substring(0,2).toUpperCase();
-            div.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);flex-shrink:0">' + initials + '</div><div style="flex:1;min-width:0"><div style="font-size:.82rem;color:rgba(255,255,255,.7);font-weight:500">' + (a.name||'') + '</div><div style="font-size:.75rem;color:rgba(255,255,255,.3);overflow:hidden;text-overflow:ellipsis">' + a.email + '</div></div>';
+            const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            div.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);flex-shrink:0">' + _esc(initials) + '</div><div style="flex:1;min-width:0"><div style="font-size:.82rem;color:rgba(255,255,255,.7);font-weight:500">' + _esc(a.name) + '</div><div style="font-size:.75rem;color:rgba(255,255,255,.3);overflow:hidden;text-overflow:ellipsis">' + _esc(a.email) + '</div></div>';
             div.onclick = () => { document.getElementById('loginEmail').value = a.email; goToStep2(); };
             list.appendChild(div);
         });
@@ -335,6 +441,11 @@
         btn.classList.add('auth-btn-loading');
         btn.disabled = true;
         errEl.style.display = 'none';
+
+        if (window.TokenPayCaptcha) {
+            const ct = await TokenPayCaptcha.check();
+            if (ct === undefined) { btn.classList.remove('auth-btn-loading'); btn.disabled = false; return; }
+        }
 
         try {
             const res = await fetch(API + '/auth/login', {
@@ -377,6 +488,14 @@
     async function resendLoginCode() {
         const email = document.getElementById('loginEmail').value.trim();
         const pass = document.getElementById('loginPassword').value;
+        if (_isQuickLogin) {
+            try {
+                await fetch(API + '/auth/send-code', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, type:'login' }) });
+            } catch(e) {}
+            if (resendTimer) clearInterval(resendTimer);
+            resendTimer = startResendTimer('resendCodeBtn');
+            return;
+        }
         if (!email || !pass) return;
         try {
             await fetch(API + '/auth/login', {
@@ -386,11 +505,13 @@
             });
             if (resendTimer) clearInterval(resendTimer);
             resendTimer = startResendTimer('resendCodeBtn');
+            setTimeout(() => document.getElementById('emailCode').focus(), 100);
         } catch(e) {}
     }
 
-    // Step 3 → submit email code (+ maybe go to 2FA)
+    // Step 3 → submit email code
     async function submitEmailCode() {
+        if (_isQuickLogin) { submitQuickCode(); return; }
         const btn = document.getElementById('emailCodeBtn');
         const email = document.getElementById('loginEmail').value.trim();
         const pass = document.getElementById('loginPassword').value;
@@ -416,7 +537,6 @@
             });
             const data = await res.json();
 
-            // Need 2FA
             if (data.requires_2fa) {
                 btn.classList.remove('auth-btn-loading');
                 btn.disabled = false;
@@ -434,7 +554,6 @@
                 return;
             }
 
-            // Success — save and redirect
             completeLogin(data, isGuest);
         } catch (err) {
             errEl.textContent = L('Ошибка соединения', 'Connection error');
@@ -483,6 +602,47 @@
         return false;
     }
 
+    // Step 3 quick-login submit (no password path)
+    async function submitQuickCode() {
+        const btn = document.getElementById('emailCodeBtn');
+        const email = document.getElementById('loginEmail').value.trim();
+        const code = document.getElementById('emailCode').value.replace(/\D/g, '').trim();
+        const errEl = document.getElementById('emailCodeError');
+        const isGuest = document.getElementById('guestDevice').checked;
+        if (!code || code.length < 6) { errEl.textContent = L('Введите 6-значный код','Enter 6-digit code'); errEl.style.display='block'; return; }
+        btn.classList.add('auth-btn-loading'); btn.disabled = true; errEl.style.display='none';
+        try {
+            const res = await fetch(API + '/auth/quick-login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, email_code: code }) });
+            const data = await res.json();
+            if (data.requires_2fa) {
+                btn.classList.remove('auth-btn-loading'); btn.disabled = false;
+                document.getElementById('step3').classList.remove('active');
+                document.getElementById('step4').classList.add('active');
+                setTimeout(() => document.getElementById('twoFactorCode').focus(), 100);
+                return;
+            }
+            if (!res.ok) {
+                if (data.error?.code === 'quick_login_expired') {
+                    // Fall back to full login
+                    _isQuickLogin = false;
+                    document.getElementById('step3').classList.remove('active');
+                    document.getElementById('step1').classList.add('active');
+                    btn.classList.remove('auth-btn-loading'); btn.disabled = false;
+                    return;
+                }
+                errEl.textContent = data.error?.message || L('Неверный код','Invalid code');
+                errEl.style.display = 'block';
+                btn.classList.remove('auth-btn-loading'); btn.disabled = false;
+                return;
+            }
+            completeLogin(data, isGuest);
+        } catch(err) {
+            errEl.textContent = L('Ошибка соединения','Connection error');
+            errEl.style.display = 'block';
+            btn.classList.remove('auth-btn-loading'); btn.disabled = false;
+        }
+    }
+
     function completeLogin(data, isGuest) {
         if (isGuest) {
             sessionStorage.setItem('tpid_user', JSON.stringify(data.user));
@@ -497,10 +657,8 @@
             saveAccount(data.user);
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirectTo = urlParams.get('redirect');
-        if (redirectTo) { window.location.href = decodeURIComponent(redirectTo); return; }
-        window.location.href = '/dashboard';
+        localStorage.setItem('tpid_last_login', String(Date.now()));
+        window.location.href = _redirectTarget();
     }
 
     // ===== FORGOT PASSWORD FLOW =====

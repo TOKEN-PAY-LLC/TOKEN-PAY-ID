@@ -7,15 +7,15 @@ services:
     restart: unless-stopped
     environment:
       - PORT=8080
-      - DB_HOST=5.23.55.152
-      - DB_PORT=5432
-      - DB_NAME=default_db
-      - DB_USER=gen_user
-      - DB_PASSWORD=93JJFQLAYC=Uo)
-      - JWT_SECRET=${JWT_SECRET:-tpid_jwt_production_secret_2026}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-tpid_refresh_production_secret_2026}
-      - ADMIN_EMAIL=info@tokenpay.space
-      - ADMIN_PASSWORD=Zdcgbjm812.
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-info@tokenpay.space}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - CORS_ORIGIN=https://tokenpay.space
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}

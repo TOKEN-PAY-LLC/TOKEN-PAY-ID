@@ -1,5 +1,8 @@
 const nodemailer = require('nodemailer');
 
+// HTML escape to prevent injection in email templates
+function _h(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
 // ===== SMTP CONFIG =====
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.timeweb.ru';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT) || 465;
@@ -151,73 +154,73 @@ body{margin:0;padding:0;background:#050505;font-family:'Comfortaa','Segoe UI',Ro
 
 function verificationCodeTemplate(name, code, expiresMin = 10, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.verifyTitle}</h1><p>${l.hi(name)}</p><p>${l.verifyText}</p>
-<div class="cb"><div class="cv">${code}</div><div class="cl">${l.validFor(expiresMin)}</div></div>
+    return baseTemplate(`<h1>${l.verifyTitle}</h1><p>${l.hi(_h(name))}</p><p>${l.verifyText}</p>
+<div class="cb"><div class="cv">${_h(code)}</div><div class="cl">${l.validFor(expiresMin)}</div></div>
 <p>${l.ignoreIfNot}</p><div class="wn"><p>${l.doNotShare}</p></div>`, String(code));
 }
 
 function loginNotificationTemplate(name, ip, device, time, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.loginTitle}</h1><p>${l.loginText(name)}</p>
-<div class="in"><div class="ir"><span class="il">${l.ip}</span><span class="iv">${ip}</span></div>
-<div class="ir"><span class="il">${l.device}</span><span class="iv">${device}</span></div>
-<div class="ir"><span class="il">${l.time}</span><span class="iv">${time}</span></div></div>
-<p>${l.loginWarn}</p><div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.loginBtn}</a></div>`, ip);
+    return baseTemplate(`<h1>${l.loginTitle}</h1><p>${l.loginText(_h(name))}</p>
+<div class="in"><div class="ir"><span class="il">${l.ip}</span><span class="iv">${_h(ip)}</span></div>
+<div class="ir"><span class="il">${l.device}</span><span class="iv">${_h(device)}</span></div>
+<div class="ir"><span class="il">${l.time}</span><span class="iv">${_h(time)}</span></div></div>
+<p>${l.loginWarn}</p><div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.loginBtn}</a></div>`, _h(ip));
 }
 
 function welcomeTemplate(name, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.welcomeTitle}</h1><p>${l.welcomeText(name)}</p>
+    return baseTemplate(`<h1>${l.welcomeTitle}</h1><p>${l.welcomeText(_h(name))}</p>
 <div class="in"><div class="ir"><span class="il">\uD83D\uDD10</span><span class="iv">${l.feat1}</span></div>
 <div class="ir"><span class="il">\uD83D\uDD11</span><span class="iv">${l.feat2}</span></div>
 <div class="ir"><span class="il">\uD83D\uDCCA</span><span class="iv">${l.feat3}</span></div>
 <div class="ir"><span class="il">\uD83D\uDEE1\uFE0F</span><span class="iv">${l.feat4}</span></div></div>
 <div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.welcomeBtn}</a></div>
-<p>${l.welcomeTip}</p>`, name);
+<p>${l.welcomeTip}</p>`, _h(name));
 }
 
 function passwordResetTemplate(name, code, expiresMin = 15, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.resetTitle}</h1><p>${l.resetText(name)}</p>
-<div class="cb"><div class="cv">${code}</div><div class="cl">${l.validFor(expiresMin)}</div></div>
+    return baseTemplate(`<h1>${l.resetTitle}</h1><p>${l.resetText(_h(name))}</p>
+<div class="cb"><div class="cv">${_h(code)}</div><div class="cl">${l.validFor(expiresMin)}</div></div>
 <p>${l.resetIgnore}</p><div class="wn"><p>${l.resetWarn}</p></div>`, String(code));
 }
 
 function oauthApprovalTemplate(name, appName, scopes, time, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.oauthTitle}</h1><p>${l.oauthText(name)}</p>
-<div class="in"><div class="ir"><span class="il">${l.app}</span><span class="iv">${appName}</span></div>
-<div class="ir"><span class="il">${l.scopes}</span><span class="iv">${scopes}</span></div>
-<div class="ir"><span class="il">${l.time}</span><span class="iv">${time}</span></div></div>
-<p>${l.oauthWarn}</p><div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.oauthBtn}</a></div>`, appName);
+    return baseTemplate(`<h1>${l.oauthTitle}</h1><p>${l.oauthText(_h(name))}</p>
+<div class="in"><div class="ir"><span class="il">${l.app}</span><span class="iv">${_h(appName)}</span></div>
+<div class="ir"><span class="il">${l.scopes}</span><span class="iv">${_h(scopes)}</span></div>
+<div class="ir"><span class="il">${l.time}</span><span class="iv">${_h(time)}</span></div></div>
+<p>${l.oauthWarn}</p><div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.oauthBtn}</a></div>`, _h(appName));
 }
 
 function apiKeyCreatedTemplate(name, keyName, publicKey, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.keyTitle}</h1><p>${l.keyText(name)}</p>
-<div class="in"><div class="ir"><span class="il">${l.keyName}</span><span class="iv">${keyName}</span></div>
-<div class="ir"><span class="il">Public Key</span><span class="iv" style="font-family:'Comfortaa',monospace;font-size:10px">${publicKey}</span></div></div>
-<div class="wn"><p>${l.keyWarn}</p></div>`, keyName);
+    return baseTemplate(`<h1>${l.keyTitle}</h1><p>${l.keyText(_h(name))}</p>
+<div class="in"><div class="ir"><span class="il">${l.keyName}</span><span class="iv">${_h(keyName)}</span></div>
+<div class="ir"><span class="il">Public Key</span><span class="iv" style="font-family:'Comfortaa',monospace;font-size:10px">${_h(publicKey)}</span></div></div>
+<div class="wn"><p>${l.keyWarn}</p></div>`, _h(keyName));
 }
 
 function enterpriseApprovedTemplate(name, company, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.entApprovedTitle}</h1><p>${l.entApprovedText(name, company)}</p>
-<div class="in"><div class="ir"><span class="il">\uD83C\uDFE2</span><span class="iv">${company}</span></div>
+    return baseTemplate(`<h1>${l.entApprovedTitle}</h1><p>${l.entApprovedText(_h(name), _h(company))}</p>
+<div class="in"><div class="ir"><span class="il">\uD83C\uDFE2</span><span class="iv">${_h(company)}</span></div>
 <div class="ir"><span class="il">\uD83D\uDD11</span><span class="iv">API & OAuth 2.0</span></div></div>
-<div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.entBtn}</a></div>`, company);
+<div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.entBtn}</a></div>`, _h(company));
 }
 
 function enterpriseRejectedTemplate(name, company, reason, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.entRejectedTitle}</h1><p>${l.entRejectedText(name, company, reason)}</p>`, company);
+    return baseTemplate(`<h1>${l.entRejectedTitle}</h1><p>${l.entRejectedText(_h(name), _h(company), _h(reason))}</p>`, _h(company));
 }
 
 function securityAlertTemplate(name, action, ip, lang = 'ru') {
     const l = s(lang);
-    return baseTemplate(`<h1>${l.securityTitle}</h1><p>${l.securityText(name, action)}</p>
-<div class="in"><div class="ir"><span class="il">${l.ip || 'IP'}</span><span class="iv">${ip}</span></div></div>
-<div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.securityBtn}</a></div>`, action);
+    return baseTemplate(`<h1>${l.securityTitle}</h1><p>${l.securityText(_h(name), _h(action))}</p>
+<div class="in"><div class="ir"><span class="il">${l.ip || 'IP'}</span><span class="iv">${_h(ip)}</span></div></div>
+<div class="bw"><a href="${SITE_URL}/dashboard" class="bt">${l.securityBtn}</a></div>`, _h(action));
 }
 
 // ===== SEND =====

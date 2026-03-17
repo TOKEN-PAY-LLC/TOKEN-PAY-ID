@@ -1,12 +1,13 @@
 /**
- * TOKEN PAY ID Widget v1.0
- * Embed: <script src="https://tokenpay.space/tpid-widget.js" data-client-id="YOUR_CLIENT_ID"></script>
+ * TOKEN PAY ID Widget v1.2.0
+ * Embed: <script src="https://tokenpay.space/sdk/tpid-widget.js" data-client-id="YOUR_CLIENT_ID"></script>
  * Manual: window.TPID.init({ clientId, onSuccess, onError, lang })
  *         window.TPID.open()
  */
 (function (w, d) {
   'use strict';
 
+  const WIDGET_VERSION = '1.2.0';
   const API = 'https://tokenpay.space/api/v1';
   const ORIGIN = 'https://tokenpay.space';
   const LS_KEY = 'tpid_saved_accounts';
@@ -79,12 +80,33 @@
 @keyframes tpidShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .tpid-shake{animation:tpidShake .35s}
 
-/* ─── Button ─────────────────────────────────────────────────────────────── */
+/* ─── Standard Button ────────────────────────────────────────────────────── */
 .tpid-trigger-btn{display:inline-flex;align-items:center;gap:10px;padding:11px 20px;background:#000;color:#fff;border:1.5px solid rgba(255,255,255,.15);border-radius:10px;font-family:'Comfortaa',system-ui,sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap;position:relative;overflow:hidden}
 .tpid-trigger-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.06),transparent);opacity:0;transition:opacity .2s}
 .tpid-trigger-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.25);border-color:rgba(255,255,255,.3)}
 .tpid-trigger-btn:hover::before{opacity:1}
+.tpid-trigger-btn .tpid-btn-icon{width:20px;height:20px;flex-shrink:0}
 .tpid-trigger-btn img{width:20px;height:20px;object-fit:contain}
+
+/* ─── Round Icon Button (circle, no text) ────────────────────────────────── */
+.tpid-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;background:#000;border:1.5px solid rgba(255,255,255,.15);border-radius:50%;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.tpid-icon-btn::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.12),transparent 70%);opacity:0;transition:opacity .25s}
+.tpid-icon-btn:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 6px 24px rgba(0,0,0,.35);border-color:rgba(255,255,255,.35)}
+.tpid-icon-btn:hover::before{opacity:1}
+.tpid-icon-btn:active{transform:translateY(0) scale(.97)}
+.tpid-icon-btn .tpid-btn-icon{width:22px;height:22px}
+.tpid-icon-btn.tpid-icon-sm{width:36px;height:36px}
+.tpid-icon-btn.tpid-icon-sm .tpid-btn-icon{width:18px;height:18px}
+.tpid-icon-btn.tpid-icon-lg{width:52px;height:52px}
+.tpid-icon-btn.tpid-icon-lg .tpid-btn-icon{width:26px;height:26px}
+
+/* ─── Logo Button (transparent bg, just logo+text) ──────────────────────── */
+.tpid-logo-btn{display:inline-flex;align-items:center;gap:10px;padding:10px 18px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.12);border-radius:12px;font-family:'Comfortaa',system-ui,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .25s;text-decoration:none;white-space:nowrap;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.tpid-logo-btn:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.04);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.tpid-logo-btn:active{transform:translateY(0)}
+.tpid-logo-btn .tpid-btn-icon{width:20px;height:20px;flex-shrink:0}
+.tpid-logo-btn .tpid-btn-logo{height:16px;width:auto;opacity:.9}
+.tpid-logo-btn img{height:16px;width:auto;object-fit:contain;opacity:.9}
 
 /* ─── Light theme ────────────────────────────────────────────────────────── */
 .tpid-light .tpid-modal{background:rgba(255,255,255,.97);border-color:rgba(0,0,0,.08);box-shadow:0 0 0 1px rgba(0,0,0,.04),0 40px 100px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.8)}
@@ -131,6 +153,11 @@
 .tpid-light .tpid-success p{color:rgba(0,0,0,.4)}
 .tpid-light .tpid-trigger-btn{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}
 .tpid-light .tpid-trigger-btn:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);border-color:rgba(0,0,0,.2)}
+.tpid-light .tpid-icon-btn{background:#fff;border-color:rgba(0,0,0,.1);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.tpid-light .tpid-icon-btn:hover{box-shadow:0 6px 24px rgba(0,0,0,.12);border-color:rgba(0,0,0,.2)}
+.tpid-light .tpid-icon-btn .tpid-btn-icon{color:#111}
+.tpid-light .tpid-logo-btn{color:#111;border-color:rgba(0,0,0,.1)}
+.tpid-light .tpid-logo-btn:hover{border-color:rgba(0,0,0,.2);background:rgba(0,0,0,.02)}
 @media(max-width:480px){.tpid-modal{padding:32px 24px 28px;border-radius:20px;max-width:calc(100vw - 32px)}.tpid-logo-area img{max-width:180px}.tpid-input{font-size:16px;padding:14px}}
 `;
 
@@ -357,6 +384,7 @@
   }
 
   function $id(id) { return d.getElementById(id); }
+  function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
   function showStep(n) {
     [1,2,3,4,5].forEach(i => {
@@ -427,9 +455,9 @@
       const item = d.createElement('div');
       item.className = 'tpid-saved-item';
       item.innerHTML =
-        '<div class="tpid-saved-av">' + initials + '</div>' +
-        '<div class="tpid-saved-info"><div class="tpid-saved-name">' + (a.name || '') + '</div>' +
-        '<div class="tpid-saved-email">' + a.email + '</div></div>' +
+        '<div class="tpid-saved-av">' + _esc(initials) + '</div>' +
+        '<div class="tpid-saved-info"><div class="tpid-saved-name">' + _esc(a.name || '') + '</div>' +
+        '<div class="tpid-saved-email">' + _esc(a.email) + '</div></div>' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>';
       item.onclick = function() {
         $id('tpid-email').value = a.email;
@@ -663,6 +691,7 @@
 
   // ─── Public API ──────────────────────────────────────────────────────────────
   var TPID = {
+    version: WIDGET_VERSION,
     /**
      * @param {object} cfg
      * @param {string} cfg.clientId
@@ -681,6 +710,21 @@
       if (cfg && cfg.autoButton !== false) {
         this._autoButton();
       }
+      // Auto-update check (non-blocking)
+      this._checkUpdate();
+    },
+
+    _checkUpdate: function() {
+      try {
+        fetch(API + '/sdk/version').then(function(r) { return r.json(); }).then(function(data) {
+          if (data.widget && data.widget !== WIDGET_VERSION) {
+            console.warn('[TPID] Widget update available: v' + WIDGET_VERSION + ' → v' + data.widget + '. Update: ' + (data.widget_url || ORIGIN + '/sdk/tpid-widget.js'));
+            if (data.breaking_changes) {
+              console.error('[TPID] BREAKING CHANGES in new version. Please update immediately.');
+            }
+          }
+        }).catch(function() {});
+      } catch(e) {}
     },
 
     setTheme: function(theme) {
@@ -721,27 +765,146 @@
       }
     },
 
-    /** Create a default "Sign in with TOKEN PAY ID" button in the given container selector */
+    /**
+     * Inline SVG shield icon — no external image dependency
+     */
+    _shieldSVG: function(size) {
+      size = size || 20;
+      return '<svg class="tpid-btn-icon" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M12 2L3 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" fill="currentColor" opacity=".15"/>' +
+        '<path d="M12 2L3 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>' +
+        '<path d="M9.5 12.5l2 2 3.5-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
+        '</svg>';
+    },
+
+    /**
+     * Render a standard "Sign in with TOKEN PAY ID" button
+     * @param {string|Element} selector - CSS selector or DOM element
+     * @param {object} [options] - { label, theme, size, onClick }
+     */
     renderButton: function(selector, options) {
       var container = typeof selector === 'string' ? d.querySelector(selector) : selector;
-      if (!container) return;
+      if (!container) return null;
       var opts = options || {};
       var btn = d.createElement('button');
       btn.className = 'tpid-trigger-btn';
       btn.type = 'button';
-      btn.innerHTML =
-        '<img src="' + ORIGIN + '/tokenpay-icon.png" alt="TOKEN PAY ID" onerror="this.style.display=\'none\'">' +
-        '<span>' + (opts.label || t('btnLabel')) + '</span>';
-      if (_theme === 'light') btn.classList.add('tpid-light');
-      btn.onclick = function() { TPID.open(); };
+      btn.innerHTML = this._shieldSVG(20) + '<span>' + _esc(opts.label || t('btnLabel')) + '</span>';
+      if (opts.theme === 'light' || (_theme === 'light' && opts.theme !== 'dark')) btn.classList.add('tpid-light');
+      btn.onclick = opts.onClick || function() { TPID.open(); };
       container.appendChild(btn);
+      return btn;
+    },
+
+    /**
+     * Render a round icon-only button (perfect for navbars)
+     * @param {string|Element} selector
+     * @param {object} [options] - { size: 'sm'|'md'|'lg', theme, onClick, title }
+     */
+    renderIconButton: function(selector, options) {
+      var container = typeof selector === 'string' ? d.querySelector(selector) : selector;
+      if (!container) return null;
+      var opts = options || {};
+      var sizes = { sm: 18, md: 22, lg: 26 };
+      var iconSize = sizes[opts.size] || sizes.md;
+      var btn = d.createElement('button');
+      btn.className = 'tpid-icon-btn';
+      if (opts.size === 'sm') btn.classList.add('tpid-icon-sm');
+      if (opts.size === 'lg') btn.classList.add('tpid-icon-lg');
+      btn.type = 'button';
+      btn.title = opts.title || t('btnLabel');
+      btn.setAttribute('aria-label', opts.title || t('btnLabel'));
+      btn.innerHTML = this._shieldSVG(iconSize);
+      if (opts.theme === 'light' || (_theme === 'light' && opts.theme !== 'dark')) btn.classList.add('tpid-light');
+      btn.onclick = opts.onClick || function() { TPID.open(); };
+      container.appendChild(btn);
+      return btn;
+    },
+
+    /**
+     * Render a transparent logo button (TOKEN PAY ID text + shield icon)
+     * @param {string|Element} selector
+     * @param {object} [options] - { label, theme, onClick }
+     */
+    renderLogoButton: function(selector, options) {
+      var container = typeof selector === 'string' ? d.querySelector(selector) : selector;
+      if (!container) return null;
+      var opts = options || {};
+      var btn = d.createElement('button');
+      btn.className = 'tpid-logo-btn';
+      btn.type = 'button';
+      btn.innerHTML = this._shieldSVG(20) + '<span>' + _esc(opts.label || 'TOKEN PAY ID') + '</span>';
+      if (opts.theme === 'light' || (_theme === 'light' && opts.theme !== 'dark')) btn.classList.add('tpid-light');
+      btn.onclick = opts.onClick || function() { TPID.open(); };
+      container.appendChild(btn);
+      return btn;
+    },
+
+    /**
+     * OAuth popup flow — opens OAuth consent in popup, resolves with auth code
+     * Enterprise calls: TPID.loginWithOAuth({ clientId, redirectUri, scope, state })
+     * @returns {Promise<{code, state}>}
+     */
+    loginWithOAuth: function(options) {
+      var opts = options || _cfg;
+      var clientId = opts.clientId || _cfg.clientId;
+      var redirectUri = opts.redirectUri || _cfg.redirectUri;
+      var scope = opts.scope || 'profile';
+      var state = opts.state || ('tpid_' + Math.random().toString(36).slice(2, 10));
+      var codeChallenge = opts.codeChallenge || '';
+      var codeChallengeMethod = opts.codeChallengeMethod || 'S256';
+      if (!clientId) {
+        return Promise.reject(new Error('clientId is required'));
+      }
+      var url = ORIGIN + '/api/v1/oauth/authorize?response_type=code&client_id=' +
+        encodeURIComponent(clientId) + '&scope=' + encodeURIComponent(scope) +
+        '&state=' + encodeURIComponent(state) +
+        '&prompt=login';
+      if (redirectUri) url += '&redirect_uri=' + encodeURIComponent(redirectUri);
+      if (codeChallenge) url += '&code_challenge=' + encodeURIComponent(codeChallenge) + '&code_challenge_method=' + encodeURIComponent(codeChallengeMethod);
+
+      var w2 = w.open(url, 'tpid_oauth', 'width=480,height=640,menubar=no,toolbar=no,location=yes,status=no');
+      return new Promise(function(resolve, reject) {
+        var resolved = false;
+        function onMessage(ev) {
+          if (!ev.data || ev.data.type !== 'tpid_oauth_code') return;
+          resolved = true;
+          w.removeEventListener('message', onMessage);
+          clearInterval(pollTimer);
+          if (ev.data.error) {
+            reject(new Error(ev.data.error));
+          } else {
+            resolve({ code: ev.data.code, state: ev.data.state, redirect_url: ev.data.redirect_url });
+          }
+        }
+        w.addEventListener('message', onMessage);
+        var pollTimer = setInterval(function() {
+          if (!w2 || w2.closed) {
+            clearInterval(pollTimer);
+            w.removeEventListener('message', onMessage);
+            if (!resolved) reject(new Error('popup_closed'));
+          }
+        }, 500);
+      });
     },
 
     _autoButton: function() {
       var containers = d.querySelectorAll('[data-tpid-button]');
+      var self = this;
       containers.forEach(function(c) {
-        var label = c.getAttribute('data-tpid-label') || 'Войти через TOKEN PAY ID';
-        TPID.renderButton(c, { label: label });
+        var variant = c.getAttribute('data-tpid-button') || 'standard';
+        var label = c.getAttribute('data-tpid-label');
+        var size = c.getAttribute('data-tpid-size') || 'md';
+        var btnTheme = c.getAttribute('data-tpid-theme');
+        var opts = { theme: btnTheme, size: size };
+        if (label) opts.label = label;
+        if (variant === 'icon') {
+          self.renderIconButton(c, opts);
+        } else if (variant === 'logo') {
+          self.renderLogoButton(c, opts);
+        } else {
+          self.renderButton(c, opts);
+        }
       });
     }
   };

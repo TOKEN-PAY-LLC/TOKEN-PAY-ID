@@ -13,6 +13,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css?v=20260316d">
+    <script src="captcha.js?v=20260316d"></script>
 </head>
 <body>
     <canvas id="particles"></canvas>
@@ -41,7 +42,7 @@
                         </div>
                         <button type="button" class="auth-btn" onclick="regGoStep2()" data-ru="Далее" data-en="Next">Далее</button>
                         <div class="auth-footer">
-                            <span data-ru="Уже есть аккаунт?" data-en="Already have an account?">Уже есть аккаунт?</span> <a href="/login" data-ru="Войти" data-en="Sign in">Войти</a>
+                            <span data-ru="Уже есть аккаунт?" data-en="Already have an account?">Уже есть аккаунт?</span> <a id="loginLink" href="/login" data-ru="Войти" data-en="Sign in">Войти</a>
                         </div>
                     </div>
 
@@ -134,6 +135,16 @@
     function L(ru, en) { return _lang === 'en' ? en : ru; }
     applyLang();
 
+    // Preserve redirect param in login link for OAuth flows
+    (function() {
+        const p = new URLSearchParams(window.location.search);
+        const redirect = p.get('redirect');
+        if (redirect) {
+            const ll = document.getElementById('loginLink');
+            if (ll) ll.href = '/login?redirect=' + encodeURIComponent(redirect);
+        }
+    })();
+
     // ===== Session persistence: redirect if already logged in =====
     (function() {
         const token = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
@@ -143,7 +154,15 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token })
         }).then(r => r.json()).then(data => {
-            if (data.valid) window.location.href = '/dashboard';
+            if (data.valid) {
+                const _rp = new URLSearchParams(window.location.search).get('redirect');
+                if (_rp) {
+                    const d = decodeURIComponent(_rp);
+                    if (d.startsWith('/') && !d.startsWith('//')) { window.location.href = d; return; }
+                    try { const u = new URL(d); if (u.origin === window.location.origin) { window.location.href = d; return; } } catch(e) {}
+                }
+                window.location.href = '/dashboard';
+            }
         }).catch(() => {});
     })();
 
@@ -228,6 +247,11 @@
 
         btn.classList.add('auth-btn-loading');
         btn.disabled = true;
+
+        if (window.TokenPayCaptcha) {
+            const ct = await TokenPayCaptcha.check();
+            if (ct === undefined) { btn.classList.remove('auth-btn-loading'); btn.disabled = false; return; }
+        }
 
         try {
             const res = await fetch(API + '/auth/send-code', {
@@ -318,7 +342,14 @@
             localStorage.setItem('tpid_token', data.accessToken);
             localStorage.setItem('tpid_refresh', data.refreshToken);
             localStorage.setItem('tp_token', data.accessToken);
-            window.location.href='/dashboard';
+            const _rp = new URLSearchParams(window.location.search).get('redirect');
+            let _dest = '/dashboard';
+            if (_rp) {
+                const _d = decodeURIComponent(_rp);
+                if (_d.startsWith('/') && !_d.startsWith('//')) _dest = _d;
+                else { try { const _u = new URL(_d); if (_u.origin === window.location.origin) _dest = _d; } catch(e) {} }
+            }
+            window.location.href = _dest;
         } catch (err) {
             errEl.textContent = L('Ошибка соединения с сервером', 'Connection error');
             errEl.style.display = 'block';

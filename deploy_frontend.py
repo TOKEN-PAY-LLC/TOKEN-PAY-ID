@@ -20,6 +20,16 @@ FRONTEND_FILES = [
     'frontend/terms.html',
     'frontend/admin.html',
     'frontend/oauth-consent.html',
+    'frontend/captcha.js',
+    'frontend/script.js',
+    'frontend/oauth-widget.html',
+    'frontend/oauth-widget.js',
+    'frontend/tpid-widget.js',
+]
+
+# Nginx config
+NGINX_FILES = [
+    'nginx/nginx.conf',
 ]
 
 # Backend files to upload
@@ -28,7 +38,7 @@ BACKEND_FILES = [
     'backend/server.js',
 ]
 
-ALL_FILES = FRONTEND_FILES + BACKEND_FILES
+ALL_FILES = FRONTEND_FILES + BACKEND_FILES + NGINX_FILES
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

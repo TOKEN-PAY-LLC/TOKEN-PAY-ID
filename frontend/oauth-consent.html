@@ -235,7 +235,7 @@
         </div>
 
         <div class="consent-login-notice" id="loginNotice">
-            Нет аккаунта? <a href="/register">Зарегистрируйтесь</a>
+            Нет аккаунта? <a id="registerLink" href="/register">Зарегистрируйтесь</a>
         </div>
     </div>
 
@@ -246,13 +246,93 @@
         const redirectUri = params.get('redirect_uri');
         const scope = params.get('scope') || 'profile';
         const state = params.get('state') || '';
-        const appName = params.get('app_name') || 'Неизвестное приложение';
+        const appName = params.get('app_name') || 'Unknown App';
         const ownerName = params.get('owner_name') || '';
+        const appIcon = params.get('app_icon') || '';
+        const appDesc = params.get('app_desc') || '';
+        const codeChallenge = params.get('code_challenge') || '';
+        const codeChallengeMethod = params.get('code_challenge_method') || '';
+        const promptParam = params.get('prompt') || '';
+        const loginHint = params.get('login_hint') || '';
+        const isPopup = !!(window.opener && window.opener !== window);
 
+        // prompt=login → force re-authentication (fixes admin account bug)
+        if (promptParam === 'login') {
+            localStorage.removeItem('tp_token');
+            localStorage.removeItem('tpid_token');
+            sessionStorage.removeItem('tpid_token');
+            // Remove prompt=login from URL to avoid infinite redirect loop
+            const cleanParams = new URLSearchParams(window.location.search);
+            cleanParams.delete('prompt');
+            const cleanUrl = window.location.pathname + '?' + cleanParams.toString();
+            history.replaceState(null, '', cleanUrl);
+        }
+
+        // i18n
+        const _lang = (localStorage.getItem('tp_lang') || navigator.language || 'ru').substring(0, 2);
+        function L(ru, en) { return _lang === 'en' ? en : ru; }
+        document.title = L('Авторизация — TOKEN PAY ID', 'Authorization — TOKEN PAY ID');
+
+        // Populate app info
         document.getElementById('appName').textContent = appName;
-        document.getElementById('appOwner').textContent = ownerName ? `от ${ownerName}` : '';
+        document.getElementById('appOwner').textContent = ownerName ? L(`от ${ownerName}`, `by ${ownerName}`) : '';
+        document.querySelector('.consent-title').textContent = L('Вход через TOKEN PAY ID', 'Sign in with TOKEN PAY ID');
+        document.querySelector('.consent-subtitle').textContent = L('Приложение запрашивает доступ к вашему аккаунту', 'Application requests access to your account');
+        document.getElementById('denyBtn').textContent = L('Отклонить', 'Deny');
+        document.getElementById('allowBtn').textContent = L('Разрешить', 'Allow');
 
-        let token = localStorage.getItem('tp_token');
+        // Register link with redirect
+        const regLink = document.getElementById('registerLink');
+        regLink.href = '/register?redirect=' + encodeURIComponent(window.location.href);
+        regLink.textContent = L('Зарегистрируйтесь', 'Sign up');
+        document.getElementById('loginNotice').firstChild.textContent = L('Нет аккаунта? ', 'No account? ');
+
+        // App icon (if provided) — sanitize to prevent XSS
+        if (appIcon && /^https?:\/\//.test(appIcon)) {
+            const logoEl = document.querySelector('.consent-logo');
+            const iconImg = document.createElement('img');
+            iconImg.src = appIcon;
+            iconImg.alt = appName.replace(/[<>"'&]/g, '');
+            iconImg.onerror = function() { this.parentElement.innerHTML = '<img src="tokenpay-logo.png" alt="TOKEN PAY">'; };
+            iconImg.style.cssText = 'width:100%;height:100%;object-fit:contain';
+            logoEl.innerHTML = '';
+            logoEl.appendChild(iconImg);
+        }
+
+        // Dynamic scopes
+        const SCOPE_MAP = {
+            profile:  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', ru: 'Имя и email', en: 'Name and email' },
+            email:    { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M22 7l-10 7L2 7"/></svg>', ru: 'Email адрес', en: 'Email address' },
+            openid:   { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', ru: 'Статус верификации', en: 'Verification status' },
+        };
+        const scopeContainer = document.querySelector('.consent-scope');
+        const scopeTitle = document.querySelector('.consent-scope-title');
+        scopeTitle.textContent = L('Запрашиваемые разрешения', 'Requested permissions');
+        // Clear hardcoded scopes and render dynamically
+        scopeContainer.querySelectorAll('.consent-scope-item').forEach(el => el.remove());
+        const scopes = scope.split(/[\s,]+/).filter(Boolean);
+        const rendered = new Set();
+        scopes.forEach(s => {
+            const key = s.toLowerCase();
+            if (rendered.has(key)) return;
+            rendered.add(key);
+            const info = SCOPE_MAP[key] || { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>', ru: key, en: key };
+            const div = document.createElement('div');
+            div.className = 'consent-scope-item';
+            div.innerHTML = info.icon + ' ' + L(info.ru, info.en);
+            scopeContainer.appendChild(div);
+        });
+        // Always show profile if not explicitly listed
+        if (!rendered.has('profile')) {
+            const info = SCOPE_MAP.profile;
+            const div = document.createElement('div');
+            div.className = 'consent-scope-item';
+            div.innerHTML = info.icon + ' ' + L(info.ru, info.en);
+            scopeContainer.insertBefore(div, scopeTitle.nextSibling);
+        }
+
+        // Token — check both tp_token and tpid_token for consistency
+        let token = localStorage.getItem('tp_token') || localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
 
         function showError(msg) {
             const box = document.getElementById('errorBox');
@@ -260,11 +340,21 @@
             box.style.display = 'block';
         }
 
+        function _loginRedirect() {
+            const returnUrl = encodeURIComponent(window.location.href);
+            let loginUrl = `login?isOAuth=true&redirect=${returnUrl}`;
+            if (loginHint) loginUrl += '&login_hint=' + encodeURIComponent(loginHint);
+            window.location.href = loginUrl;
+        }
+
+        function _switchAccountUrl() {
+            const returnUrl = encodeURIComponent(window.location.href);
+            return `login?isOAuth=true&force=1&redirect=${returnUrl}`;
+        }
+
         async function loadUser() {
             if (!token) {
-                // Redirect to login, then come back
-                const returnUrl = encodeURIComponent(window.location.href);
-                window.location.href = `login?redirect=${returnUrl}`;
+                _loginRedirect();
                 return;
             }
             try {
@@ -273,26 +363,40 @@
                 });
                 if (!resp.ok) {
                     localStorage.removeItem('tp_token');
-                    const returnUrl = encodeURIComponent(window.location.href);
-                    window.location.href = `login?redirect=${returnUrl}`;
+                    localStorage.removeItem('tpid_token');
+                    sessionStorage.removeItem('tpid_token');
+                    token = null;
+                    _loginRedirect();
                     return;
                 }
                 const user = await resp.json();
+                // Security: if login_hint is set, verify the loaded user matches
+                if (loginHint && user.email && user.email.toLowerCase() !== loginHint.toLowerCase()) {
+                    // Wrong user loaded (e.g. admin token cached) — force re-login
+                    localStorage.removeItem('tp_token');
+                    localStorage.removeItem('tpid_token');
+                    sessionStorage.removeItem('tpid_token');
+                    token = null;
+                    _loginRedirect();
+                    return;
+                }
                 document.getElementById('userBox').style.display = 'flex';
                 document.getElementById('userAvatar').textContent = (user.name || '?')[0].toUpperCase();
                 document.getElementById('userName').textContent = user.name;
                 document.getElementById('userEmail').textContent = user.email;
                 document.getElementById('loginNotice').innerHTML =
-                    `Войти как другой пользователь? <a href="login?redirect=${encodeURIComponent(window.location.href)}">Сменить аккаунт</a>`;
+                    L(`Не вы? <a href="${_switchAccountUrl()}">Сменить аккаунт</a>`,
+                      `Not you? <a href="${_switchAccountUrl()}">Switch account</a>`);
             } catch (e) {
-                showError('Ошибка загрузки профиля');
+                showError(L('Ошибка загрузки профиля', 'Failed to load profile'));
             }
         }
 
         async function approve() {
+            _flowCompleted = true;
             const btn = document.getElementById('allowBtn');
             btn.disabled = true;
-            btn.textContent = 'Авторизация...';
+            btn.textContent = L('Авторизация...', 'Authorizing...');
             try {
                 const resp = await fetch(`${API}/oauth/approve`, {
                     method: 'POST',
@@ -300,25 +404,56 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ client_id: clientId, redirect_uri: redirectUri, scope, state })
+                    body: JSON.stringify(Object.assign(
+                        { client_id: clientId, redirect_uri: redirectUri, scope, state },
+                        codeChallenge ? { code_challenge: codeChallenge, code_challenge_method: codeChallengeMethod || 'S256' } : {}
+                    ))
                 });
                 const data = await resp.json();
                 if (!resp.ok) {
-                    showError(data.error?.message || 'Ошибка авторизации');
+                    showError(data.error?.message || L('Ошибка авторизации', 'Authorization error'));
                     btn.disabled = false;
-                    btn.textContent = 'Разрешить';
+                    btn.textContent = L('Разрешить', 'Allow');
                     return;
                 }
-                // Redirect back to client app with the code
+                if (isPopup) {
+                    try {
+                        const url = new URL(data.redirect_url);
+                        window.opener.postMessage({ type: 'tpid_oauth_code', code: url.searchParams.get('code'), state: url.searchParams.get('state') }, '*');
+                    } catch(e) {
+                        window.opener.postMessage({ type: 'tpid_oauth_code', redirect_url: data.redirect_url }, '*');
+                    }
+                    window.close();
+                    return;
+                }
                 window.location.href = data.redirect_url;
             } catch (e) {
-                showError('Ошибка сети');
+                showError(L('Ошибка сети', 'Network error'));
                 btn.disabled = false;
-                btn.textContent = 'Разрешить';
+                btn.textContent = L('Разрешить', 'Allow');
             }
         }
 
-        function deny() {
+        let _flowCompleted = false;
+
+        async function deny() {
+            _flowCompleted = true;
+            // Notify server so enterprise gets webhook
+            try {
+                await fetch(`${API}/oauth/deny`, {
+                    method: 'POST',
+                    headers: Object.assign(
+                        { 'Content-Type': 'application/json' },
+                        token ? { 'Authorization': `Bearer ${token}` } : {}
+                    ),
+                    body: JSON.stringify({ client_id: clientId, state })
+                });
+            } catch (e) { /* best-effort */ }
+            if (isPopup) {
+                window.opener.postMessage({ type: 'tpid_oauth_code', error: 'access_denied', state }, '*');
+                window.close();
+                return;
+            }
             if (redirectUri) {
                 const url = new URL(redirectUri);
                 url.searchParams.set('error', 'access_denied');
@@ -329,6 +464,18 @@
                 window.location.href = '/';
             }
         }
+
+        // Fire cancel when user closes the window without approving/denying
+        window.addEventListener('beforeunload', function() {
+            if (_flowCompleted) return;
+            // Use sendBeacon for reliable delivery on page close
+            if (navigator.sendBeacon && clientId) {
+                navigator.sendBeacon(
+                    `${API}/oauth/cancel`,
+                    new Blob([JSON.stringify({ client_id: clientId, state, reason: 'window_closed' })], { type: 'application/json' })
+                );
+            }
+        });
 
         loadUser();
     </script>

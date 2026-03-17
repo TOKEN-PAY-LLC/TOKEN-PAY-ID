@@ -14,6 +14,28 @@
     <link rel="stylesheet" href="styles.css?v=20260316d">
 </head>
 <body>
+    <script>
+    // Instant auth check — prevent flash of login/register buttons when logged in
+    (function(){
+        var t = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
+        var r = localStorage.getItem('tpid_refresh') || sessionStorage.getItem('tpid_refresh');
+        if (t || r) {
+            var u; try { u = JSON.parse(localStorage.getItem('tpid_user') || sessionStorage.getItem('tpid_user') || 'null'); } catch(e) { u = null; }
+            var lang = localStorage.getItem('tp_lang') || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ru');
+            var label = lang === 'en' ? 'Dashboard' : 'Личный кабинет';
+            var name = u ? ((u.name || '').split(' ')[0] || label) : label;
+            document.write('<style>.nav-auth a[href="/login"],.nav-auth a[href="/register"],.nav-mobile-auth a[href="/login"],.nav-mobile-auth a[href="/register"]{display:none!important}.hero-buttons a[href="/login"],.hero-buttons a[href="/register"]{display:none!important}</style>');
+            document.addEventListener('DOMContentLoaded', function(){
+                var na = document.querySelector('.nav-auth');
+                if (na) na.innerHTML = '<a href="/dashboard" class="nav-btn nav-btn-white" style="display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + name + '</span></a>';
+                var ma = document.querySelector('.nav-mobile-auth');
+                if (ma) ma.innerHTML = '<a href="/dashboard" class="btn btn-primary" style="width:100%;justify-content:center">' + label + '</a>';
+                var hb = document.querySelector('.hero-buttons');
+                if (hb) hb.innerHTML = '<a href="/dashboard" class="btn btn-primary shimmer-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + label + '</span></a><a href="/docs" class="btn btn-secondary">' + (lang === 'en' ? 'API Docs' : 'API документация') + '</a>';
+            });
+        }
+    })();
+    </script>
     <canvas id="particles"></canvas>
 
     <!-- Floating clouds -->

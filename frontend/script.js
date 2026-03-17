@@ -345,6 +345,54 @@ function initContactForm() {
     });
 }
 
+// ===== AUTH NAV CHECK =====
+function _escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function updateNavAuth() {
+    const token = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
+    const refreshTok = localStorage.getItem('tpid_refresh') || sessionStorage.getItem('tpid_refresh');
+    const user = (() => { try { return JSON.parse(localStorage.getItem('tpid_user') || sessionStorage.getItem('tpid_user') || 'null'); } catch(e) { return null; } })();
+    if (!token && !refreshTok) return;
+
+    const _lang = localStorage.getItem('tp_lang') || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ru');
+    const label = _lang === 'en' ? 'Dashboard' : 'Личный кабинет';
+
+    // Desktop .nav-auth
+    const navAuth = document.querySelector('.nav-auth');
+    if (navAuth) {
+        navAuth.innerHTML = `<a href="/dashboard" class="nav-btn nav-btn-white" style="display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>${user ? _escHtml((user.name || '').split(' ')[0]) || label : label}</span>
+        </a>`;
+    }
+
+    // Mobile .nav-mobile-auth
+    const mobileAuth = document.querySelector('.nav-mobile-auth');
+    if (mobileAuth) {
+        mobileAuth.innerHTML = `<a href="/dashboard" class="btn btn-primary" style="width:100%;justify-content:center">${label}</a>`;
+    }
+
+    // Validate token silently; if invalid try refresh
+    fetch('/api/v1/auth/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) })
+        .then(r => r.json()).then(d => {
+            if (d.valid) return;
+            if (refreshTok) {
+                fetch('/api/v1/auth/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: refreshTok }) })
+                    .then(r => r.json()).then(data => {
+                        if (data.accessToken) {
+                            const store = sessionStorage.getItem('tpid_refresh') ? sessionStorage : localStorage;
+                            store.setItem('tpid_token', data.accessToken);
+                            if (data.refreshToken) store.setItem('tpid_refresh', data.refreshToken);
+                        } else {
+                            // Both invalid — clear and show login buttons
+                            ['tpid_token','tpid_refresh','tpid_user','tp_token'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k); });
+                            if (navAuth) navAuth.innerHTML = `<a href="/login" class="nav-btn nav-btn-ghost" data-ru="Войти" data-en="Sign In">Войти</a><a href="/register" class="nav-btn nav-btn-white" data-ru="Регистрация" data-en="Sign Up">Регистрация</a>`;
+                            if (mobileAuth) mobileAuth.innerHTML = `<a href="/login" class="btn btn-secondary" style="width:100%;justify-content:center">Войти</a><a href="/register" class="btn btn-primary" style="width:100%;justify-content:center">Регистрация</a>`;
+                        }
+                    }).catch(() => {});
+            }
+        }).catch(() => {});
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('particles');
@@ -356,6 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new LanguageManager();
     new ThemeManager();
     initContactForm();
+    updateNavAuth();
 });
 
 // ===== CSS for spin animation (injected) =====

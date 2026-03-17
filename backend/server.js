@@ -55,7 +55,7 @@ const PORT = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'tpid_jwt_secret_' + uuidv4();
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'tpid_refresh_' + uuidv4();
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'info@tokenpay.space';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Zdcgbjm777812.';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 
 // ===== DATABASE =====
 const pool = new Pool({
@@ -63,7 +63,7 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432,
     database: process.env.DB_NAME || 'default_db',
     user: process.env.DB_USER || 'gen_user',
-    password: process.env.DB_PASSWORD || '93JJFQLAYC=Uo)',
+    password: process.env.DB_PASSWORD || '',
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
@@ -84,7 +84,7 @@ app.use(helmet({
     xPermittedCrossDomainPolicies: false
 }));
 
-const allowedOrigins = (process.env.CORS_ORIGIN || 'https://tokenpay.space').split(',').map(s => s.trim());
+const allowedOrigins = (process.env.CORS_ORIGIN || 'https://tokenpay.space,https://cupol.space,https://auth.tokenpay.space,https://id.tokenpay.space').split(',').map(s => s.trim());
 app.use(cors({
     origin: function(origin, cb) {
         if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return cb(null, true);
@@ -143,6 +143,12 @@ function sanitize(str, maxLen = 255) {
         .replace(/on\w+=/gi, '')
         .substring(0, maxLen).trim();
 }
+function escapeLike(str) {
+    return String(str).replace(/[%_\\]/g, c => '\\' + c);
+}
+function secureCode6() {
+    return String(crypto.randomInt(100000, 999999));
+}
 
 // ===== AUTH MIDDLEWARE =====
 function authMiddleware(req, res, next) {
@@ -154,10 +160,14 @@ function authMiddleware(req, res, next) {
 
     // Check if it's an API key
     if (token.startsWith('tpid_sk_')) {
-        pool.query('SELECT u.* FROM users u JOIN api_keys k ON u.id = k.user_id WHERE k.secret_key = $1 AND k.status = $2', [token, 'active'])
+        pool.query('SELECT u.*, k.expires_at as key_expires_at FROM users u JOIN api_keys k ON u.id = k.user_id WHERE k.secret_key = $1 AND k.status = $2', [token, 'active'])
             .then(result => {
-                if (result.rows.length === 0) return res.status(401).json({ error: { code: 'invalid_key', message: 'Invalid API key', status: 401 } });
-                req.user = result.rows[0];
+                if (result.rows.length === 0) return res.status(401).json({ error: { code: 'invalid_key', message: 'Invalid or revoked API key', status: 401 } });
+                const row = result.rows[0];
+                if (row.key_expires_at && new Date(row.key_expires_at) < new Date()) {
+                    return res.status(401).json({ error: { code: 'key_expired', message: 'API key has expired', status: 401 } });
+                }
+                req.user = row;
                 next();
             })
             .catch(() => res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } }));
@@ -186,15 +196,103 @@ function adminMiddleware(req, res, next) {
     next();
 }
 
+function presidentMiddleware(req, res, next) {
+    if (!req.user || req.user.role !== 'admin' || req.user.email !== ADMIN_EMAIL) {
+        return res.status(403).json({ error: { code: 'forbidden', message: 'President access required', status: 403 } });
+    }
+    next();
+}
+
 function generateTokens(userId, rememberMe = true) {
     const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: rememberMe ? '30d' : '24h' });
     return { accessToken, refreshToken, expiresIn: 3600 };
 }
 
+// ===== API VERSION HEADER =====
+app.use((req, res, next) => {
+    res.setHeader('X-API-Version', '2.1.0');
+    res.setHeader('X-TPID-SDK-Latest', '1.2.0');
+    next();
+});
+
+// ===== CAPTCHA =====
+const captchaStore = new Map(); // nonce → { x, createdAt }
+const captchaConfig = { mode: 'auto', auto_threshold: 3, images: [] };
+
+function cleanCaptchaStore() {
+    const ttl = 5 * 60 * 1000;
+    const now = Date.now();
+    for (const [k, v] of captchaStore) { if (now - v.createdAt > ttl) captchaStore.delete(k); }
+}
+
+// Public: get config mode
+app.get('/api/v1/captcha/config', (req, res) => {
+    res.json({ mode: captchaConfig.mode, auto_threshold: captchaConfig.auto_threshold });
+});
+
+// Public: generate a puzzle challenge
+app.get('/api/v1/captcha/challenge', (req, res) => {
+    cleanCaptchaStore();
+    const nonce = crypto.randomBytes(20).toString('hex');
+    const holeX = Math.floor(Math.random() * 160) + 60; // 60–220px
+    const holeY = Math.floor(Math.random() * 60) + 40;  // 40–100px
+    captchaStore.set(nonce, { x: holeX, y: holeY, createdAt: Date.now() });
+    res.json({ nonce, hole_x: holeX, hole_y: holeY, width: 320, height: 160, piece_size: 50 });
+});
+
+// Public: verify solution
+app.post('/api/v1/captcha/verify', (req, res) => {
+    const { nonce, x } = req.body;
+    if (!nonce || x === undefined) return res.status(400).json({ error: { code: 'bad_request', message: 'nonce and x required' } });
+    const ch = captchaStore.get(nonce);
+    if (!ch) return res.status(400).json({ error: { code: 'captcha_expired', message: 'Challenge expired or invalid' } });
+    captchaStore.delete(nonce);
+    if (Math.abs(Number(x) - ch.x) > 18) {
+        return res.json({ success: false, error: { code: 'captcha_failed', message: 'Incorrect. Please try again.' } });
+    }
+    const captchaToken = jwt.sign({ captcha: true, ts: Date.now() }, JWT_SECRET, { expiresIn: '15m' });
+    res.json({ success: true, captcha_token: captchaToken });
+});
+
+// Admin: get captcha config (president only)
+app.get('/api/v1/admin/captcha/config', authMiddleware, presidentMiddleware, (req, res) => {
+    res.json(captchaConfig);
+});
+
+// Admin: update captcha config (president only)
+app.put('/api/v1/admin/captcha/config', authMiddleware, presidentMiddleware, (req, res) => {
+    const { mode, auto_threshold } = req.body;
+    if (mode && ['auto', 'always', 'off'].includes(mode)) captchaConfig.mode = mode;
+    if (auto_threshold !== undefined) captchaConfig.auto_threshold = Math.max(1, Math.min(10, Number(auto_threshold)));
+    res.json({ success: true, config: captchaConfig });
+});
+
+// Admin: add custom captcha image (president only)
+app.post('/api/v1/admin/captcha/images', authMiddleware, presidentMiddleware, (req, res) => {
+    const { image, name } = req.body;
+    if (!image) return res.status(400).json({ error: { code: 'bad_request', message: 'image required' } });
+    const id = uuidv4();
+    captchaConfig.images.push({ id, name: sanitize(name || 'Image', 64), image: image.substring(0, 2 * 1024 * 1024), createdAt: new Date().toISOString() });
+    if (captchaConfig.images.length > 20) captchaConfig.images.shift();
+    res.json({ success: true, id });
+});
+
+// Admin: delete captcha image (president only)
+app.delete('/api/v1/admin/captcha/images/:id', authMiddleware, presidentMiddleware, (req, res) => {
+    const before = captchaConfig.images.length;
+    captchaConfig.images = captchaConfig.images.filter(i => i.id !== req.params.id);
+    res.json({ success: captchaConfig.images.length < before });
+});
+
 // ===== HEALTH =====
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'tokenpay-id-api', version: '1.0.0', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.json({ status: 'ok', service: 'tokenpay-id-api', version: '2.1.0', timestamp: new Date().toISOString(), db: 'connected' });
+    } catch (err) {
+        res.status(503).json({ status: 'degraded', service: 'tokenpay-id-api', version: '2.1.0', timestamp: new Date().toISOString(), db: 'disconnected' });
+    }
 });
 
 // ===== AUTH ROUTES =====
@@ -242,7 +340,7 @@ app.post('/api/v1/auth/send-code', authLimiter, async (req, res) => {
         }
 
         // Generate 6-digit code
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const code = secureCode6();
 
         // Invalidate previous codes for this email+type
         await pool.query("UPDATE email_codes SET used = TRUE WHERE email = $1 AND type = $2 AND used IS NOT TRUE", [emailLower, type]);
@@ -410,7 +508,7 @@ app.post('/api/v1/auth/login', authLimiter, async (req, res) => {
                 [emailLower]
             );
             if (recent.rows.length === 0) {
-                const code = String(Math.floor(100000 + Math.random() * 900000));
+                const code = secureCode6();
                 await pool.query("UPDATE email_codes SET used = TRUE WHERE email = $1 AND type = 'login' AND used IS NOT TRUE", [emailLower]);
                 await pool.query(
                     "INSERT INTO email_codes (id, email, code, type, used, expires_at, created_at) VALUES ($1, $2, $3, $4, FALSE, NOW() + INTERVAL '10 minutes', NOW())",
@@ -521,6 +619,62 @@ app.post('/api/v1/auth/refresh', async (req, res) => {
     }
 });
 
+// Quick re-login (no password) — only if user logged in within last 24h
+app.post('/api/v1/auth/quick-login', authLimiter, async (req, res) => {
+    try {
+        const { email, email_code: rawCode, remember_me = true } = req.body;
+        const email_code = rawCode ? String(rawCode).replace(/\D/g, '').trim() : undefined;
+        if (!email || !email_code) {
+            return res.status(400).json({ error: { code: 'missing_fields', message: 'Email and code required', status: 400 } });
+        }
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+        if (result.rows.length === 0) {
+            await new Promise(r => setTimeout(r, 200));
+            return res.status(401).json({ error: { code: 'user_not_found', message: 'User not found', status: 401 } });
+        }
+        const user = result.rows[0];
+        // Only allow if last_login was within 24h
+        const lastLogin = user.last_login ? new Date(user.last_login).getTime() : 0;
+        if (Date.now() - lastLogin > 24 * 60 * 60 * 1000) {
+            return res.status(401).json({ error: { code: 'quick_login_expired', message: 'Session expired. Please use full login with password.', status: 401 } });
+        }
+        // Verify email code
+        const codeValid = await verifyEmailCode(email, email_code, 'login');
+        if (!codeValid) {
+            return res.status(400).json({ error: { code: 'invalid_code', message: 'Invalid or expired verification code', status: 400 } });
+        }
+        // Handle 2FA
+        const { two_factor_code } = req.body;
+        if (user.two_factor_enabled) {
+            if (!two_factor_code) {
+                return res.json({ requires_2fa: true });
+            }
+            if (!totpVerify(user.totp_secret, two_factor_code)) {
+                return res.status(401).json({ error: { code: 'invalid_2fa', message: 'Invalid 2FA code', status: 401 } });
+            }
+        }
+        const tokens = generateTokens(user.id, remember_me);
+        await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
+        const sessionId = 'ses_' + uuidv4().replace(/-/g, '').substring(0, 16);
+        const ua = req.headers['user-agent'] || 'Unknown';
+        const deviceType = /mobile|android|iphone|ipad/i.test(ua) ? 'mobile' : /mac|windows|linux/i.test(ua) ? 'desktop' : 'unknown';
+        const browser = ua.match(/(Chrome|Firefox|Safari|Edge|Opera)[/\s]([\d.]+)/)?.[1] || 'Browser';
+        await pool.query(
+            `INSERT INTO sessions (id, user_id, device, ip, last_active, created_at) VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+            [sessionId, user.id, `${browser} (${deviceType})`.substring(0, 200), req.ip]
+        );
+        await pool.query(
+            `INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [uuidv4(), user.id, 'login', 'Быстрый вход (без пароля)', 'success', req.ip]
+        );
+        const userObj = { id: user.id, email: user.email, name: user.name, role: user.role, email_verified: user.email_verified, two_factor_enabled: user.two_factor_enabled, locale: user.locale || 'ru', theme: user.theme || 'dark', company_name: user.company_name };
+        res.json({ user: userObj, ...tokens, token_type: 'Bearer', session_id: sessionId });
+    } catch (err) {
+        console.error('Quick login error:', err);
+        res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
 // Verify token
 app.post('/api/v1/auth/verify', async (req, res) => {
     try {
@@ -584,7 +738,7 @@ app.post('/api/v1/auth/forgot-password', authLimiter, async (req, res) => {
         }
 
         // Generate 6-digit code
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const code = secureCode6();
 
         // Invalidate previous reset codes
         await pool.query("UPDATE email_codes SET used = TRUE WHERE email = $1 AND type = 'reset' AND used IS NOT TRUE", [emailLower]);
@@ -808,7 +962,7 @@ app.post('/api/v1/auth/resend-verification', authMiddleware, async (req, res) =>
         const verifyUrl = `https://tokenpay.space/api/v1/auth/verify-email/${token}`;
         const vLang = req.user.locale || req.lang || 'ru';
         const vSubject = vLang === 'en' ? 'Verify Email — TOKEN PAY ID' : 'Подтвердите email — TOKEN PAY ID';
-        const code6 = String(Math.floor(100000 + Math.random() * 900000));
+        const code6 = secureCode6();
         await sendEmail(req.user.email, vSubject,
             templates.verificationCode(req.user.name, code6, 1440, vLang)
         );
@@ -829,7 +983,12 @@ app.get('/api/v1/users/me', authMiddleware, (req, res) => {
         telegram_linked: u.telegram_linked || false,
         locale: u.locale || 'ru',
         theme: u.theme || 'dark',
-        created_at: u.created_at, last_login: u.last_login
+        created_at: u.created_at, last_login: u.last_login,
+        cupol_balance: u.cupol_balance || 0,
+        cupol_subscription_end: u.cupol_subscription_end || null,
+        cupol_subscription_active: u.cupol_subscription_active || false,
+        cupol_username: u.cupol_username || null,
+        cupol_synced_at: u.cupol_synced_at || null
     };
     if (u.role === 'enterprise') {
         data.company_name = u.company_name || '';
@@ -842,10 +1001,12 @@ app.get('/api/v1/users/me', authMiddleware, (req, res) => {
 // Update user
 app.put('/api/v1/users/me', authMiddleware, async (req, res) => {
     try {
-        const { name, locale, theme } = req.body;
+        const { name, locale, theme, telegram_id, telegram_linked } = req.body;
         if (name) {
-            await pool.query('UPDATE users SET name = $1 WHERE id = $2', [name, req.user.id]);
-            req.user.name = name;
+            const cleanName = sanitize(name, 100);
+            if (cleanName.length < 1) return res.status(400).json({ error: { code: 'invalid_name', message: 'Name is required', status: 400 } });
+            await pool.query('UPDATE users SET name = $1 WHERE id = $2', [cleanName, req.user.id]);
+            req.user.name = cleanName;
         }
         if (locale && ['ru', 'en'].includes(locale)) {
             await pool.query('UPDATE users SET locale = $1 WHERE id = $2', [locale, req.user.id]);
@@ -854,6 +1015,20 @@ app.put('/api/v1/users/me', authMiddleware, async (req, res) => {
         if (theme && ['light', 'dark'].includes(theme)) {
             await pool.query('UPDATE users SET theme = $1 WHERE id = $2', [theme, req.user.id]);
             req.user.theme = theme;
+        }
+        // Telegram linking (from CUPOL VPN integration)
+        if (telegram_id !== undefined) {
+            const tgId = telegram_id === null ? null : parseInt(telegram_id);
+            if (tgId !== null && (isNaN(tgId) || tgId < 0)) return res.status(400).json({ error: { code: 'invalid_telegram_id', message: 'Invalid telegram_id', status: 400 } });
+            // Check uniqueness
+            if (tgId !== null) {
+                const tgExists = await pool.query('SELECT id FROM users WHERE telegram_id = $1 AND id != $2', [tgId, req.user.id]);
+                if (tgExists.rows.length > 0) return res.status(409).json({ error: { code: 'telegram_taken', message: 'This Telegram account is already linked', status: 409 } });
+            }
+            await pool.query('UPDATE users SET telegram_id = $1 WHERE id = $2', [tgId, req.user.id]);
+        }
+        if (telegram_linked !== undefined) {
+            await pool.query('UPDATE users SET telegram_linked = $1 WHERE id = $2', [!!telegram_linked, req.user.id]);
         }
         await pool.query(
             `INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at)
@@ -878,13 +1053,18 @@ app.get('/api/v1/users/activity', authMiddleware, async (req, res) => {
 
         if (type) {
             query += ' AND type LIKE $2';
-            params.push('%' + type + '%');
+            params.push('%' + escapeLike(type) + '%');
         }
+        // Get total count
+        const countQuery = query.replace('SELECT *', 'SELECT COUNT(*)');
         query += ' ORDER BY created_at DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
         params.push(limit, offset);
 
-        const result = await pool.query(query, params);
-        res.json({ activity: result.rows, total: result.rows.length });
+        const [result, countResult] = await Promise.all([
+            pool.query(query, params),
+            pool.query(countQuery, params.slice(0, params.length - 2))
+        ]);
+        res.json({ activity: result.rows, total: parseInt(countResult.rows[0].count) });
     } catch (err) {
         res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
     }
@@ -915,11 +1095,14 @@ app.delete('/api/v1/users/sessions/:id', authMiddleware, async (req, res) => {
 
 // ===== API KEY ROUTES =====
 
-// List keys
+// List keys (enterprise + admin only)
 app.get('/api/v1/keys', authMiddleware, async (req, res) => {
     try {
+        if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise account required to manage API keys', status: 403 } });
+        }
         const result = await pool.query(
-            'SELECT id, name, public_key, LEFT(secret_key, 16) as secret_prefix, status, created_at, last_used FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC',
+            'SELECT id, name, public_key, LEFT(secret_key, 16) as secret_prefix, status, created_at, last_used, expires_at FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC',
             [req.user.id]
         );
         res.json({ keys: result.rows });
@@ -928,35 +1111,49 @@ app.get('/api/v1/keys', authMiddleware, async (req, res) => {
     }
 });
 
-// Create key
+// Create key (enterprise + admin only)
 app.post('/api/v1/keys', authMiddleware, async (req, res) => {
     try {
-        const { name } = req.body;
-        if (!name) return res.status(400).json({ error: { code: 'missing_name', message: 'Key name is required', status: 400 } });
+        if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise account required to create API keys', status: 403 } });
+        }
+        const { name, expires_in_days } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ error: { code: 'missing_name', message: 'Key name is required', status: 400 } });
+        if (name.trim().length > 100) return res.status(400).json({ error: { code: 'name_too_long', message: 'Key name must be under 100 characters', status: 400 } });
+
+        let expiresAt = null;
+        if (expires_in_days !== undefined && expires_in_days !== null) {
+            const days = parseInt(expires_in_days);
+            if (isNaN(days) || days < 1 || days > 3650) {
+                return res.status(400).json({ error: { code: 'invalid_expiry', message: 'expires_in_days must be between 1 and 3650', status: 400 } });
+            }
+            expiresAt = new Date(Date.now() + days * 86400000);
+        }
 
         const id = uuidv4();
         const publicKey = 'tpid_pk_' + uuidv4().replace(/-/g, '').substring(0, 16);
         const secretKey = 'tpid_sk_' + uuidv4().replace(/-/g, '') + uuidv4().replace(/-/g, '').substring(0, 8);
 
         await pool.query(
-            `INSERT INTO api_keys (id, user_id, name, public_key, secret_key, status, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-            [id, req.user.id, name, publicKey, secretKey, 'active']
+            `INSERT INTO api_keys (id, user_id, name, public_key, secret_key, status, expires_at, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+            [id, req.user.id, name.trim(), publicKey, secretKey, 'active', expiresAt]
         );
 
         await pool.query(
             `INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at)
              VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-            [uuidv4(), req.user.id, 'key_created', 'API ключ "' + name + '" создан', 'success', req.ip]
+            [uuidv4(), req.user.id, 'key_created', 'API ключ "' + name.trim() + '" создан', 'success', req.ip]
         );
+        fireWebhook(req.user.id, 'key.created', { key_name: name.trim(), public_key: publicKey, expires_at: expiresAt ? expiresAt.toISOString() : null });
 
-        res.status(201).json({ id, name, public_key: publicKey, secret_key: secretKey, status: 'active', created_at: new Date().toISOString() });
+        res.status(201).json({ id, name: name.trim(), public_key: publicKey, secret_key: secretKey, status: 'active', expires_at: expiresAt ? expiresAt.toISOString() : null, created_at: new Date().toISOString() });
     } catch (err) {
         res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
     }
 });
 
-// Revoke key
+// Revoke key (enterprise + admin only)
 app.delete('/api/v1/keys/:id', authMiddleware, async (req, res) => {
     try {
         const result = await pool.query(
@@ -970,10 +1167,34 @@ app.delete('/api/v1/keys/:id', authMiddleware, async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
             [uuidv4(), req.user.id, 'key_revoked', 'API ключ "' + result.rows[0].name + '" отозван', 'warning', req.ip]
         );
+        fireWebhook(req.user.id, 'key.revoked', { key_id: req.params.id, key_name: result.rows[0].name });
 
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
+// ===== API KEY APP BRANDING =====
+
+// Update API key app branding (enterprise/admin only)
+app.put('/api/v1/keys/:id/branding', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
+        }
+        const { app_name, app_icon_url, app_description } = req.body;
+        const updates = []; const params = []; let idx = 1;
+        if (app_name !== undefined) { updates.push(`app_name = $${idx++}`); params.push(sanitize(app_name, 255) || null); }
+        if (app_icon_url !== undefined) { updates.push(`app_icon_url = $${idx++}`); params.push(sanitize(app_icon_url, 500) || null); }
+        if (app_description !== undefined) { updates.push(`app_description = $${idx++}`); params.push(sanitize(app_description, 1000) || null); }
+        if (updates.length === 0) return res.status(400).json({ error: { code: 'no_updates', message: 'No fields to update', status: 400 } });
+        params.push(req.params.id, req.user.id);
+        const result = await pool.query(`UPDATE api_keys SET ${updates.join(', ')} WHERE id = $${idx} AND user_id = $${idx + 1} RETURNING id, name, app_name, app_icon_url, app_description`, params);
+        if (result.rows.length === 0) return res.status(404).json({ error: { code: 'not_found', message: 'Key not found', status: 404 } });
+        res.json({ success: true, key: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
     }
 });
 
@@ -1101,7 +1322,7 @@ app.get('/api/v1/admin/activity', authMiddleware, adminMiddleware, async (req, r
 
         if (type) {
             query += ' WHERE a.type LIKE $1';
-            params.push('%' + type + '%');
+            params.push('%' + escapeLike(type) + '%');
         }
         query += ` ORDER BY a.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
         params.push(limit, offset);
@@ -1117,31 +1338,30 @@ app.get('/api/v1/admin/activity', authMiddleware, adminMiddleware, async (req, r
 // Admin: system info
 app.get('/api/v1/admin/system', authMiddleware, adminMiddleware, async (req, res) => {
     try {
-        const users = await pool.query('SELECT COUNT(*) FROM users');
-        const verified = await pool.query('SELECT COUNT(*) FROM users WHERE email_verified = TRUE');
-        const twofa = await pool.query('SELECT COUNT(*) FROM users WHERE two_factor_enabled = TRUE');
-        const enterprise = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'enterprise'");
-        const keys = await pool.query("SELECT COUNT(*) FROM api_keys WHERE status = 'active'");
-        const revokedKeys = await pool.query("SELECT COUNT(*) FROM api_keys WHERE status = 'revoked'");
-        const sessions = await pool.query('SELECT COUNT(*) FROM sessions');
-        const todayActivity = await pool.query("SELECT COUNT(*) FROM activity_log WHERE created_at > NOW() - INTERVAL '24 hours'");
-        const weekActivity = await pool.query("SELECT COUNT(*) FROM activity_log WHERE created_at > NOW() - INTERVAL '7 days'");
-        const totalActivity = await pool.query('SELECT COUNT(*) FROM activity_log');
-        const todayLogins = await pool.query("SELECT COUNT(*) FROM activity_log WHERE type = 'login' AND created_at > NOW() - INTERVAL '24 hours'");
-        const todayRegistrations = await pool.query("SELECT COUNT(*) FROM activity_log WHERE type = 'account_created' AND created_at > NOW() - INTERVAL '24 hours'");
-        const failedLogins = await pool.query("SELECT COUNT(*) FROM activity_log WHERE type = 'login_failed' AND created_at > NOW() - INTERVAL '24 hours'");
-        const connectedApps = await pool.query('SELECT COUNT(*) FROM connected_apps');
-        const oauthCodes = await pool.query("SELECT COUNT(*) FROM oauth_codes WHERE expires_at > NOW() AND used = FALSE");
-
-        // Roles breakdown
-        const roleBreakdown = await pool.query("SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY count DESC");
-
-        // Recent registrations (last 7 days per day)
-        const recentRegs = await pool.query(`
-            SELECT DATE(created_at) as date, COUNT(*) as count 
-            FROM users WHERE created_at > NOW() - INTERVAL '7 days' 
-            GROUP BY DATE(created_at) ORDER BY date DESC
-        `);
+        const [users, verified, twofa, enterprise, keys, revokedKeys, sessions,
+               todayActivity, weekActivity, totalActivity, todayLogins,
+               todayRegistrations, failedLogins, connectedApps, oauthCodes,
+               roleBreakdown, recentRegs] = await Promise.all([
+            pool.query('SELECT COUNT(*) FROM users'),
+            pool.query('SELECT COUNT(*) FROM users WHERE email_verified = TRUE'),
+            pool.query('SELECT COUNT(*) FROM users WHERE two_factor_enabled = TRUE'),
+            pool.query("SELECT COUNT(*) FROM users WHERE role = 'enterprise'"),
+            pool.query("SELECT COUNT(*) FROM api_keys WHERE status = 'active'"),
+            pool.query("SELECT COUNT(*) FROM api_keys WHERE status = 'revoked'"),
+            pool.query('SELECT COUNT(*) FROM sessions'),
+            pool.query("SELECT COUNT(*) FROM activity_log WHERE created_at > NOW() - INTERVAL '24 hours'"),
+            pool.query("SELECT COUNT(*) FROM activity_log WHERE created_at > NOW() - INTERVAL '7 days'"),
+            pool.query('SELECT COUNT(*) FROM activity_log'),
+            pool.query("SELECT COUNT(*) FROM activity_log WHERE type = 'login' AND created_at > NOW() - INTERVAL '24 hours'"),
+            pool.query("SELECT COUNT(*) FROM activity_log WHERE type = 'account_created' AND created_at > NOW() - INTERVAL '24 hours'"),
+            pool.query("SELECT COUNT(*) FROM activity_log WHERE type = 'login_failed' AND created_at > NOW() - INTERVAL '24 hours'"),
+            pool.query('SELECT COUNT(*) FROM connected_apps'),
+            pool.query("SELECT COUNT(*) FROM oauth_codes WHERE expires_at > NOW() AND used = FALSE"),
+            pool.query("SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY count DESC"),
+            pool.query(`SELECT DATE(created_at) as date, COUNT(*) as count 
+                FROM users WHERE created_at > NOW() - INTERVAL '7 days' 
+                GROUP BY DATE(created_at) ORDER BY date DESC`)
+        ]);
 
         res.json({
             users: {
@@ -1193,15 +1413,18 @@ app.get('/.well-known/openid-configuration', (req, res) => {
         token_endpoint: `${issuer}/api/v1/oauth/token`,
         userinfo_endpoint: `${issuer}/api/v1/oauth/userinfo`,
         revocation_endpoint: `${issuer}/api/v1/oauth/revoke`,
-        jwks_uri: `${issuer}/.well-known/jwks.json`,
+        cancel_endpoint: `${issuer}/api/v1/oauth/cancel`,
+        deny_endpoint: `${issuer}/api/v1/oauth/deny`,
+        branding_endpoint: `${issuer}/api/v1/oauth/branding`,
         response_types_supported: ['code'],
+        prompt_values_supported: ['login', 'consent', 'none'],
         grant_types_supported: ['authorization_code', 'refresh_token'],
         subject_types_supported: ['public'],
-        id_token_signing_alg_values_supported: ['RS256'],
+        id_token_signing_alg_values_supported: ['HS256'],
         scopes_supported: ['openid', 'profile', 'email'],
-        token_endpoint_auth_methods_supported: ['client_secret_post', 'client_secret_basic'],
+        token_endpoint_auth_methods_supported: ['client_secret_post', 'client_secret_basic', 'none'],
         code_challenge_methods_supported: ['S256', 'plain'],
-        claims_supported: ['sub', 'email', 'name', 'email_verified', 'iat', 'exp']
+        claims_supported: ['sub', 'email', 'name', 'email_verified', 'locale', 'role', 'iat', 'exp']
     });
 });
 
@@ -1210,7 +1433,7 @@ app.get('/.well-known/openid-configuration', (req, res) => {
 // GET /api/v1/oauth/authorize — redirect user to consent screen
 app.get('/api/v1/oauth/authorize', async (req, res) => {
     try {
-        const { client_id, redirect_uri, response_type, scope, state } = req.query;
+        const { client_id, redirect_uri, response_type, scope, state, code_challenge, code_challenge_method, prompt, login_hint } = req.query;
         if (response_type !== 'code') {
             return res.status(400).json({ error: { code: 'unsupported_response_type', message: 'Only response_type=code is supported', status: 400 } });
         }
@@ -1218,18 +1441,34 @@ app.get('/api/v1/oauth/authorize', async (req, res) => {
             return res.status(400).json({ error: { code: 'missing_params', message: 'client_id and redirect_uri are required', status: 400 } });
         }
         const keyResult = await pool.query(
-            'SELECT k.*, u.name as owner_name FROM api_keys k JOIN users u ON k.user_id = u.id WHERE k.public_key = $1 AND k.status = $2',
+            'SELECT k.*, u.name as owner_name, u.company_name as owner_company, u.callback_url, u.allowed_redirect_uris FROM api_keys k JOIN users u ON k.user_id = u.id WHERE k.public_key = $1 AND k.status = $2',
             [client_id, 'active']
         );
         if (keyResult.rows.length === 0) {
             return res.status(400).json({ error: { code: 'invalid_client', message: 'Unknown client_id', status: 400 } });
         }
-        // Redirect to consent page with params
-        const params = new URLSearchParams({
+        const ent = keyResult.rows[0];
+        // Validate redirect_uri against allowed list (if configured)
+        const allowedUris = ent.allowed_redirect_uris
+            ? ent.allowed_redirect_uris.split('\n').map(s => s.trim()).filter(Boolean)
+            : (ent.callback_url ? [ent.callback_url] : []);
+        if (allowedUris.length > 0 && !allowedUris.includes(redirect_uri)) {
+            return res.status(400).json({ error: { code: 'invalid_redirect_uri', message: 'redirect_uri not in allowed list', status: 400 } });
+        }
+        // Redirect to consent page with params (PKCE forwarded for popup postMessage)
+        // Use app_name from api_keys (OAuth branding), fallback to key name
+        const displayAppName = ent.app_name || ent.name;
+        const displayOwner = ent.owner_company || ent.owner_name;
+        const consentParams = {
             client_id, redirect_uri, scope: scope || 'profile', state: state || '',
-            app_name: keyResult.rows[0].name, owner_name: keyResult.rows[0].owner_name
-        });
-        res.redirect(`/oauth-consent.html?${params.toString()}`);
+            app_name: displayAppName, owner_name: displayOwner
+        };
+        if (ent.app_icon_url) consentParams.app_icon = ent.app_icon_url;
+        if (ent.app_description) consentParams.app_desc = ent.app_description;
+        if (code_challenge) { consentParams.code_challenge = code_challenge; consentParams.code_challenge_method = code_challenge_method || 'S256'; }
+        if (prompt) consentParams.prompt = prompt;
+        if (login_hint) consentParams.login_hint = login_hint;
+        res.redirect(`/oauth-consent.html?${new URLSearchParams(consentParams).toString()}`);
     } catch (err) {
         res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
     }
@@ -1243,10 +1482,18 @@ app.post('/api/v1/oauth/approve', authMiddleware, async (req, res) => {
             return res.status(400).json({ error: { code: 'missing_params', message: 'client_id and redirect_uri required', status: 400 } });
         }
         const keyResult = await pool.query(
-            'SELECT * FROM api_keys WHERE public_key = $1 AND status = $2', [client_id, 'active']
+            'SELECT k.*, u.callback_url, u.allowed_redirect_uris FROM api_keys k JOIN users u ON k.user_id = u.id WHERE k.public_key = $1 AND k.status = $2', [client_id, 'active']
         );
         if (keyResult.rows.length === 0) {
             return res.status(400).json({ error: { code: 'invalid_client', message: 'Invalid client_id', status: 400 } });
+        }
+        // Re-validate redirect_uri (prevent tampering)
+        const ent = keyResult.rows[0];
+        const allowedUris = ent.allowed_redirect_uris
+            ? ent.allowed_redirect_uris.split('\n').map(s => s.trim()).filter(Boolean)
+            : (ent.callback_url ? [ent.callback_url] : []);
+        if (allowedUris.length > 0 && !allowedUris.includes(redirect_uri)) {
+            return res.status(400).json({ error: { code: 'invalid_redirect_uri', message: 'redirect_uri not in allowed list', status: 400 } });
         }
         // Generate authorization code (valid 5 min, PKCE optional)
         const code = 'tpid_code_' + uuidv4().replace(/-/g, '');
@@ -1260,6 +1507,24 @@ app.post('/api/v1/oauth/approve', authMiddleware, async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
             [uuidv4(), req.user.id, 'oauth_approve', 'OAuth авторизация одобрена', 'success', req.ip]
         );
+        // Track connected app (insert or update last_used)
+        const entKeyRow = await pool.query('SELECT user_id, name, app_name FROM api_keys WHERE public_key = $1 AND status = $2', [client_id, 'active']);
+        if (entKeyRow.rows.length > 0) {
+            const entId = entKeyRow.rows[0].user_id;
+            const appName = entKeyRow.rows[0].app_name || entKeyRow.rows[0].name;
+            const existingConn = await pool.query('SELECT id FROM connected_apps WHERE user_id = $1 AND enterprise_id = $2', [req.user.id, entId]);
+            if (existingConn.rows.length > 0) {
+                await pool.query('UPDATE connected_apps SET last_used = NOW(), scopes = $1, app_name = $2 WHERE id = $3',
+                    [scope || 'profile', appName, existingConn.rows[0].id]).catch(() => {});
+            } else {
+                await pool.query(`INSERT INTO connected_apps (id, user_id, enterprise_id, app_name, scopes, authorized_at, last_used) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+                    [uuidv4(), req.user.id, entId, appName, scope || 'profile']).catch(() => {});
+            }
+            fireWebhook(entId, 'user.oauth_connect', {
+                user_id: req.user.id, email: req.user.email, name: req.user.name,
+                scope: scope || 'profile', client_id, timestamp: new Date().toISOString()
+            });
+        }
         const redirectUrl = new URL(redirect_uri);
         redirectUrl.searchParams.set('code', code);
         if (state) redirectUrl.searchParams.set('state', state);
@@ -1270,12 +1535,27 @@ app.post('/api/v1/oauth/approve', authMiddleware, async (req, res) => {
     }
 });
 
-// POST /api/v1/oauth/token — exchange auth code for access token (PKCE supported)
+// POST /api/v1/oauth/token — exchange auth code or refresh token (PKCE supported)
 app.post('/api/v1/oauth/token', async (req, res) => {
     try {
-        const { grant_type, code, client_id, client_secret, redirect_uri, code_verifier } = req.body;
+        const { grant_type, code, client_id, client_secret, redirect_uri, code_verifier, refresh_token: rt } = req.body;
+
+        // Handle refresh_token grant
+        if (grant_type === 'refresh_token') {
+            if (!rt) return res.status(400).json({ error: { code: 'missing_token', message: 'refresh_token required', status: 400 } });
+            try {
+                const decoded = jwt.verify(rt, JWT_REFRESH_SECRET);
+                const userResult = await pool.query('SELECT id FROM users WHERE id = $1', [decoded.userId]);
+                if (userResult.rows.length === 0) return res.status(401).json({ error: { code: 'user_not_found', message: 'User not found', status: 401 } });
+                const tokens = generateTokens(decoded.userId);
+                return res.json({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken, token_type: 'Bearer', expires_in: tokens.expiresIn });
+            } catch (e) {
+                return res.status(401).json({ error: { code: 'invalid_token', message: 'Invalid or expired refresh token', status: 401 } });
+            }
+        }
+
         if (grant_type !== 'authorization_code') {
-            return res.status(400).json({ error: { code: 'unsupported_grant', message: 'Only authorization_code is supported', status: 400 } });
+            return res.status(400).json({ error: { code: 'unsupported_grant', message: 'Supported: authorization_code, refresh_token', status: 400 } });
         }
         if (!code || !client_id) {
             return res.status(400).json({ error: { code: 'missing_params', message: 'code and client_id required', status: 400 } });
@@ -1350,22 +1630,361 @@ app.get('/api/v1/oauth/userinfo', authMiddleware, (req, res) => {
     const u = req.user;
     res.json({
         id: u.id, email: u.email, name: u.name,
+        role: u.role,
         email_verified: u.email_verified,
+        locale: u.locale || 'ru',
+        theme: u.theme || 'dark',
+        telegram_id: u.telegram_id || null,
+        telegram_linked: !!u.telegram_linked,
+        cupol_balance: u.cupol_balance || 0,
+        cupol_subscription_end: u.cupol_subscription_end || null,
+        cupol_subscription_active: u.cupol_subscription_active || false,
+        cupol_username: u.cupol_username || null,
         created_at: u.created_at
     });
 });
+
+// POST /api/v1/internal/cupol-sync — CUPOL pushes balance/subscription data (API key auth)
+app.post('/api/v1/internal/cupol-sync', authMiddleware, async (req, res) => {
+    try {
+        // Only admin/enterprise API keys can call this
+        if (req.user.role !== 'admin' && req.user.role !== 'enterprise') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Admin or enterprise access required', status: 403 } });
+        }
+        const { telegram_id, balance, subscription_end, subscription_active, username } = req.body;
+        if (!telegram_id) {
+            return res.status(400).json({ error: { code: 'missing_fields', message: 'telegram_id is required', status: 400 } });
+        }
+        // Find user by telegram_id
+        const userResult = await pool.query('SELECT id FROM users WHERE telegram_id = $1', [telegram_id]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: { code: 'not_found', message: 'No TPID user linked to this telegram_id', status: 404 } });
+        }
+        const userId = userResult.rows[0].id;
+        const updates = [];
+        const params = [];
+        let idx = 1;
+        if (balance !== undefined) { updates.push(`cupol_balance = $${idx++}`); params.push(balance); }
+        if (subscription_end !== undefined) { updates.push(`cupol_subscription_end = $${idx++}`); params.push(subscription_end); }
+        if (subscription_active !== undefined) { updates.push(`cupol_subscription_active = $${idx++}`); params.push(!!subscription_active); }
+        if (username !== undefined) { updates.push(`cupol_username = $${idx++}`); params.push(username); }
+        updates.push(`cupol_synced_at = NOW()`);
+        if (updates.length > 1) {
+            params.push(userId);
+            await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = $${idx}`, params);
+        }
+        res.json({ success: true, user_id: userId });
+    } catch (err) {
+        console.error('CUPOL sync error:', err);
+        res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
+// GET /api/v1/internal/cupol-data — CUPOL pulls TPID profile for a telegram_id (API key auth)
+app.get('/api/v1/internal/cupol-data', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin' && req.user.role !== 'enterprise') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Admin or enterprise access required', status: 403 } });
+        }
+        const telegram_id = req.query.telegram_id;
+        if (!telegram_id) {
+            return res.status(400).json({ error: { code: 'missing_fields', message: 'telegram_id query param required', status: 400 } });
+        }
+        const result = await pool.query('SELECT id, email, name, email_verified, created_at FROM users WHERE telegram_id = $1', [telegram_id]);
+        if (result.rows.length === 0) {
+            return res.json({ linked: false });
+        }
+        const u = result.rows[0];
+        res.json({ linked: true, tpid_user_id: u.id, email: u.email, name: u.name, email_verified: u.email_verified, created_at: u.created_at });
+    } catch (err) {
+        console.error('CUPOL data error:', err);
+        res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
+// Token blacklist (in-memory, cleared on restart — acceptable for OAuth revocation)
+const tokenBlacklist = new Set();
+setInterval(() => {
+    // Clean blacklist entries older than 2h (tokens expire in 1h anyway)
+    // We store expiry timestamps, so just clear periodically
+    if (tokenBlacklist.size > 10000) tokenBlacklist.clear();
+}, 3600000);
 
 // POST /api/v1/oauth/revoke — revoke an OAuth token
 app.post('/api/v1/oauth/revoke', async (req, res) => {
     try {
         const { token } = req.body;
         if (!token) return res.status(400).json({ error: { code: 'missing_token', message: 'Token required', status: 400 } });
-        // We just acknowledge — JWT tokens are stateless, so "revoking" is a no-op
-        // In production, add token to a blacklist
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            tokenBlacklist.add(token);
+        } catch (e) {
+            // Token already expired or invalid — that's fine
+        }
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
     }
+});
+
+// GET /api/v1/oauth/branding — returns button configs, CSS snippet, and integration code for enterprises
+app.get('/api/v1/oauth/branding', async (req, res) => {
+    try {
+        const { client_id } = req.query;
+        const issuer = `https://${req.get('host') || 'tokenpay.space'}`;
+
+        // If client_id provided, return app-specific branding
+        let appBranding = null;
+        if (client_id) {
+            const keyResult = await pool.query(
+                `SELECT k.app_name, k.name, k.app_icon_url, k.app_description,
+                        u.name as owner_name, u.company_name as owner_company
+                 FROM api_keys k JOIN users u ON k.user_id = u.id
+                 WHERE k.public_key = $1 AND k.status = $2`,
+                [client_id, 'active']
+            );
+            if (keyResult.rows.length > 0) {
+                const ent = keyResult.rows[0];
+                appBranding = {
+                    app_name: ent.app_name || ent.name,
+                    owner: ent.owner_company || ent.owner_name,
+                    icon_url: ent.app_icon_url || null,
+                    description: ent.app_description || null
+                };
+            }
+        }
+
+        res.json({
+            provider: 'TOKEN PAY ID',
+            version: '2.1.0',
+            widget_url: `${issuer}/sdk/tpid-widget.js`,
+            widget_version: '1.2.0',
+            authorize_url: `${issuer}/api/v1/oauth/authorize`,
+            token_url: `${issuer}/api/v1/oauth/token`,
+            icon: {
+                shield_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L3 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.5 12.5l2 2 3.5-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                logo_dark_url: `${issuer}/tokenpay-id-light.png`,
+                logo_light_url: `${issuer}/tokenpay-id-dark.png`,
+                icon_url: `${issuer}/tokenpay-icon.png`
+            },
+            buttons: {
+                standard: {
+                    description: 'Full "Sign in with TOKEN PAY ID" button',
+                    html: `<div data-tpid-button="standard"></div>`,
+                    api: 'TPID.renderButton("#container")'
+                },
+                icon: {
+                    description: 'Round icon-only button (for navbars)',
+                    html: `<div data-tpid-button="icon"></div>`,
+                    html_sizes: {
+                        sm: '<div data-tpid-button="icon" data-tpid-size="sm"></div>',
+                        md: '<div data-tpid-button="icon" data-tpid-size="md"></div>',
+                        lg: '<div data-tpid-button="icon" data-tpid-size="lg"></div>'
+                    },
+                    api: 'TPID.renderIconButton("#container", { size: "md" })'
+                },
+                logo: {
+                    description: 'Transparent logo button (TOKEN PAY ID text)',
+                    html: `<div data-tpid-button="logo"></div>`,
+                    api: 'TPID.renderLogoButton("#container")'
+                }
+            },
+            integration: {
+                quick_start: `<!-- Add to your HTML -->\n<script src="${issuer}/sdk/tpid-widget.js" data-client-id="YOUR_CLIENT_ID"><\/script>\n\n<!-- Buttons appear automatically in these containers -->\n<div data-tpid-button="standard"></div>\n<div data-tpid-button="icon"></div>\n<div data-tpid-button="logo"></div>`,
+                oauth_popup: `// OAuth popup flow (returns Promise)\nconst result = await TPID.loginWithOAuth({\n  clientId: 'YOUR_CLIENT_ID',\n  redirectUri: 'https://yoursite.com/callback',\n  scope: 'profile email'\n});\nconsole.log(result.code); // authorization code`,
+                manual_init: `<script src="${issuer}/sdk/tpid-widget.js"><\/script>\n<script>\nTPID.init({\n  clientId: 'YOUR_CLIENT_ID',\n  theme: 'auto',\n  lang: 'ru',\n  onSuccess: function(data) {\n    console.log('User:', data.user);\n    console.log('Token:', data.accessToken);\n  }\n});\n<\/script>`
+            },
+            themes: ['dark', 'light', 'auto'],
+            languages: ['ru', 'en'],
+            app: appBranding
+        });
+    } catch (err) {
+        console.error('Branding error:', err);
+        res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
+// POST /api/v1/oauth/cancel — enterprise notifies that user closed/cancelled OAuth flow
+app.post('/api/v1/oauth/cancel', async (req, res) => {
+    try {
+        const { client_id, state, reason } = req.body;
+        if (!client_id) {
+            return res.status(400).json({ error: { code: 'missing_params', message: 'client_id is required', status: 400 } });
+        }
+        // Find enterprise by client_id (public_key)
+        const keyResult = await pool.query(
+            'SELECT k.user_id, k.name, k.app_name FROM api_keys k WHERE k.public_key = $1 AND k.status = $2',
+            [client_id, 'active']
+        );
+        if (keyResult.rows.length === 0) {
+            return res.status(400).json({ error: { code: 'invalid_client', message: 'Unknown client_id', status: 400 } });
+        }
+        const ent = keyResult.rows[0];
+        // Invalidate any pending oauth codes for this client_id + state
+        if (state) {
+            await pool.query(
+                "UPDATE oauth_codes SET used = TRUE WHERE client_id = $1 AND used = FALSE AND expires_at > NOW()",
+                [client_id]
+            ).catch(() => {});
+        }
+        // Fire webhook to enterprise
+        fireWebhook(ent.user_id, 'oauth.cancelled', {
+            client_id,
+            state: state || null,
+            reason: reason || 'user_closed',
+            timestamp: new Date().toISOString()
+        });
+        // Log
+        await pool.query(
+            `INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [uuidv4(), ent.user_id, 'oauth_cancelled', `OAuth отменён пользователем (${ent.app_name || ent.name})`, 'info', req.ip]
+        ).catch(() => {});
+        res.json({ success: true });
+    } catch (err) {
+        console.error('OAuth cancel error:', err);
+        res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
+// POST /api/v1/oauth/deny — consent page calls this when user explicitly denies
+app.post('/api/v1/oauth/deny', async (req, res) => {
+    try {
+        const { client_id, state } = req.body;
+        if (!client_id) {
+            return res.status(400).json({ error: { code: 'missing_params', message: 'client_id is required', status: 400 } });
+        }
+        const keyResult = await pool.query(
+            'SELECT k.user_id, k.name, k.app_name FROM api_keys k WHERE k.public_key = $1 AND k.status = $2',
+            [client_id, 'active']
+        );
+        if (keyResult.rows.length === 0) {
+            return res.status(400).json({ error: { code: 'invalid_client', message: 'Unknown client_id', status: 400 } });
+        }
+        const ent = keyResult.rows[0];
+        // Get user info if authenticated
+        let userId = null;
+        let userEmail = null;
+        const auth = req.headers.authorization;
+        if (auth && auth.startsWith('Bearer ')) {
+            try {
+                const decoded = jwt.verify(auth.split(' ')[1], JWT_SECRET);
+                const userRow = await pool.query('SELECT id, email FROM users WHERE id = $1', [decoded.userId]);
+                if (userRow.rows.length > 0) { userId = userRow.rows[0].id; userEmail = userRow.rows[0].email; }
+            } catch (e) { /* token invalid — that's ok, user denied without being logged in */ }
+        }
+        // Fire webhook to enterprise
+        fireWebhook(ent.user_id, 'oauth.denied', {
+            client_id,
+            state: state || null,
+            user_id: userId,
+            user_email: userEmail,
+            timestamp: new Date().toISOString()
+        });
+        // Log activity
+        if (userId) {
+            await pool.query(
+                `INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+                [uuidv4(), userId, 'oauth_denied', `OAuth отклонён для ${ent.app_name || ent.name}`, 'info', req.ip]
+            ).catch(() => {});
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('OAuth deny error:', err);
+        res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
+// ===== GENERIC ENTERPRISE DATA SYNC (replaces CUPOL-specific endpoints) =====
+
+// POST /api/v1/enterprise/sync-user — any enterprise pushes user metadata (API key auth)
+app.post('/api/v1/enterprise/sync-user', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin' && req.user.role !== 'enterprise') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
+        }
+        const { telegram_id, user_id, metadata } = req.body;
+        if (!telegram_id && !user_id) {
+            return res.status(400).json({ error: { code: 'missing_fields', message: 'telegram_id or user_id is required', status: 400 } });
+        }
+        // Find TPID user
+        let userResult;
+        if (user_id) {
+            userResult = await pool.query('SELECT id FROM users WHERE id = $1', [user_id]);
+        } else {
+            userResult = await pool.query('SELECT id FROM users WHERE telegram_id = $1', [telegram_id]);
+        }
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: { code: 'not_found', message: 'No TPID user found', status: 404 } });
+        }
+        const tpidUserId = userResult.rows[0].id;
+        // Update connected_apps metadata
+        if (metadata && typeof metadata === 'object') {
+            const existingConn = await pool.query(
+                'SELECT id FROM connected_apps WHERE user_id = $1 AND enterprise_id = $2',
+                [tpidUserId, req.user.id]
+            );
+            if (existingConn.rows.length > 0) {
+                await pool.query(
+                    'UPDATE connected_apps SET last_used = NOW() WHERE id = $1',
+                    [existingConn.rows[0].id]
+                );
+            }
+        }
+        // Also support legacy CUPOL-specific fields for backward compatibility
+        const { balance, subscription_end, subscription_active, username } = req.body;
+        const updates = []; const params = []; let idx = 1;
+        if (balance !== undefined) { updates.push(`cupol_balance = $${idx++}`); params.push(balance); }
+        if (subscription_end !== undefined) { updates.push(`cupol_subscription_end = $${idx++}`); params.push(subscription_end); }
+        if (subscription_active !== undefined) { updates.push(`cupol_subscription_active = $${idx++}`); params.push(!!subscription_active); }
+        if (username !== undefined) { updates.push(`cupol_username = $${idx++}`); params.push(username); }
+        if (updates.length > 0) {
+            updates.push(`cupol_synced_at = NOW()`);
+            params.push(tpidUserId);
+            await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = $${idx}`, params);
+        }
+        res.json({ success: true, user_id: tpidUserId });
+    } catch (err) {
+        console.error('Enterprise sync-user error:', err);
+        res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
+// GET /api/v1/enterprise/user-data — any enterprise pulls TPID user profile (API key auth)
+app.get('/api/v1/enterprise/user-data', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin' && req.user.role !== 'enterprise') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
+        }
+        const { telegram_id, user_id } = req.query;
+        if (!telegram_id && !user_id) {
+            return res.status(400).json({ error: { code: 'missing_fields', message: 'telegram_id or user_id query param required', status: 400 } });
+        }
+        let result;
+        if (user_id) {
+            result = await pool.query('SELECT id, email, name, email_verified, locale, theme, created_at FROM users WHERE id = $1', [user_id]);
+        } else {
+            result = await pool.query('SELECT id, email, name, email_verified, locale, theme, created_at FROM users WHERE telegram_id = $1', [telegram_id]);
+        }
+        if (result.rows.length === 0) {
+            return res.json({ linked: false });
+        }
+        const u = result.rows[0];
+        res.json({ linked: true, tpid_user_id: u.id, email: u.email, name: u.name, email_verified: u.email_verified, locale: u.locale, theme: u.theme, created_at: u.created_at });
+    } catch (err) {
+        console.error('Enterprise user-data error:', err);
+        res.status(500).json({ error: { code: 'server_error', message: 'Internal server error', status: 500 } });
+    }
+});
+
+// ===== SDK VERSION ENDPOINT =====
+app.get('/api/v1/sdk/version', (req, res) => {
+    res.json({
+        widget: '1.2.0',
+        api: '2.1.0',
+        widget_url: 'https://tokenpay.space/sdk/tpid-widget.js',
+        changelog_url: 'https://tokenpay.space/docs#changelog',
+        breaking_changes: false
+    });
 });
 
 // ===== DB INIT + ADMIN SEED =====
@@ -1491,6 +2110,14 @@ async function initDB() {
         // Enterprise callback URL
         await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS callback_url VARCHAR(500) DEFAULT NULL`);
 
+        // API key expiry support
+        await client.query(`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP DEFAULT NULL`);
+
+        // OAuth app branding on API keys (so consent page shows proper app name/icon)
+        await client.query(`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS app_name VARCHAR(255) DEFAULT NULL`);
+        await client.query(`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS app_icon_url VARCHAR(500) DEFAULT NULL`);
+        await client.query(`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS app_description TEXT DEFAULT NULL`);
+
         // Connected apps tracking (when user authorizes via OAuth on enterprise sites)
         await client.query(`
             CREATE TABLE IF NOT EXISTS connected_apps (
@@ -1504,6 +2131,35 @@ async function initDB() {
             );
             CREATE INDEX IF NOT EXISTS idx_connected_apps_user ON connected_apps(user_id);
             CREATE INDEX IF NOT EXISTS idx_connected_apps_enterprise ON connected_apps(enterprise_id);
+        `);
+
+        // Telegram integration: telegram_id column for CUPOL VPN linking
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_id BIGINT DEFAULT NULL`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id)`);
+
+        // CUPOL VPN sync columns
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cupol_balance INTEGER DEFAULT 0`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cupol_subscription_end TIMESTAMP DEFAULT NULL`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cupol_subscription_active BOOLEAN DEFAULT FALSE`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cupol_username VARCHAR(255) DEFAULT NULL`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cupol_synced_at TIMESTAMP DEFAULT NULL`);
+
+        // Webhook system for enterprise
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS webhook_url VARCHAR(500) DEFAULT NULL`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS webhook_secret VARCHAR(64) DEFAULT NULL`);
+        await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_redirect_uris TEXT DEFAULT NULL`);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS webhook_deliveries (
+                id VARCHAR(64) PRIMARY KEY,
+                enterprise_id VARCHAR(64) REFERENCES users(id) ON DELETE CASCADE,
+                event VARCHAR(100) NOT NULL,
+                status_code INTEGER DEFAULT 0,
+                duration_ms INTEGER DEFAULT 0,
+                error TEXT,
+                delivered_at TIMESTAMP DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_webhook_del_enterprise ON webhook_deliveries(enterprise_id);
+            CREATE INDEX IF NOT EXISTS idx_webhook_del_delivered ON webhook_deliveries(delivered_at);
         `);
 
         // Seed admin
@@ -1530,6 +2186,8 @@ async function initDB() {
             const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
             await client.query('UPDATE users SET password_hash = $1 WHERE email = $2', [adminHash, ADMIN_EMAIL]);
             console.log('[INIT] Admin account exists:', ADMIN_EMAIL, '(password synced)');
+            // Auto-fix: rename admin key from 'Admin Master Key' to proper app name
+            await client.query(`UPDATE api_keys SET app_name = 'CUPOL VPN', app_description = 'Безопасный VPN-сервис' WHERE name = 'Admin Master Key' AND app_name IS NULL`).catch(() => {});
         }
 
         console.log('[INIT] Database tables ready');
@@ -1688,20 +2346,38 @@ app.get('/api/v1/users/connected-apps', authMiddleware, async (req, res) => {
 // User: revoke connected app
 app.delete('/api/v1/users/connected-apps/:id', authMiddleware, async (req, res) => {
     try {
+        const appRow = await pool.query('SELECT enterprise_id FROM connected_apps WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
         await pool.query('DELETE FROM connected_apps WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+        if (appRow.rows.length > 0) {
+            fireWebhook(appRow.rows[0].enterprise_id, 'user.unlink', {
+                user_id: req.user.id, email: req.user.email, timestamp: new Date().toISOString()
+            });
+        }
+        await pool.query(`INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [uuidv4(), req.user.id, 'app_revoked', 'Приложение отвязано', 'success', req.ip]).catch(() => {});
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
     }
 });
 
-// Enterprise: get settings (callback URL etc)
+// Enterprise: get settings
 app.get('/api/v1/enterprise/settings', authMiddleware, async (req, res) => {
     try {
         if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
             return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
         }
-        res.json({ callback_url: req.user.callback_url || '', company_name: req.user.company_name || '', website: req.user.website || '' });
+        const r = await pool.query('SELECT callback_url, company_name, website, description, webhook_url, webhook_secret, allowed_redirect_uris FROM users WHERE id = $1', [req.user.id]);
+        const u = r.rows[0];
+        res.json({
+            callback_url: u.callback_url || '',
+            company_name: u.company_name || '',
+            website: u.website || '',
+            description: u.description || '',
+            webhook_url: u.webhook_url || '',
+            has_webhook_secret: !!(u.webhook_secret),
+            allowed_redirect_uris: u.allowed_redirect_uris ? u.allowed_redirect_uris.split('\n').filter(Boolean) : []
+        });
     } catch (err) {
         res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
     }
@@ -1713,17 +2389,26 @@ app.put('/api/v1/enterprise/settings', authMiddleware, async (req, res) => {
         if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
             return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
         }
-        const { callback_url } = req.body;
-        if (callback_url !== undefined) {
-            const cleanUrl = sanitize(callback_url, 500);
-            await pool.query('UPDATE users SET callback_url = $1 WHERE id = $2', [cleanUrl || null, req.user.id]);
-            req.user.callback_url = cleanUrl;
+        const { callback_url, company_name, website, description, allowed_redirect_uris } = req.body;
+        const updates = []; const params = []; let idx = 1;
+        if (callback_url !== undefined) { updates.push(`callback_url = $${idx++}`); params.push(sanitize(callback_url, 500) || null); }
+        if (company_name !== undefined) { updates.push(`company_name = $${idx++}`); params.push(sanitize(company_name, 255)); }
+        if (website !== undefined) { updates.push(`website = $${idx++}`); params.push(sanitize(website, 255)); }
+        if (description !== undefined) { updates.push(`description = $${idx++}`); params.push(sanitize(description, 2000)); }
+        if (allowed_redirect_uris !== undefined) {
+            const uriList = Array.isArray(allowed_redirect_uris)
+                ? allowed_redirect_uris.join('\n')
+                : String(allowed_redirect_uris);
+            updates.push(`allowed_redirect_uris = $${idx++}`);
+            params.push(uriList.substring(0, 5000) || null);
         }
-        await pool.query(
-            `INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-            [uuidv4(), req.user.id, 'settings_updated', 'Настройки интеграции обновлены', 'success', req.ip]
-        );
-        res.json({ success: true, callback_url: req.user.callback_url || '' });
+        if (updates.length > 0) {
+            params.push(req.user.id);
+            await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = $${idx}`, params);
+        }
+        await pool.query(`INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [uuidv4(), req.user.id, 'settings_updated', 'Настройки обновлены', 'success', req.ip]);
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
     }
@@ -1771,6 +2456,164 @@ app.get('/api/v1/enterprise/users', authMiddleware, async (req, res) => {
     }
 });
 
+// ===== WEBHOOK SYSTEM =====
+
+async function fireWebhook(enterpriseId, event, payload) {
+    if (!enterpriseId) return;
+    try {
+        const result = await pool.query(
+            `SELECT webhook_url, webhook_secret FROM users WHERE id = $1 AND webhook_url IS NOT NULL AND webhook_url != ''`,
+            [enterpriseId]
+        );
+        if (result.rows.length === 0) return;
+        const { webhook_url, webhook_secret } = result.rows[0];
+        if (!webhook_url || !/^https?:\/\//.test(webhook_url)) return;
+
+        const deliveryId = uuidv4();
+        const body = JSON.stringify({ id: deliveryId, event, timestamp: new Date().toISOString(), data: payload });
+        const headers = {
+            'Content-Type': 'application/json',
+            'User-Agent': 'TPID-Webhook/1.0',
+            'X-TPID-Event': event,
+            'X-TPID-Delivery': deliveryId,
+        };
+        if (webhook_secret) {
+            headers['X-TPID-Signature'] = 'sha256=' + crypto.createHmac('sha256', webhook_secret).update(body).digest('hex');
+        }
+        const startMs = Date.now();
+        try {
+            const r = await fetch(webhook_url, { method: 'POST', headers, body, signal: AbortSignal.timeout(10000) });
+            await pool.query(
+                `INSERT INTO webhook_deliveries (id, enterprise_id, event, status_code, duration_ms, delivered_at) VALUES ($1, $2, $3, $4, $5, NOW())`,
+                [deliveryId, enterpriseId, event, r.status, Date.now() - startMs]
+            ).catch(() => {});
+        } catch (err) {
+            await pool.query(
+                `INSERT INTO webhook_deliveries (id, enterprise_id, event, status_code, duration_ms, error, delivered_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+                [deliveryId, enterpriseId, event, 0, Date.now() - startMs, err.message.substring(0, 255)]
+            ).catch(() => {});
+        }
+    } catch (err) {
+        console.error('[WEBHOOK] fireWebhook error:', err.message);
+    }
+}
+
+// Enterprise: get webhook settings
+app.get('/api/v1/enterprise/webhook', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
+        }
+        const r = await pool.query('SELECT webhook_url, webhook_secret, allowed_redirect_uris FROM users WHERE id = $1', [req.user.id]);
+        const u = r.rows[0];
+        res.json({
+            webhook_url: u.webhook_url || '',
+            has_secret: !!(u.webhook_secret),
+            allowed_redirect_uris: u.allowed_redirect_uris ? u.allowed_redirect_uris.split('\n').filter(Boolean) : []
+        });
+    } catch (err) {
+        res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
+    }
+});
+
+// Enterprise: update webhook URL + allowed redirect URIs
+app.put('/api/v1/enterprise/webhook', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
+        }
+        const { webhook_url, allowed_redirect_uris } = req.body;
+        const updates = []; const params = []; let idx = 1;
+        if (webhook_url !== undefined) {
+            const clean = webhook_url ? sanitize(webhook_url, 500) : null;
+            if (clean && !/^https?:\/\//.test(clean)) {
+                return res.status(400).json({ error: { code: 'invalid_url', message: 'webhook_url must start with https://', status: 400 } });
+            }
+            updates.push(`webhook_url = $${idx++}`); params.push(clean || null);
+        }
+        if (allowed_redirect_uris !== undefined) {
+            const raw = Array.isArray(allowed_redirect_uris) ? allowed_redirect_uris.join('\n') : String(allowed_redirect_uris || '');
+            updates.push(`allowed_redirect_uris = $${idx++}`); params.push(sanitize(raw, 3000) || null);
+        }
+        if (updates.length === 0) return res.status(400).json({ error: { code: 'no_updates', message: 'No fields to update', status: 400 } });
+        params.push(req.user.id);
+        await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = $${idx}`, params);
+        await pool.query(`INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [uuidv4(), req.user.id, 'webhook_updated', 'Настройки вебхука обновлены', 'success', req.ip]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
+    }
+});
+
+// Enterprise: rotate webhook signing secret
+app.post('/api/v1/enterprise/webhook/rotate-secret', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
+        }
+        const secret = crypto.randomBytes(32).toString('hex');
+        await pool.query('UPDATE users SET webhook_secret = $1 WHERE id = $2', [secret, req.user.id]);
+        await pool.query(`INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [uuidv4(), req.user.id, 'webhook_secret_rotated', 'Секрет вебхука обновлён', 'success', req.ip]);
+        res.json({ success: true, secret });
+    } catch (err) {
+        res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
+    }
+});
+
+// Enterprise: send test webhook
+app.post('/api/v1/enterprise/webhook/test', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
+        }
+        const r = await pool.query('SELECT webhook_url FROM users WHERE id = $1', [req.user.id]);
+        if (!r.rows[0]?.webhook_url) {
+            return res.status(400).json({ error: { code: 'no_webhook', message: 'Configure a webhook URL first', status: 400 } });
+        }
+        await fireWebhook(req.user.id, 'test', { message: 'Test webhook from TOKEN PAY ID', app: req.user.company_name || req.user.email, timestamp: new Date().toISOString() });
+        res.json({ success: true, message: 'Test event fired. Check the delivery log.' });
+    } catch (err) {
+        res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
+    }
+});
+
+// Enterprise: webhook delivery log
+app.get('/api/v1/enterprise/webhook/deliveries', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'enterprise' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: { code: 'forbidden', message: 'Enterprise access required', status: 403 } });
+        }
+        const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+        const offset = parseInt(req.query.offset) || 0;
+        const result = await pool.query(
+            'SELECT id, event, status_code, duration_ms, error, delivered_at FROM webhook_deliveries WHERE enterprise_id = $1 ORDER BY delivered_at DESC LIMIT $2 OFFSET $3',
+            [req.user.id, limit, offset]
+        );
+        const count = await pool.query('SELECT COUNT(*) FROM webhook_deliveries WHERE enterprise_id = $1', [req.user.id]);
+        res.json({ deliveries: result.rows, total: parseInt(count.rows[0].count) });
+    } catch (err) {
+        res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
+    }
+});
+
+// Admin: view all webhook deliveries
+app.get('/api/v1/admin/webhooks', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+        const offset = parseInt(req.query.offset) || 0;
+        const result = await pool.query(
+            `SELECT wd.*, u.email, u.company_name FROM webhook_deliveries wd JOIN users u ON wd.enterprise_id = u.id ORDER BY wd.delivered_at DESC LIMIT $1 OFFSET $2`,
+            [limit, offset]
+        );
+        const count = await pool.query('SELECT COUNT(*) FROM webhook_deliveries');
+        res.json({ deliveries: result.rows, total: parseInt(count.rows[0].count) });
+    } catch (err) {
+        res.status(500).json({ error: { code: 'server_error', message: 'Server error', status: 500 } });
+    }
+});
+
 // ===== CONTACT FORM =====
 app.post('/api/v1/contact', async (req, res) => {
     try {
@@ -1788,11 +2631,13 @@ app.post('/api/v1/contact', async (req, res) => {
                     <div style="background:#111;padding:16px;border-radius:8px;border:1px solid #222;margin-top:8px">${sanitize(message, 5000).replace(/\n/g, '<br>')}</div>
                 </div>`
             ).catch(smtpErr => console.error('[CONTACT] Email error:', smtpErr.message));
-        // Log to DB for admin review
+        // Log to DB for admin review (use admin user_id to avoid FK null issue)
         try {
+            const adminRow = await pool.query('SELECT id FROM users WHERE role = $1 LIMIT 1', ['admin']);
+            const logUserId = adminRow.rows.length > 0 ? adminRow.rows[0].id : null;
             await pool.query(
                 `INSERT INTO activity_log (id, user_id, type, title, status, ip, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-                [uuidv4(), null, 'contact_form', `Обращение от ${sanitize(name, 50)}: ${sanitize(message, 100)}`, 'info', req.ip]
+                [uuidv4(), logUserId, 'contact_form', `Обращение от ${sanitize(name, 50)}: ${sanitize(message, 100)}`, 'info', req.ip]
             );
         } catch(e) {}
         res.json({ success: true });
@@ -1801,6 +2646,24 @@ app.post('/api/v1/contact', async (req, res) => {
         res.status(500).json({ error: { message: 'Failed to send' } });
     }
 });
+
+// ===== PERIODIC CLEANUP =====
+setInterval(async () => {
+    try {
+        // Clean expired email codes (older than 1 day)
+        await pool.query("DELETE FROM email_codes WHERE expires_at < NOW() - INTERVAL '1 day'");
+        // Clean expired oauth codes (older than 1 hour)
+        await pool.query("DELETE FROM oauth_codes WHERE expires_at < NOW() - INTERVAL '1 hour'");
+        // Clean stale sessions (inactive > 30 days)
+        await pool.query("DELETE FROM sessions WHERE last_active < NOW() - INTERVAL '30 days'");
+        // Clean old webhook deliveries (older than 30 days)
+        await pool.query("DELETE FROM webhook_deliveries WHERE delivered_at < NOW() - INTERVAL '30 days'");
+        // Clean old activity log entries (older than 90 days)
+        await pool.query("DELETE FROM activity_log WHERE created_at < NOW() - INTERVAL '90 days'");
+    } catch (err) {
+        // Cleanup is best-effort
+    }
+}, 6 * 3600000); // Every 6 hours
 
 // ===== START =====
 app.listen(PORT, async () => {
