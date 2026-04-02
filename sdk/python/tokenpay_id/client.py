@@ -150,6 +150,70 @@ class TokenPayIDClient:
             "client_secret": self.client_secret,
         })
 
+    # ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+
+    def get_notifications(self, access_token: str) -> Dict[str, Any]:
+        """Get notification history (last 50)."""
+        return self._get("/api/v1/notifications", access_token)
+
+    def mark_notification_read(self, access_token: str, notification_id: str) -> Dict[str, Any]:
+        """Mark a notification as read."""
+        return self._put(f"/api/v1/notifications/{notification_id}/read", access_token)
+
+    def mark_all_notifications_read(self, access_token: str) -> Dict[str, Any]:
+        """Mark all notifications as read."""
+        return self._put("/api/v1/notifications/read-all", access_token)
+
+    # ── WEBHOOK VERIFICATION ──────────────────────────────────────────────────
+
+    @staticmethod
+    def verify_webhook_signature(
+        payload: str,
+        signature: str,
+        secret: str,
+        tolerance: int = 300,
+    ) -> bool:
+        """
+        Verify a webhook signature (Stripe-style t=timestamp,v1=hmac).
+
+        Args:
+            payload: Raw request body string
+            signature: X-TPID-Signature header value
+            secret: Your webhook secret from dashboard
+            tolerance: Max age in seconds (default 5 min)
+
+        Returns:
+            True if signature is valid
+        """
+        import hmac as _hmac
+        import time
+
+        parts = {}
+        for part in signature.split(","):
+            k, _, v = part.partition("=")
+            parts[k] = v
+
+        ts_str = parts.get("t", "")
+        v1 = parts.get("v1", "")
+        if not ts_str or not v1:
+            return False
+
+        try:
+            ts = int(ts_str)
+        except ValueError:
+            return False
+
+        if abs(time.time() - ts) > tolerance:
+            return False
+
+        expected = _hmac.new(
+            secret.encode(),
+            f"{ts}.{payload}".encode(),
+            hashlib.sha256,
+        ).hexdigest()
+
+        return _hmac.compare_digest(expected, v1)
+
     # ── INTERNAL ──────────────────────────────────────────────────────────────
 
     def _post(self, path: str, body: dict) -> dict:
@@ -176,6 +240,24 @@ class TokenPayIDClient:
         import urllib.request, json
         req = urllib.request.Request(
             self.base_url + path,
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        try:
+            with urllib.request.urlopen(req) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            err = json.loads(e.read()).get("error", {})
+            raise TokenPayIDError(
+                err.get("code", "request_failed"),
+                err.get("message", str(e)),
+                err.get("status", e.code),
+            )
+
+    def _put(self, path: str, access_token: str) -> dict:
+        import urllib.request, json
+        req = urllib.request.Request(
+            self.base_url + path,
+            method="PUT",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         try:

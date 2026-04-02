@@ -2,7 +2,7 @@
   "info": {
     "name": "TOKEN PAY ID API",
     "description": "Official Postman collection for TOKEN PAY ID — unified authentication platform by TOKEN PAY LLC.\n\nBase URL: https://tokenpay.space\nDocs: https://tokenpay.space/docs\nContact: info@tokenpay.space",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -424,6 +424,46 @@
               "mode": "raw",
               "raw": "{\n  \"callback_url\": \"https://yourapp.com/callback\"\n}"
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/notifications",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Get notification history (last 50)"
+          }
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/api/v1/notifications/NOTIFICATION_ID/read",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Mark a single notification as read"
+          }
+        },
+        {
+          "name": "Mark All Read",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/api/v1/notifications/read-all",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "description": "Mark all notifications as read"
+          }
+        },
+        {
+          "name": "SSE Notification Stream",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/notifications/stream?token={{access_token}}",
+            "description": "Server-Sent Events stream for real-time push notifications. Note: Postman does not natively support SSE — use a browser or EventSource client."
           }
         }
       ]

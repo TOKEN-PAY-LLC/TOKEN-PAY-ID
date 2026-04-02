@@ -4,6 +4,7 @@ package tpid
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -70,6 +71,22 @@ type TokenResponse struct {
 type PKCEPair struct {
 	Verifier  string
 	Challenge string
+}
+
+// Notification represents a push notification.
+type Notification struct {
+	ID        string `json:"id"`
+	Type      string `json:"type"`
+	Title     string `json:"title"`
+	Body      string `json:"body"`
+	IsRead    bool   `json:"is_read"`
+	CreatedAt string `json:"created_at"`
+}
+
+// NotificationsResponse is returned from the notifications endpoint.
+type NotificationsResponse struct {
+	Notifications []Notification `json:"notifications"`
+	Unread        int            `json:"unread"`
 }
 
 // Error represents a TOKEN PAY ID API error.
@@ -189,6 +206,63 @@ func (c *Client) RevokeToken(token string) error {
 	return c.post("/api/v1/oauth/revoke", body, &resp)
 }
 
+// GetNotifications retrieves the notification history (last 50).
+func (c *Client) GetNotifications(accessToken string) (*NotificationsResponse, error) {
+	var resp NotificationsResponse
+	if err := c.get("/api/v1/notifications", accessToken, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// MarkNotificationRead marks a single notification as read.
+func (c *Client) MarkNotificationRead(accessToken, notificationID string) error {
+	var resp map[string]interface{}
+	return c.put("/api/v1/notifications/"+notificationID+"/read", accessToken, &resp)
+}
+
+// MarkAllNotificationsRead marks all notifications as read.
+func (c *Client) MarkAllNotificationsRead(accessToken string) error {
+	var resp map[string]interface{}
+	return c.put("/api/v1/notifications/read-all", accessToken, &resp)
+}
+
+// VerifyWebhookSignature verifies a TPID webhook signature (Stripe-style t=ts,v1=hmac).
+// Returns true if the signature is valid and within the tolerance window.
+func VerifyWebhookSignature(payload, signature, secret string, toleranceSec int) bool {
+	if toleranceSec <= 0 {
+		toleranceSec = 300
+	}
+	parts := map[string]string{}
+	for _, seg := range strings.Split(signature, ",") {
+		idx := strings.Index(seg, "=")
+		if idx > 0 {
+			parts[seg[:idx]] = seg[idx+1:]
+		}
+	}
+	tsStr, ok1 := parts["t"]
+	v1, ok2 := parts["v1"]
+	if !ok1 || !ok2 {
+		return false
+	}
+	var ts int64
+	if _, err := fmt.Sscanf(tsStr, "%d", &ts); err != nil {
+		return false
+	}
+	now := time.Now().Unix()
+	diff := now - ts
+	if diff < 0 {
+		diff = -diff
+	}
+	if diff > int64(toleranceSec) {
+		return false
+	}
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(fmt.Sprintf("%d.%s", ts, payload)))
+	expected := fmt.Sprintf("%x", mac.Sum(nil))
+	return hmac.Equal([]byte(expected), []byte(v1))
+}
+
 // ── INTERNAL ──────────────────────────────────────────────────────────────────
 
 func (c *Client) post(path string, body interface{}, out interface{}) error {
@@ -203,6 +277,15 @@ func (c *Client) post(path string, body interface{}, out interface{}) error {
 
 func (c *Client) get(path, token string, out interface{}) error {
 	req, err := http.NewRequest("GET", c.cfg.BaseURL+path, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	return c.do(req, out)
+}
+
+func (c *Client) put(path, token string, out interface{}) error {
+	req, err := http.NewRequest("PUT", c.cfg.BaseURL+path, nil)
 	if err != nil {
 		return err
 	}

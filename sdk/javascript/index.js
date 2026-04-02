@@ -132,7 +132,7 @@ class TokenPayIDClient {
         return this._get('/api/v1/users/me', accessToken);
     }
 
-    // ─── TOKEN REVOCATION ────────────────────────────────────────────────────
+    // ─── TOKEN REVOCATION ────────────────────────────────────────────────────────
 
     /**
      * Revoke an OAuth access or refresh token.
@@ -144,6 +144,64 @@ class TokenPayIDClient {
             client_id: this.clientId,
             client_secret: this.clientSecret,
         });
+    }
+
+    // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+
+    /**
+     * Get notification history (last 50).
+     * @param {string} accessToken
+     * @returns {Promise<{notifications: Array, unread: number}>}
+     */
+    async getNotifications(accessToken) {
+        return this._get('/api/v1/notifications', accessToken);
+    }
+
+    /**
+     * Mark a notification as read.
+     * @param {string} accessToken
+     * @param {string} notificationId
+     */
+    async markNotificationRead(accessToken, notificationId) {
+        return this._put('/api/v1/notifications/' + notificationId + '/read', accessToken);
+    }
+
+    /**
+     * Mark all notifications as read.
+     * @param {string} accessToken
+     */
+    async markAllNotificationsRead(accessToken) {
+        return this._put('/api/v1/notifications/read-all', accessToken);
+    }
+
+    // ─── WEBHOOK VERIFICATION ───────────────────────────────────────────────────
+
+    /**
+     * Verify a webhook signature (Stripe-style t=timestamp,v1=hmac).
+     * @param {string} payload     - Raw request body
+     * @param {string} signature   - X-TPID-Signature header value
+     * @param {string} secret      - Your webhook secret
+     * @param {number} [tolerance=300] - Max age in seconds (default 5 min)
+     * @returns {boolean}
+     */
+    static verifyWebhookSignature(payload, signature, secret, tolerance = 300) {
+        const parts = {};
+        signature.split(',').forEach(p => {
+            const [k, ...v] = p.split('=');
+            parts[k] = v.join('=');
+        });
+        const ts = parseInt(parts.t, 10);
+        if (!ts || !parts.v1) return false;
+        if (Math.abs(Date.now() / 1000 - ts) > tolerance) return false;
+        try {
+            const { createHmac } = require('crypto');
+            const expected = createHmac('sha256', secret)
+                .update(ts + '.' + payload)
+                .digest('hex');
+            return expected === parts.v1;
+        } catch (_) {
+            return false;
+        }
     }
 
     // ─── INTERNAL ────────────────────────────────────────────────────────────
@@ -161,6 +219,16 @@ class TokenPayIDClient {
 
     async _get(path, accessToken) {
         const res = await fetch(this.baseUrl + path, {
+            headers: { Authorization: 'Bearer ' + accessToken },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new TokenPayIDError(data.error || { code: 'request_failed', message: res.statusText, status: res.status });
+        return data;
+    }
+
+    async _put(path, accessToken) {
+        const res = await fetch(this.baseUrl + path, {
+            method: 'PUT',
             headers: { Authorization: 'Bearer ' + accessToken },
         });
         const data = await res.json();

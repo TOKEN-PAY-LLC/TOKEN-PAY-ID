@@ -29,6 +29,7 @@ TOKEN PAY ID is the unified digital identity platform by TOKEN PAY LLC. It provi
 - **2FA / TOTP** — Built-in two-factor authentication
 - **Enterprise SSO** — Single sign-on for your organization
 - **Webhooks** — Real-time event notifications
+- **Push Notifications** — SSE-based real-time alerts
 - **SDKs** — JavaScript, Python, Go — ready to use
 
 ---
@@ -44,7 +45,7 @@ TOKEN PAY ID is the unified digital identity platform by TOKEN PAY LLC. It provi
 ### 2. Add the login button (5 minutes)
 
 ```html
-<script src="https://tokenpay.space/tpid-widget.js"></script>
+<script src="https://tokenpay.space/sdk/tpid-widget.js"></script>
 <div id="tpid-login"></div>
 <script>
   TokenPayID.mount('#tpid-login', {
@@ -234,6 +235,15 @@ Authorization: Bearer ACCESS_TOKEN
 | `GET` | `/.well-known/openid-configuration` | OpenID Connect discovery |
 | `GET` | `/.well-known/jwks.json` | JSON Web Key Set |
 
+### Notifications
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/notifications` | Get notification history (last 50) |
+| `PUT` | `/api/v1/notifications/:id/read` | Mark notification as read |
+| `PUT` | `/api/v1/notifications/read-all` | Mark all as read |
+| `GET` | `/api/v1/notifications/stream?token=JWT` | SSE real-time stream |
+
 ### Enterprise
 
 | Method | Endpoint | Description |
@@ -346,14 +356,17 @@ Long-lived key from your dashboard. Use for server-to-server.
 Enterprise accounts can receive real-time event notifications.
 
 **Events:**
-- `user.login` — User authenticated via your app
-- `user.logout` — User revoked access
-- `user.registered` — New user created
+- `user.oauth_connect` — User authorized via your app
+- `user.oauth_cancel` — User closed the consent window
+- `user.oauth_deny` — User denied authorization
+- `user.unlink` — User disconnected from your app
+- `key.created` — New API key created
+- `key.revoked` — API key revoked
 
 **Payload:**
 ```json
 {
-  "event": "user.login",
+  "event": "user.oauth_connect",
   "timestamp": "2025-06-01T12:00:00.000Z",
   "data": {
     "user_id": "tpid_usr_abc123",
@@ -395,6 +408,12 @@ TOKEN PAY ID is fully OpenID Connect compliant.
 - **Refresh token rotation** on every refresh
 - Rate limiting and IP-based abuse prevention
 - Email verification required for all accounts
+
+---
+
+## Contributors
+
+- **Ivan Chernykh** — Lead Developer, Architecture & Implementation
 
 ---
 

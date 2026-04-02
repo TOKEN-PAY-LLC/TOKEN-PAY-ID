@@ -42,6 +42,20 @@ export class TokenPayIDError extends Error {
     status: number;
 }
 
+export interface Notification {
+    id: string;
+    type: string;
+    title: string;
+    body: string;
+    is_read: boolean;
+    created_at: string;
+}
+
+export interface NotificationsResponse {
+    notifications: Notification[];
+    unread: number;
+}
+
 export class TokenPayIDClient {
     constructor(config: TokenPayIDConfig);
     generatePKCE(): Promise<PKCEPair>;
@@ -51,4 +65,8 @@ export class TokenPayIDClient {
     getUser(accessToken: string): Promise<User>;
     getMe(accessToken: string): Promise<User>;
     revokeToken(token: string): Promise<{ success: boolean }>;
+    getNotifications(accessToken: string): Promise<NotificationsResponse>;
+    markNotificationRead(accessToken: string, notificationId: string): Promise<{ success: boolean }>;
+    markAllNotificationsRead(accessToken: string): Promise<{ success: boolean }>;
+    static verifyWebhookSignature(payload: string, signature: string, secret: string, tolerance?: number): boolean;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@tokenpay/id",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Official JavaScript SDK for TOKEN PAY ID — unified authentication platform",
   "main": "index.js",
   "types": "index.d.ts",
