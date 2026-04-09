@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#000"/>
+  <g transform="translate(56,56) scale(0.78)">
+    <!-- Head silhouette -->
+    <path d="M200 450 C120 450 60 380 60 290 C60 170 130 80 220 60 C250 52 270 55 290 65 C340 85 380 130 395 190 C410 250 400 320 370 370 C340 420 290 450 240 450 Z" fill="#fff"/>
+    <!-- Face profile detail -->
+    <path d="M180 350 C170 340 165 320 170 300 C175 280 185 265 200 255 C210 248 215 240 215 230 C215 215 205 200 195 195 C185 190 180 180 185 170" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/>
+    <!-- Orbit ring -->
+    <ellipse cx="256" cy="256" rx="230" ry="90" fill="none" stroke="#fff" stroke-width="28" transform="rotate(-25,256,256)"/>
+    <!-- Second ring line for depth -->
+    <ellipse cx="256" cy="256" rx="210" ry="75" fill="none" stroke="#000" stroke-width="8" transform="rotate(-25,256,256)" opacity="0.3"/>
+  </g>
+</svg>

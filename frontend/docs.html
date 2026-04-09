@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>API Документация — TOKEN PAY ID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=6">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=6">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=6">
+    <link rel="manifest" href="manifest.json?v=6">
+    <meta name="theme-color" content="#000000">
+    <link rel="stylesheet" href="styles.css?v=20260403c">
+    <script src="theme-init.js?v=20260403c"></script>
+</head>
+<body>
+    <canvas id="particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.75"></canvas>
+    <div class="docs" style="position:relative;z-index:1">
+        <!-- Mobile header -->
+        <div class="docs-mobile-bar" id="docsMobileBar">
+            <button class="docs-mobile-toggle" onclick="toggleDocsSide()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            </button>
+            <a href="/"><img src="tokenpay-logo.png" alt="TOKEN PAY"></a>
+        </div>
+        <div class="docs-side-overlay" id="docsSideOverlay" onclick="toggleDocsSide()"></div>
+        <!-- Sidebar -->
+        <aside class="docs-side" id="docsSide">
+            <div class="docs-side-logo">
+                <a href="/"><img src="tokenpay-logo.png" alt="TOKEN PAY"></a>
+            </div>
+            <div class="docs-side-title">API Reference v2.2</div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">Начало работы</div>
+                <a class="docs-side-link active" href="#introduction" onclick="scrollToSection('introduction',this)">Введение</a>
+                <a class="docs-side-link" href="#authentication" onclick="scrollToSection('authentication',this)">Аутентификация</a>
+                <a class="docs-side-link" href="#rate-limits" onclick="scrollToSection('rate-limits',this)">Лимиты</a>
+                <a class="docs-side-link" href="#errors" onclick="scrollToSection('errors',this)">Коды ошибок</a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">OAuth 2.0</div>
+                <a class="docs-side-link" href="#oauth-flow" onclick="scrollToSection('oauth-flow',this)">Авторизация</a>
+                <a class="docs-side-link" href="#oauth-token" onclick="scrollToSection('oauth-token',this)">
+                    <span class="method method-post">POST</span> /oauth/token
+                </a>
+                <a class="docs-side-link" href="#oauth-userinfo" onclick="scrollToSection('oauth-userinfo',this)">
+                    <span class="method method-get">GET</span> /oauth/userinfo
+                </a>
+                <a class="docs-side-link" href="#oauth-revoke" onclick="scrollToSection('oauth-revoke',this)">
+                    <span class="method method-post">POST</span> /oauth/revoke
+                </a>
+                <a class="docs-side-link" href="#oauth-cancel" onclick="scrollToSection('oauth-cancel',this)">
+                    <span class="method method-post">POST</span> /oauth/cancel
+                </a>
+                <a class="docs-side-link" href="#oauth-deny" onclick="scrollToSection('oauth-deny',this)">
+                    <span class="method method-post">POST</span> /oauth/deny
+                </a>
+                <a class="docs-side-link" href="#oauth-branding" onclick="scrollToSection('oauth-branding',this)">
+                    <span class="method method-get">GET</span> /oauth/branding
+                </a>
+                <a class="docs-side-link" href="#oauth-register" onclick="scrollToSection('oauth-register',this)">
+                    <span class="method method-post">POST</span> /oauth/register
+                </a>
+                <a class="docs-side-link" href="#oauth-client-info" onclick="scrollToSection('oauth-client-info',this)">
+                    <span class="method method-get">GET</span> /oauth/client-info
+                </a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">Пользователи</div>
+                <a class="docs-side-link" href="#users-me" onclick="scrollToSection('users-me',this)">
+                    <span class="method method-get">GET</span> /users/me
+                </a>
+                <a class="docs-side-link" href="#users-update" onclick="scrollToSection('users-update',this)">
+                    <span class="method method-put">PUT</span> /users/me
+                </a>
+                <a class="docs-side-link" href="#users-activity" onclick="scrollToSection('users-activity',this)">
+                    <span class="method method-get">GET</span> /users/activity
+                </a>
+                <a class="docs-side-link" href="#users-sessions" onclick="scrollToSection('users-sessions',this)">
+                    <span class="method method-get">GET</span> /users/sessions
+                </a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">Auth</div>
+                <a class="docs-side-link" href="#auth-send-code" onclick="scrollToSection('auth-send-code',this)">
+                    <span class="method method-post">POST</span> /auth/send-code
+                </a>
+                <a class="docs-side-link" href="#auth-verify" onclick="scrollToSection('auth-verify',this)">
+                    <span class="method method-post">POST</span> /auth/verify
+                </a>
+                <a class="docs-side-link" href="#auth-register" onclick="scrollToSection('auth-register',this)">
+                    <span class="method method-post">POST</span> /auth/register
+                </a>
+                <a class="docs-side-link" href="#auth-login" onclick="scrollToSection('auth-login',this)">
+                    <span class="method method-post">POST</span> /auth/login
+                </a>
+                <a class="docs-side-link" href="#auth-refresh" onclick="scrollToSection('auth-refresh',this)">
+                    <span class="method method-post">POST</span> /auth/refresh
+                </a>
+                <a class="docs-side-link" href="#auth-qr" onclick="scrollToSection('auth-qr',this)">QR-вход</a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">API ключи</div>
+                <a class="docs-side-link" href="#keys-list" onclick="scrollToSection('keys-list',this)">
+                    <span class="method method-get">GET</span> /keys
+                </a>
+                <a class="docs-side-link" href="#keys-create" onclick="scrollToSection('keys-create',this)">
+                    <span class="method method-post">POST</span> /keys
+                </a>
+                <a class="docs-side-link" href="#keys-revoke" onclick="scrollToSection('keys-revoke',this)">
+                    <span class="method method-del">DEL</span> /keys/:id
+                </a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">Webhooks</div>
+                <a class="docs-side-link" href="#webhooks-overview" onclick="scrollToSection('webhooks-overview',this)">Обзор</a>
+                <a class="docs-side-link" href="#webhooks-events" onclick="scrollToSection('webhooks-events',this)">События</a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">Notifications</div>
+                <a class="docs-side-link" href="#notifications-api" onclick="scrollToSection('notifications-api',this)">Push API</a>
+                <a class="docs-side-link" href="#notifications-sse" onclick="scrollToSection('notifications-sse',this)">SSE Stream</a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">Widget SDK v1.2</div>
+                <a class="docs-side-link" href="#widget-quickstart" onclick="scrollToSection('widget-quickstart',this)">Быстрый старт</a>
+                <a class="docs-side-link" href="#widget-buttons" onclick="scrollToSection('widget-buttons',this)">Кнопки (3 варианта)</a>
+                <a class="docs-side-link" href="#widget-oauth" onclick="scrollToSection('widget-oauth',this)">OAuth Popup</a>
+                <a class="docs-side-link" href="#widget-api" onclick="scrollToSection('widget-api',this)">Программный API</a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">SDK</div>
+                <a class="docs-side-link" href="#sdk-js" onclick="scrollToSection('sdk-js',this)">JavaScript</a>
+                <a class="docs-side-link" href="#sdk-python" onclick="scrollToSection('sdk-python',this)">Python</a>
+                <a class="docs-side-link" href="#sdk-go" onclick="scrollToSection('sdk-go',this)">Go</a>
+            </div>
+
+            <div class="docs-side-group">
+                <div class="docs-side-group-title">Changelog</div>
+                <a class="docs-side-link" href="#changelog" onclick="scrollToSection('changelog',this)">v2.2.0</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="docs-main">
+            <section id="introduction">
+                <h1 style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><img src="tokenpay-id-light.png" alt="TOKEN PAY ID" class="tpid-logo" style="max-width:280px;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none"> API</h1>
+                <p>Документация бесплатного и открытого API системы аутентификации. Интегрируйте единую систему идентификации в ваши сервисы и приложения через OAuth 2.0, REST API и SDK.</p>
+
+                <div class="docs-callout docs-callout-info">
+                    <strong>Base URL:</strong> <code class="mono">https://id.tokenpay.space/api/v1</code>
+                </div>
+
+                <p>API использует JSON для всех запросов и ответов. Все запросы должны содержать заголовок <code class="mono">Content-Type: application/json</code>.</p>
+
+                <h3>Быстрый старт</h3>
+                <p>Для начала работы с API вам нужно:</p>
+                <p>1. Создать аккаунт TOKEN PAY ID<br>
+                2. Получить API ключи в <a href="/dashboard">личном кабинете</a><br>
+                3. Использовать секретный ключ для серверных запросов</p>
+
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">cURL</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">curl</span> -X GET https://id.tokenpay.space/api/v1/users/me \
+  -H <span class="str">"Authorization: Bearer tpid_sk_your_secret_key"</span> \
+  -H <span class="str">"Content-Type: application/json"</span></pre>
+                </div>
+            </section>
+
+            <section id="authentication">
+                <h2>Аутентификация</h2>
+                <p>TOKEN PAY ID API поддерживает два метода аутентификации:</p>
+
+                <h3>API ключи</h3>
+                <p>Используйте секретный ключ (<code class="mono">tpid_sk_...</code>) в заголовке <code class="mono">Authorization</code>:</p>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTTP</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre>Authorization: Bearer tpid_sk_ваш_секретный_ключ</pre>
+                </div>
+
+                <div class="docs-callout docs-callout-warn">
+                    <strong>Важно:</strong> Никогда не используйте секретный ключ (sk) в клиентском коде. Для фронтенда используйте публичный ключ (pk) и OAuth 2.0 flow.
+                </div>
+
+                <h3>OAuth 2.0 Bearer Token</h3>
+                <p>Для пользовательских запросов используйте access_token полученный через OAuth 2.0 flow:</p>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTTP</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre>Authorization: Bearer eyJhbGciOiJSUzI1NiIs...</pre>
+                </div>
+            </section>
+
+            <section id="rate-limits">
+                <h2>Лимиты запросов</h2>
+                <p>API имеет следующие ограничения:</p>
+                <table class="docs-params">
+                    <thead><tr><th>Тарифный план</th><th>Запросов/мин</th><th>Запросов/день</th></tr></thead>
+                    <tbody>
+                        <tr><td>Free</td><td class="mono">60</td><td class="mono">10,000</td></tr>
+                        <tr><td>Pro</td><td class="mono">300</td><td class="mono">100,000</td></tr>
+                        <tr><td>Enterprise</td><td class="mono">1,000</td><td class="mono">Unlimited</td></tr>
+                    </tbody>
+                </table>
+                <p>Заголовки ответа содержат информацию о лимитах:</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">Headers</span></div>
+                    <pre>X-RateLimit-Limit: <span class="num">60</span>
+X-RateLimit-Remaining: <span class="num">45</span>
+X-RateLimit-Reset: <span class="num">1678886400</span></pre>
+                </div>
+            </section>
+
+            <section id="errors">
+                <h2>Коды ошибок</h2>
+                <p>API возвращает стандартные HTTP коды и JSON-объект ошибки:</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON</span></div>
+                    <pre>{
+  <span class="str">"error"</span>: {
+    <span class="str">"code"</span>: <span class="str">"invalid_token"</span>,
+    <span class="str">"message"</span>: <span class="str">"The access token is invalid or expired"</span>,
+    <span class="str">"status"</span>: <span class="num">401</span>
+  }
+}</pre>
+                </div>
+                <table class="docs-params">
+                    <thead><tr><th>Код</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="mono">400</td><td>Некорректный запрос</td></tr>
+                        <tr><td class="mono">401</td><td>Неавторизован — неверный или отсутствующий токен</td></tr>
+                        <tr><td class="mono">403</td><td>Запрещено — недостаточно прав</td></tr>
+                        <tr><td class="mono">404</td><td>Ресурс не найден</td></tr>
+                        <tr><td class="mono">429</td><td>Превышен лимит запросов</td></tr>
+                        <tr><td class="mono">500</td><td>Внутренняя ошибка сервера</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="oauth-flow">
+                <h2>OAuth 2.0 — Авторизация</h2>
+                <p>TOKEN PAY ID поддерживает стандартный OAuth 2.0 Authorization Code flow для безопасной авторизации пользователей в сторонних сервисах.</p>
+
+                <h3>Шаг 1: Redirect к авторизации</h3>
+                <p>Перенаправьте пользователя на страницу авторизации:</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">URL</span></div>
+                    <pre>https://id.tokenpay.space/api/v1/oauth/authorize?
+  client_id=<span class="str">tpid_pk_your_public_key</span>&
+  redirect_uri=<span class="str">https://yourapp.com/callback</span>&
+  response_type=<span class="str">code</span>&
+  scope=<span class="str">profile email</span>&
+  state=<span class="str">random_csrf_token</span>&
+  prompt=<span class="str">login</span>&
+  code_challenge=<span class="str">SHA256_HASH</span>&
+  code_challenge_method=<span class="str">S256</span></pre>
+                </div>
+                <div class="docs-callout docs-callout-warn">
+                    <strong>PKCE обязателен:</strong> Начиная с v2.2.0, параметры <code class="mono">code_challenge</code> и <code class="mono">code_challenge_method=S256</code> являются обязательными для всех клиентов. Запросы без PKCE будут отклонены.
+                </div>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">client_id</td><td class="param-type">string</td><td><span class="param-req">required</span> — Публичный ключ</td></tr>
+                        <tr><td class="param-name">redirect_uri</td><td class="param-type">string</td><td><span class="param-req">required</span> — URL для редиректа</td></tr>
+                        <tr><td class="param-name">response_type</td><td class="param-type">string</td><td><span class="param-req">required</span> — Только <code class="mono">code</code></td></tr>
+                        <tr><td class="param-name">scope</td><td class="param-type">string</td><td>Запрашиваемые разрешения (по умолч. <code class="mono">profile</code>)</td></tr>
+                        <tr><td class="param-name">state</td><td class="param-type">string</td><td>CSRF-токен (рекомендуется)</td></tr>
+                        <tr><td class="param-name">prompt</td><td class="param-type">string</td><td><code class="mono">login</code> — принудительная переавторизация, <code class="mono">consent</code>, <code class="mono">none</code></td></tr>
+                        <tr><td class="param-name">login_hint</td><td class="param-type">string</td><td>Email для предзаполнения формы входа</td></tr>
+                        <tr><td class="param-name">code_challenge</td><td class="param-type">string</td><td><span class="param-req">required</span> — PKCE challenge (SHA-256 хеш code_verifier)</td></tr>
+                        <tr><td class="param-name">code_challenge_method</td><td class="param-type">string</td><td><span class="param-req">required</span> — Только <code class="mono">S256</code></td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Шаг 2: Обмен кода на токен</h3>
+                <p>После авторизации пользователь будет перенаправлен на ваш <code class="mono">redirect_uri</code> с параметром <code class="mono">code</code>. Обменяйте его на access_token:</p>
+            </section>
+
+            <section id="oauth-token">
+                <h3>POST /oauth/token</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/oauth/token</span>
+                </div>
+                <p>Обмен authorization code на access token.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">grant_type</td><td class="param-type">string</td><td><span class="param-req">required</span> — <code class="mono">authorization_code</code> или <code class="mono">refresh_token</code></td></tr>
+                        <tr><td class="param-name">code</td><td class="param-type">string</td><td><span class="param-req">required</span> — Authorization code</td></tr>
+                        <tr><td class="param-name">client_id</td><td class="param-type">string</td><td><span class="param-req">required</span> — Ваш публичный ключ</td></tr>
+                        <tr><td class="param-name">client_secret</td><td class="param-type">string</td><td>Секретный ключ (обязателен для confidential-клиентов, не нужен для public + PKCE)</td></tr>
+                        <tr><td class="param-name">redirect_uri</td><td class="param-type">string</td><td><span class="param-req">required</span> — Должен совпадать с исходным</td></tr>
+                        <tr><td class="param-name">code_verifier</td><td class="param-type">string</td><td><span class="param-req">required</span> — PKCE verifier (случайная строка 43–128 символов, из которой был создан code_challenge)</td></tr>
+                    </tbody>
+                </table>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">cURL</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">curl</span> -X POST https://id.tokenpay.space/api/v1/oauth/token \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "grant_type": "authorization_code",
+    "code": "abc123...",
+    "client_id": "tpid_pk_...",
+    "client_secret": "tpid_sk_...",
+    "redirect_uri": "https://yourapp.com/callback",
+    "code_verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+  }'</span></pre>
+                </div>
+                <h3>Ответ</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"access_token"</span>: <span class="str">"eyJhbGciOiJSUzI1NiIs..."</span>,
+  <span class="str">"token_type"</span>: <span class="str">"Bearer"</span>,
+  <span class="str">"expires_in"</span>: <span class="num">3600</span>,
+  <span class="str">"refresh_token"</span>: <span class="str">"tpid_rt_8a7b6c5d..."</span>,
+  <span class="str">"scope"</span>: <span class="str">"profile email"</span>,
+  <span class="str">"user"</span>: {
+    <span class="str">"id"</span>: <span class="str">"tpid_usr_a1b2c3d4"</span>,
+    <span class="str">"email"</span>: <span class="str">"user@example.com"</span>,
+    <span class="str">"name"</span>: <span class="str">"Иван"</span>,
+    <span class="str">"email_verified"</span>: <span class="kw">true</span>
+  }
+}</pre>
+                </div>
+            </section>
+
+            <section id="oauth-revoke">
+                <h3>POST /oauth/revoke</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/oauth/revoke</span>
+                </div>
+                <p>Отзыв access или refresh токена.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">token</td><td class="param-type">string</td><td><span class="param-req">required</span> — Токен для отзыва</td></tr>
+                        <tr><td class="param-name">token_type_hint</td><td class="param-type">string</td><td><code class="mono">access_token</code> или <code class="mono">refresh_token</code></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="oauth-userinfo">
+                <h3>GET /oauth/userinfo</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/oauth/userinfo</span>
+                </div>
+                <p>Получить профиль пользователя по OAuth access token. Возвращает данные в зависимости от запрошенного scope.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">cURL</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">curl</span> -X GET https://tokenpay.space/api/v1/oauth/userinfo \
+  -H <span class="str">"Authorization: Bearer ACCESS_TOKEN"</span></pre>
+                </div>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"id"</span>: <span class="str">"tpid_usr_a1b2c3d4e5f6"</span>,
+  <span class="str">"email"</span>: <span class="str">"user@example.com"</span>,
+  <span class="str">"name"</span>: <span class="str">"Иван"</span>,
+  <span class="str">"role"</span>: <span class="str">"user"</span>,
+  <span class="str">"email_verified"</span>: <span class="kw">true</span>,
+  <span class="str">"locale"</span>: <span class="str">"ru"</span>,
+  <span class="str">"theme"</span>: <span class="str">"dark"</span>,
+  <span class="str">"telegram_linked"</span>: <span class="kw">true</span>,
+  <span class="str">"cupol_balance"</span>: <span class="num">150</span>,
+  <span class="str">"cupol_subscription_active"</span>: <span class="kw">true</span>,
+  <span class="str">"created_at"</span>: <span class="str">"2026-01-15T12:00:00Z"</span>
+}</pre>
+                </div>
+            </section>
+
+            <section id="oauth-cancel">
+                <h3>POST /oauth/cancel</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/oauth/cancel</span>
+                </div>
+                <p>Уведомить enterprise о том, что пользователь закрыл окно согласия (вызывается автоматически через <code class="mono">sendBeacon</code>). Запускает webhook <code class="mono">user.oauth_cancel</code>.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">client_id</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">reason</td><td class="param-type">string</td><td>Причина: <code class="mono">window_closed</code>, <code class="mono">user_cancel</code></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="oauth-deny">
+                <h3>POST /oauth/deny</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/oauth/deny</span>
+                </div>
+                <p>Пользователь явно отклонил запрос на авторизацию. Запускает webhook <code class="mono">user.oauth_deny</code> и перенаправляет с ошибкой <code class="mono">access_denied</code>.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">client_id</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">redirect_uri</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">state</td><td class="param-type">string</td><td>Передаётся обратно в redirect</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="oauth-branding">
+                <h3>GET /oauth/branding</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/oauth/branding</span>
+                </div>
+                <p>Получить конфигурацию кнопок, иконки и готовый код для интеграции виджета TOKEN PAY ID. Не требует аутентификации.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK (сокращённо)</span></div>
+                    <pre>{
+  <span class="str">"provider"</span>: <span class="str">"TOKEN PAY ID"</span>,
+  <span class="str">"widget_url"</span>: <span class="str">"https://tokenpay.space/sdk/tpid-widget.js"</span>,
+  <span class="str">"widget_version"</span>: <span class="str">"1.2.0"</span>,
+  <span class="str">"icon"</span>: { <span class="str">"shield_svg"</span>: <span class="str">"&lt;svg ...&gt;"</span> },
+  <span class="str">"buttons"</span>: {
+    <span class="str">"standard"</span>: { <span class="str">"label"</span>: <span class="str">"Войти через TOKEN PAY"</span>, ... },
+    <span class="str">"icon"</span>: { <span class="str">"shape"</span>: <span class="str">"circle"</span>, ... },
+    <span class="str">"logo"</span>: { <span class="str">"background"</span>: <span class="str">"transparent"</span>, ... }
+  },
+  <span class="str">"integration"</span>: {
+    <span class="str">"quick_start"</span>: <span class="str">"&lt;script src=... data-client-id=...&gt;"</span>,
+    <span class="str">"oauth_popup"</span>: <span class="str">"TPID.loginWithOAuth().then(...);"</span>
+  },
+  <span class="str">"themes"</span>: [<span class="str">"dark"</span>, <span class="str">"light"</span>, <span class="str">"auto"</span>],
+  <span class="str">"languages"</span>: [<span class="str">"ru"</span>, <span class="str">"en"</span>]
+}</pre>
+                </div>
+            </section>
+
+            <section id="oauth-register">
+                <h3>POST /oauth/register — Dynamic Client Registration (RFC 7591)</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/oauth/register</span>
+                </div>
+                <p>Зарегистрировать новый OAuth-клиент программно. Требуется авторизация (Bearer token или API ключ).</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">client_name</td><td class="param-type">string</td><td><span class="param-req">required</span> — Название приложения</td></tr>
+                        <tr><td class="param-name">redirect_uris</td><td class="param-type">string[]</td><td><span class="param-req">required</span> — Массив разрешённых redirect URI</td></tr>
+                        <tr><td class="param-name">client_type</td><td class="param-type">string</td><td><code class="mono">public</code> или <code class="mono">confidential</code> (по умолч. <code class="mono">public</code>)</td></tr>
+                        <tr><td class="param-name">client_uri</td><td class="param-type">string</td><td>URL сайта приложения</td></tr>
+                        <tr><td class="param-name">logo_uri</td><td class="param-type">string</td><td>URL логотипа</td></tr>
+                        <tr><td class="param-name">tos_uri</td><td class="param-type">string</td><td>URL условий использования</td></tr>
+                        <tr><td class="param-name">policy_uri</td><td class="param-type">string</td><td>URL политики конфиденциальности</td></tr>
+                        <tr><td class="param-name">contacts</td><td class="param-type">string</td><td>Контактные email (через запятую)</td></tr>
+                        <tr><td class="param-name">scope</td><td class="param-type">string</td><td>Запрашиваемые scope: <code class="mono">openid</code>, <code class="mono">profile</code>, <code class="mono">email</code></td></tr>
+                    </tbody>
+                </table>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 201 Created</span></div>
+                    <pre>{
+  <span class="str">"client_id"</span>: <span class="str">"tpid_pk_..."</span>,
+  <span class="str">"client_secret"</span>: <span class="str">"tpid_sk_..."</span>,
+  <span class="str">"client_name"</span>: <span class="str">"My App"</span>,
+  <span class="str">"redirect_uris"</span>: [<span class="str">"https://myapp.com/callback"</span>],
+  <span class="str">"client_type"</span>: <span class="str">"public"</span>,
+  <span class="str">"registration_access_token"</span>: <span class="str">"Bearer ..."</span>
+}</pre>
+                </div>
+                <div class="docs-callout docs-callout-warn">
+                    <strong>Важно:</strong> <code class="mono">client_secret</code> показывается только один раз при регистрации. Сохраните его.
+                </div>
+            </section>
+
+            <section id="oauth-client-info">
+                <h3>GET /oauth/client-info/:client_id</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/oauth/client-info/:client_id</span>
+                </div>
+                <p>Получить метаданные зарегистрированного OAuth-клиента. Доступно только владельцу ключа.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"client_id"</span>: <span class="str">"tpid_pk_..."</span>,
+  <span class="str">"client_name"</span>: <span class="str">"My App"</span>,
+  <span class="str">"client_type"</span>: <span class="str">"public"</span>,
+  <span class="str">"redirect_uris"</span>: [<span class="str">"https://myapp.com/callback"</span>],
+  <span class="str">"client_uri"</span>: <span class="str">"https://myapp.com"</span>,
+  <span class="str">"logo_uri"</span>: <span class="kw">null</span>,
+  <span class="str">"tos_uri"</span>: <span class="kw">null</span>,
+  <span class="str">"policy_uri"</span>: <span class="kw">null</span>,
+  <span class="str">"scope"</span>: <span class="str">"openid,profile,email"</span>
+}</pre>
+                </div>
+            </section>
+
+            <section id="users-me">
+                <h2>Пользователи</h2>
+                <h3>GET /users/me</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/users/me</span>
+                </div>
+                <p>Получить профиль текущего авторизованного пользователя.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"id"</span>: <span class="str">"tpid_usr_a1b2c3d4"</span>,
+  <span class="str">"email"</span>: <span class="str">"user@example.com"</span>,
+  <span class="str">"name"</span>: <span class="str">"Иван Чернов"</span>,
+  <span class="str">"email_verified"</span>: <span class="kw">true</span>,
+  <span class="str">"two_factor_enabled"</span>: <span class="kw">false</span>,
+  <span class="str">"telegram_linked"</span>: <span class="kw">true</span>,
+  <span class="str">"created_at"</span>: <span class="str">"2025-01-15T10:30:00Z"</span>,
+  <span class="str">"last_login"</span>: <span class="str">"2026-03-13T09:45:00Z"</span>
+}</pre>
+                </div>
+            </section>
+
+            <section id="users-update">
+                <h3>PUT /users/me</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-put">PUT</span>
+                    <span class="path">/api/v1/users/me</span>
+                </div>
+                <p>Обновить профиль пользователя.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">name</td><td class="param-type">string</td><td>Имя пользователя</td></tr>
+                        <tr><td class="param-name">avatar_url</td><td class="param-type">string</td><td>URL аватара</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="users-activity">
+                <h3>GET /users/activity</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/users/activity</span>
+                </div>
+                <p>История активности пользователя: входы, API вызовы, изменения безопасности.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">limit</td><td class="param-type">integer</td><td>Количество записей (по умолчанию 50, максимум 200)</td></tr>
+                        <tr><td class="param-name">offset</td><td class="param-type">integer</td><td>Смещение для пагинации</td></tr>
+                        <tr><td class="param-name">type</td><td class="param-type">string</td><td>Фильтр: <code class="mono">auth</code>, <code class="mono">api</code>, <code class="mono">security</code></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="users-sessions">
+                <h3>GET /users/sessions</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/users/sessions</span>
+                </div>
+                <p>Список активных сессий пользователя.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"sessions"</span>: [
+    {
+      <span class="str">"id"</span>: <span class="str">"ses_abc123"</span>,
+      <span class="str">"device"</span>: <span class="str">"Chrome — Windows"</span>,
+      <span class="str">"ip"</span>: <span class="str">"192.168.1.1"</span>,
+      <span class="str">"location"</span>: <span class="str">"Saint Petersburg, RU"</span>,
+      <span class="str">"last_active"</span>: <span class="str">"2026-03-13T12:00:00Z"</span>,
+      <span class="str">"current"</span>: <span class="kw">true</span>
+    }
+  ]
+}</pre>
+                </div>
+            </section>
+
+            <section id="auth-send-code">
+                <h2>Auth</h2>
+                <h3>POST /auth/send-code</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/auth/send-code</span>
+                </div>
+                <p>Отправить 6-значный код верификации на email. Используется перед регистрацией и при входе.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">email</td><td class="param-type">string</td><td><span class="param-req">required</span> — Email адрес</td></tr>
+                        <tr><td class="param-name">type</td><td class="param-type">string</td><td><span class="param-req">required</span> — <code class="mono">register</code> или <code class="mono">login</code></td></tr>
+                    </tbody>
+                </table>
+                <div class="docs-callout docs-callout-info">
+                    <strong>Rate limit:</strong> 1 код в 60 секунд на email. Код действителен 10 минут.
+                </div>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"success"</span>: <span class="kw">true</span>,
+  <span class="str">"message"</span>: <span class="str">"Verification code sent"</span>,
+  <span class="str">"expires_in"</span>: <span class="num">600</span>
+}</pre>
+                </div>
+            </section>
+
+            <section id="auth-verify">
+                <h3>POST /auth/verify</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/auth/verify</span>
+                </div>
+                <p>Верификация access токена. Используется сторонними сервисами для проверки авторизации пользователя.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">token</td><td class="param-type">string</td><td><span class="param-req">required</span> — Access token для проверки</td></tr>
+                    </tbody>
+                </table>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"valid"</span>: <span class="kw">true</span>,
+  <span class="str">"user_id"</span>: <span class="str">"tpid_usr_a1b2c3d4"</span>,
+  <span class="str">"email"</span>: <span class="str">"user@example.com"</span>,
+  <span class="str">"scopes"</span>: [<span class="str">"profile"</span>, <span class="str">"email"</span>],
+  <span class="str">"expires_at"</span>: <span class="num">1678886400</span>
+}</pre>
+                </div>
+            </section>
+
+            <section id="auth-register">
+                <h3>POST /auth/register</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/auth/register</span>
+                </div>
+                <p>Регистрация нового пользователя. Требуется предварительная отправка кода через <code class="mono">/auth/send-code</code>.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">email</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">password</td><td class="param-type">string</td><td><span class="param-req">required</span> — Минимум 8 символов</td></tr>
+                        <tr><td class="param-name">name</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">email_code</td><td class="param-type">string</td><td><span class="param-req">required</span> — 6-значный код из email (от <code class="mono">/auth/send-code</code>)</td></tr>
+                    </tbody>
+                </table>
+                <div class="docs-callout docs-callout-warn">
+                    <strong>Обязательно:</strong> Перед регистрацией необходимо отправить код верификации через <code class="mono">POST /auth/send-code</code> с <code class="mono">type: "register"</code>.
+                </div>
+            </section>
+
+            <section id="auth-login">
+                <h3>POST /auth/login</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/auth/login</span>
+                </div>
+                <p>Двухэтапная авторизация. Первый вызов с email+password отправляет код на почту и возвращает <code class="mono">requires_email_code: true</code>. Второй вызов с email+password+email_code завершает авторизацию.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">email</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">password</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                        <tr><td class="param-name">email_code</td><td class="param-type">string</td><td>6-значный код из email (обязателен на втором шаге)</td></tr>
+                        <tr><td class="param-name">two_factor_code</td><td class="param-type">string</td><td>TOTP код, если 2FA включена</td></tr>
+                    </tbody>
+                </table>
+                <h4>Шаг 1 — отправка пароля:</h4>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"requires_email_code"</span>: <span class="kw">true</span>,
+  <span class="str">"requires_2fa"</span>: <span class="kw">false</span>,
+  <span class="str">"message"</span>: <span class="str">"Verification code sent to your email"</span>
+}</pre>
+                </div>
+                <h4>Шаг 2 — подтверждение кода:</h4>
+                <p>Повторите запрос, добавив <code class="mono">email_code</code>. При успехе возвращается access/refresh token и данные пользователя.</p>
+            </section>
+
+            <section id="auth-refresh">
+                <h3>POST /auth/refresh</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/auth/refresh</span>
+                </div>
+                <p>Обновление access токена с помощью refresh токена.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">refresh_token</td><td class="param-type">string</td><td><span class="param-req">required</span></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="auth-qr">
+                <h3>QR-вход</h3>
+                <p>Двухэтапный вход через QR-код: десктоп генерирует сессию, мобильное устройство (с активной авторизацией) подтверждает.</p>
+
+                <h4>1. Инициализация QR-сессии</h4>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/auth/qr/login-init</span>
+                </div>
+                <p>Создаёт QR-сессию (не требует авторизации). Возвращает <code class="mono">sessionId</code> и URL для QR-кода.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"sessionId"</span>: <span class="str">"uuid-..."</span>,
+  <span class="str">"ttl"</span>: <span class="num">300</span>,
+  <span class="str">"qrUrl"</span>: <span class="str">"https://tokenpay.space/qr-login?sid=uuid-..."</span>
+}</pre>
+                </div>
+
+                <h4>2. Polling (десктоп)</h4>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/auth/qr/login-poll/:sessionId</span>
+                </div>
+                <p>Десктоп опрашивает каждые 2 секунды. Статус: <code class="mono">pending</code> → <code class="mono">approved</code> → возвращает токены.</p>
+
+                <h4>3. Подтверждение (мобильное устройство)</h4>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/auth/qr/login-confirm/:sessionId</span>
+                </div>
+                <p>Требует <code class="mono">Authorization: Bearer</code>. Мобильное устройство подтверждает вход.</p>
+                <div class="docs-callout docs-callout-info">
+                    <strong>TTL:</strong> QR-сессия живёт 5 минут. После истечения возвращается <code class="mono">status: "expired"</code>.
+                </div>
+            </section>
+
+            <section id="keys-list">
+                <h2>API ключи</h2>
+                <h3>GET /keys</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/keys</span>
+                </div>
+                <p>Получить список API ключей пользователя.</p>
+            </section>
+
+            <section id="keys-create">
+                <h3>POST /keys</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="path">/api/v1/keys</span>
+                </div>
+                <p>Создать новый API ключ.</p>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">name</td><td class="param-type">string</td><td><span class="param-req">required</span> — Название ключа</td></tr>
+                        <tr><td class="param-name">scopes</td><td class="param-type">string[]</td><td>Массив разрешений</td></tr>
+                    </tbody>
+                </table>
+                <div class="docs-callout docs-callout-warn">
+                    <strong>Важно:</strong> Секретный ключ показывается только один раз при создании. Сохраните его в безопасном месте.
+                </div>
+            </section>
+
+            <section id="keys-revoke">
+                <h3>DELETE /keys/:id</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-del">DEL</span>
+                    <span class="path">/api/v1/keys/:key_id</span>
+                </div>
+                <p>Отозвать (удалить) API ключ. Все запросы с этим ключом немедленно перестанут работать.</p>
+            </section>
+
+            <section id="webhooks-overview">
+                <h2>Webhooks</h2>
+                <p>Webhooks позволяют получать уведомления о событиях TOKEN PAY ID в реальном времени. Настройте URL вашего сервера в <a href="/dashboard">личном кабинете</a>.</p>
+                <p>Каждый webhook запрос содержит подпись в заголовке <code class="mono">X-TPID-Signature</code> формата Stripe-style для верификации подлинности:</p>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">Header</span></div>
+                    <pre>X-TPID-Signature: t=<span class="num">1711000000</span>,v1=<span class="str">hmac_sha256_hex</span></pre>
+                </div>
+                <p>Для проверки подписи:</p>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">JavaScript</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">const</span> crypto = require(<span class="str">'crypto'</span>);
+
+<span class="kw">function</span> verifyWebhook(body, signature, secret) {
+  <span class="kw">const</span> parts = {};
+  signature.split(<span class="str">','</span>).forEach(p => {
+    <span class="kw">const</span> [k, v] = p.split(<span class="str">'='</span>);
+    parts[k] = v;
+  });
+  <span class="kw">const</span> expected = crypto
+    .createHmac(<span class="str">'sha256'</span>, secret)
+    .update(parts.t + <span class="str">'.'</span> + JSON.stringify(body))
+    .digest(<span class="str">'hex'</span>);
+  <span class="kw">return</span> parts.v1 === expected;
+}</pre>
+                </div>
+                <div class="docs-callout docs-callout-warn">
+                    <strong>Replay protection:</strong> Проверяйте <code class="mono">t</code> (timestamp) — отклоняйте запросы старше 5 минут.
+                </div>
+                <h3>Payload</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — Webhook Payload</span></div>
+                    <pre>{
+  <span class="str">"event"</span>: <span class="str">"user.login"</span>,
+  <span class="str">"timestamp"</span>: <span class="str">"2026-03-13T12:00:00Z"</span>,
+  <span class="str">"data"</span>: {
+    <span class="str">"user_id"</span>: <span class="str">"tpid_usr_a1b2c3d4"</span>,
+    <span class="str">"ip"</span>: <span class="str">"192.168.1.1"</span>,
+    <span class="str">"device"</span>: <span class="str">"Chrome — Windows"</span>
+  }
+}</pre>
+                </div>
+            </section>
+
+            <section id="webhooks-events">
+                <h3>Доступные события</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Событие</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">user.register</td><td>Новая регистрация пользователя</td></tr>
+                        <tr><td class="param-name">user.login</td><td>Успешный вход в аккаунт</td></tr>
+                        <tr><td class="param-name">user.logout</td><td>Выход из аккаунта</td></tr>
+                        <tr><td class="param-name">user.updated</td><td>Профиль обновлён</td></tr>
+                        <tr><td class="param-name">user.deleted</td><td>Аккаунт удалён</td></tr>
+                        <tr><td class="param-name">user.2fa.enabled</td><td>2FA включена</td></tr>
+                        <tr><td class="param-name">user.2fa.disabled</td><td>2FA отключена</td></tr>
+                        <tr><td class="param-name">key.created</td><td>Создан новый API ключ</td></tr>
+                        <tr><td class="param-name">key.revoked</td><td>API ключ отозван</td></tr>
+                        <tr><td class="param-name">session.created</td><td>Новая сессия</td></tr>
+                        <tr><td class="param-name">session.revoked</td><td>Сессия завершена</td></tr>
+                        <tr><td class="param-name">token.refreshed</td><td>Токен обновлён</td></tr>
+                        <tr><td class="param-name">user.oauth_connect</td><td>Пользователь одобрил OAuth авторизацию</td></tr>
+                        <tr><td class="param-name">user.oauth_cancel</td><td>Пользователь закрыл окно OAuth</td></tr>
+                        <tr><td class="param-name">user.oauth_deny</td><td>Пользователь отклонил OAuth запрос</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="notifications-api">
+                <h2>Push Notifications API</h2>
+                <p>Система push-уведомлений позволяет получать уведомления в реальном времени через SSE (Server-Sent Events) или через REST API.</p>
+
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/notifications</span>
+                </div>
+                <p>Получить историю уведомлений (последние 50). Требует <code class="mono">Authorization: Bearer &lt;token&gt;</code>.</p>
+                <div class="docs-code"><div class="docs-code-header"><span class="docs-code-lang">Response</span></div><pre>{
+  <span class="str">"notifications"</span>: [
+    { <span class="str">"id"</span>: <span class="str">"..."</span>, <span class="str">"type"</span>: <span class="str">"oauth_connect"</span>, <span class="str">"title"</span>: <span class="str">"New user connected"</span>, <span class="str">"body"</span>: <span class="str">"user@example.com authorized via OAuth"</span>, <span class="str">"is_read"</span>: <span class="kw">false</span>, <span class="str">"created_at"</span>: <span class="str">"2026-04-02T12:00:00Z"</span> }
+  ],
+  <span class="str">"unread"</span>: <span class="num">3</span>
+}</pre></div>
+
+                <div class="docs-endpoint">
+                    <span class="method method-put">PUT</span>
+                    <span class="path">/api/v1/notifications/:id/read</span>
+                </div>
+                <p>Отметить уведомление как прочитанное.</p>
+
+                <div class="docs-endpoint">
+                    <span class="method method-put">PUT</span>
+                    <span class="path">/api/v1/notifications/read-all</span>
+                </div>
+                <p>Отметить все уведомления как прочитанные.</p>
+            </section>
+
+            <section id="notifications-sse">
+                <h3>SSE Stream (Server-Sent Events)</h3>
+                <div class="docs-endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="path">/api/v1/notifications/stream?token=&lt;jwt&gt;</span>
+                </div>
+                <p>Подключение к потоку уведомлений в реальном времени. JWT передаётся через query-параметр (EventSource не поддерживает заголовки).</p>
+                <div class="docs-code"><div class="docs-code-header"><span class="docs-code-lang">JavaScript</span></div><pre><span class="kw">const</span> es = <span class="kw">new</span> EventSource(<span class="str">'/api/v1/notifications/stream?token='</span> + token);
+es.addEventListener(<span class="str">'notification'</span>, e => {
+  <span class="kw">const</span> data = JSON.parse(e.data);
+  console.log(data.event, data.data.title);
+});
+es.addEventListener(<span class="str">'connected'</span>, e => {
+  console.log(<span class="str">'SSE connected'</span>, JSON.parse(e.data));
+});</pre></div>
+                <div class="docs-callout docs-callout-info">
+                    <strong>События:</strong> <code class="mono">oauth_connect</code>, <code class="mono">oauth_cancelled</code>, <code class="mono">oauth_denied</code>, <code class="mono">key_created</code>, <code class="mono">key_revoked</code>, <code class="mono">user_unlink</code>
+                </div>
+            </section>
+
+            <section id="widget-quickstart">
+                <h2>Widget SDK v1.2 — Быстрый старт</h2>
+                <p>Виджет TOKEN PAY ID предоставляет три варианта кнопок для интеграции: стандартная, круглая иконка и прозрачный логотип. Все кнопки автоматически работают с OAuth 2.0 + PKCE.</p>
+
+                <div class="docs-callout docs-callout-info">
+                    <strong>CDN:</strong> <code class="mono">https://tokenpay.space/sdk/tpid-widget.js</code><br>
+                    <small style="color:var(--text-muted)">Версия 1.2.0 — автообновления, без кэширования.</small>
+                </div>
+
+                <h3>Минимальная интеграция (1 строка)</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTML</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre>&lt;script src=<span class="str">"https://tokenpay.space/sdk/tpid-widget.js"</span>
+        data-client-id=<span class="str">"tpid_pk_ваш_ключ"</span>&gt;&lt;/script&gt;</pre>
+                </div>
+                <p>Виджет автоматически создаст кнопку «Войти через TOKEN PAY» на странице.</p>
+            </section>
+
+            <section id="widget-buttons">
+                <h3>Три варианта кнопок</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Вариант</th><th>Атрибут</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">standard</td><td><code class="mono">data-tpid-button="standard"</code></td><td>Полная кнопка с иконкой щита + текст «Войти через TOKEN PAY». Подходит для основных CTA.</td></tr>
+                        <tr><td class="param-name">icon</td><td><code class="mono">data-tpid-button="icon"</code></td><td>Круглая кнопка с иконкой щита. Идеально для навбара рядом с Google/Apple.</td></tr>
+                        <tr><td class="param-name">logo</td><td><code class="mono">data-tpid-button="logo"</code></td><td>Кнопка без фона — только логотип + текст. Для минималистичного дизайна.</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTML — Все 3 варианта</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="cm">&lt;!-- Стандартная кнопка --&gt;</span>
+&lt;div data-tpid-button=<span class="str">"standard"</span>&gt;&lt;/div&gt;
+
+<span class="cm">&lt;!-- Круглая иконка --&gt;</span>
+&lt;div data-tpid-button=<span class="str">"icon"</span>&gt;&lt;/div&gt;
+
+<span class="cm">&lt;!-- Логотип без фона --&gt;</span>
+&lt;div data-tpid-button=<span class="str">"logo"</span>&gt;&lt;/div&gt;</pre>
+                </div>
+            </section>
+
+            <section id="widget-oauth">
+                <h3>OAuth Popup Flow (Promise API)</h3>
+                <p>Метод <code class="mono">TPID.loginWithOAuth()</code> открывает popup, проводит OAuth flow и возвращает <code class="mono">Promise</code> с authorization code.</p>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">JavaScript</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre>TPID.loginWithOAuth({ prompt: <span class="str">'login'</span> })
+  .then(<span class="kw">function</span>(result) {
+    console.log(<span class="str">'Auth code:'</span>, result.code);
+    console.log(<span class="str">'State:'</span>, result.state);
+    <span class="cm">// Отправьте code на ваш сервер для обмена на токен</span>
+  })
+  .catch(<span class="kw">function</span>(err) {
+    console.error(<span class="str">'OAuth error:'</span>, err);
+  });</pre>
+                </div>
+                <div class="docs-callout docs-callout-info">
+                    <strong>prompt=login</strong> гарантирует, что пользователь увидит форму входа, даже если уже авторизован. Это решает проблему «залогиненного админа».
+                </div>
+            </section>
+
+            <section id="widget-api">
+                <h3>Программный API (TPID)</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Метод</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">TPID.init(opts)</td><td>Инициализация с clientId, redirectUri, onSuccess, onError, lang, autoButton</td></tr>
+                        <tr><td class="param-name">TPID.open()</td><td>Открыть окно авторизации (redirect flow)</td></tr>
+                        <tr><td class="param-name">TPID.loginWithOAuth(opts)</td><td>OAuth popup flow → Promise&lt;{code, state}&gt;</td></tr>
+                        <tr><td class="param-name">TPID.renderButton(el, opts)</td><td>Рендер стандартной кнопки в контейнер</td></tr>
+                        <tr><td class="param-name">TPID.renderIconButton(el, opts)</td><td>Рендер круглой иконки</td></tr>
+                        <tr><td class="param-name">TPID.renderLogoButton(el, opts)</td><td>Рендер прозрачной кнопки-логотипа</td></tr>
+                        <tr><td class="param-name">TPID.version</td><td>Текущая версия виджета (<code class="mono">1.2.0</code>)</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="sdk-js">
+                <h2>SDK — JavaScript v2.0 (tokenpay-auth.js)</h2>
+                <p>OAuth SDK с автоматической генерацией PKCE (S256). Рекомендуется как основной SDK для серверных и SPA-приложений. Для простой интеграции кнопок см. <a href="#widget-quickstart">Widget SDK v1.2</a>.</p>
+
+                <div class="docs-callout docs-callout-info">
+                    <strong>CDN:</strong> <code class="mono">https://tokenpay.space/sdk/tokenpay-auth.js</code><br>
+                    <small style="color:var(--text-muted)">v2.0.0 — PKCE (S256) генерируется автоматически. code_verifier сохраняется в sessionStorage.</small>
+                </div>
+
+                <h3>Два типа кнопок</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Тип</th><th>Вид</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">icon</td><td><code class="mono">data-mode="icon"</code></td><td>Круглая иконка (щит TOKEN PAY) — как у Google/Apple. Размеры: 36×36 / 44×44 / 54×54 px</td></tr>
+                        <tr><td class="param-name">logo</td><td><code class="mono">data-mode="logo"</code></td><td>Прямоугольная кнопка с иконкой + текст «Войти через TOKEN PAY». Min/max ширина ограничена.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>1. Быстрое подключение (data-атрибуты)</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTML — Кнопка LOGO (прямоугольная)</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="cm">&lt;!-- Прямоугольная кнопка с текстом --&gt;</span>
+&lt;script src=<span class="str">"https://tokenpay.space/sdk/tpid-auth.js"</span>
+        data-client-id=<span class="str">"tpid_pk_ваш_ключ"</span>
+        data-redirect-uri=<span class="str">"https://ваш-сайт.com/callback"</span>
+        data-mode=<span class="str">"logo"</span>
+        data-theme=<span class="str">"dark"</span>
+        data-size=<span class="str">"medium"</span>
+        data-lang=<span class="str">"ru"</span>&gt;
+&lt;/script&gt;</pre>
+                </div>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">HTML — Кнопка ICON (круглая)</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="cm">&lt;!-- Круглая иконка --&gt;</span>
+&lt;script src=<span class="str">"https://tokenpay.space/sdk/tpid-auth.js"</span>
+        data-client-id=<span class="str">"tpid_pk_ваш_ключ"</span>
+        data-redirect-uri=<span class="str">"https://ваш-сайт.com/callback"</span>
+        data-mode=<span class="str">"icon"</span>
+        data-theme=<span class="str">"light"</span>
+        data-size=<span class="str">"large"</span>&gt;
+&lt;/script&gt;</pre>
+                </div>
+
+                <h3>2. Программный API</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">JavaScript</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="cm">// Инициализация</span>
+TokenPayAuth.init({
+  clientId: <span class="str">'tpid_pk_ваш_ключ'</span>,
+  redirectUri: <span class="str">'https://ваш-сайт.com/callback'</span>,
+  theme: <span class="str">'dark'</span>,
+  locale: <span class="str">'ru'</span>,
+  onSuccess: <span class="kw">function</span>(data) {
+    console.log(<span class="str">'Код:'</span>, data.code);
+    console.log(<span class="str">'Verifier:'</span>, data.codeVerifier);
+    <span class="cm">// Отправьте code + codeVerifier на ваш сервер</span>
+  }
+});
+
+<span class="cm">// Рендер кнопки в контейнер</span>
+TokenPayAuth.renderButton(<span class="str">'#my-container'</span>, {
+  mode: <span class="str">'button'</span>, <span class="cm">// 'button' | 'icon'</span>
+  theme: <span class="str">'dark'</span>,   <span class="cm">// 'dark' | 'light' | 'auto'</span>
+  size: <span class="str">'medium'</span>,  <span class="cm">// 'small' | 'medium' | 'large'</span>
+  locale: <span class="str">'ru'</span>
+});
+
+<span class="cm">// Или запуск OAuth вручную (PKCE генерируется автоматически)</span>
+TokenPayAuth.authorize();
+
+<span class="cm">// Получить code_verifier для серверного обмена</span>
+<span class="kw">const</span> verifier = TokenPayAuth.getCodeVerifier();</pre>
+                </div>
+
+                <h3>3. Обмен кода на токен (серверная сторона)</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">cURL</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">curl</span> -X POST https://tokenpay.space/api/v1/oauth/token \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "grant_type": "authorization_code",
+    "code": "tpid_code_...",
+    "client_id": "tpid_pk_...",
+    "client_secret": "tpid_sk_...",
+    "redirect_uri": "https://ваш-сайт.com/callback",
+    "code_verifier": "PKCE_VERIFIER"
+  }'</span></pre>
+                </div>
+
+                <h3>4. Получение профиля пользователя</h3>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">cURL</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">curl</span> -X GET https://tokenpay.space/api/v1/oauth/userinfo \
+  -H <span class="str">"Authorization: Bearer ACCESS_TOKEN"</span></pre>
+                </div>
+                <div class="docs-code">
+                    <div class="docs-code-header"><span class="docs-code-lang">JSON — 200 OK</span></div>
+                    <pre>{
+  <span class="str">"id"</span>: <span class="str">"tpid_usr_a1b2c3d4e5f6"</span>,
+  <span class="str">"email"</span>: <span class="str">"user@example.com"</span>,
+  <span class="str">"name"</span>: <span class="str">"Иван"</span>,
+  <span class="str">"email_verified"</span>: <span class="kw">true</span>,
+  <span class="str">"created_at"</span>: <span class="str">"2026-01-15T12:00:00Z"</span>
+}</pre>
+                </div>
+
+                <h3>Параметры</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Параметр / Атрибут</th><th>Тип</th><th>Описание</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">clientId / data-client-id</td><td class="param-type">string</td><td><span class="param-req">required</span> — Публичный ключ API (<code class="mono">tpid_pk_...</code>)</td></tr>
+                        <tr><td class="param-name">redirectUri / data-redirect-uri</td><td class="param-type">string</td><td><span class="param-req">required</span> — URL для редиректа после авторизации</td></tr>
+                        <tr><td class="param-name">mode / data-mode</td><td class="param-type">string</td><td>Тип кнопки: <code class="mono">icon</code> (круглая) или <code class="mono">logo</code> (прямоугольная, по умолчанию)</td></tr>
+                        <tr><td class="param-name">theme / data-theme</td><td class="param-type">string</td><td>Тема: <code class="mono">dark</code> (белая кнопка), <code class="mono">light</code> (тёмная кнопка), <code class="mono">auto</code></td></tr>
+                        <tr><td class="param-name">size / data-size</td><td class="param-type">string</td><td>Размер: <code class="mono">small</code> (36px), <code class="mono">medium</code> (44px), <code class="mono">large</code> (54px)</td></tr>
+                        <tr><td class="param-name">lang / data-lang</td><td class="param-type">string</td><td>Язык: <code class="mono">ru</code> или <code class="mono">en</code></td></tr>
+                        <tr><td class="param-name">scope / data-scope</td><td class="param-type">string</td><td>OAuth scope (по умолчанию <code class="mono">openid email profile</code>)</td></tr>
+                        <tr><td class="param-name">onSuccess</td><td class="param-type">function</td><td>Callback: <code class="mono">({code, state, type}) => {}</code></td></tr>
+                        <tr><td class="param-name">onError</td><td class="param-type">function</td><td>Callback при ошибке</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Ограничения размеров</h3>
+                <table class="docs-params">
+                    <thead><tr><th>Режим</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead>
+                    <tbody>
+                        <tr><td class="param-name">icon</td><td>36×36 px</td><td>44×44 px</td><td>54×54 px</td></tr>
+                        <tr><td class="param-name">logo</td><td>h:36, w:180–320 px</td><td>h:44, w:220–400 px</td><td>h:54, w:260–480 px</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="sdk-python">
+                <h2>SDK — Python</h2>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">Install</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre>pip install tokenpay-id</pre>
+                </div>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">Python</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">from</span> tokenpay_id <span class="kw">import</span> TokenPayID
+
+client = TokenPayID(
+    client_id=<span class="str">"tpid_pk_your_public_key"</span>,
+    client_secret=<span class="str">"tpid_sk_your_secret_key"</span>
+)
+
+<span class="cm"># Verify a user's token</span>
+result = client.verify(access_token)
+print(result.user_id)  <span class="cm"># tpid_usr_...</span>
+
+<span class="cm"># Get user profile</span>
+user = client.get_user(access_token)
+print(user.email)  <span class="cm"># user@example.com</span>
+
+<span class="cm"># Webhook signature verification</span>
+is_valid = client.verify_webhook(
+    payload=request.body,
+    signature=request.headers[<span class="str">"X-TPID-Signature"</span>]
+)</pre>
+                </div>
+            </section>
+
+            <section id="sdk-go">
+                <h2>SDK — Go</h2>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">Install</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre>go get github.com/tokenpay/id-go</pre>
+                </div>
+                <div class="docs-code">
+                    <div class="docs-code-header">
+                        <span class="docs-code-lang">Go</span>
+                        <button class="docs-code-copy" onclick="copyCode(this)">Копировать</button>
+                    </div>
+                    <pre><span class="kw">package</span> main
+
+<span class="kw">import</span> (
+    tpid <span class="str">"github.com/tokenpay/id-go"</span>
+)
+
+<span class="kw">func</span> main() {
+    client := tpid.NewClient(tpid.Config{
+        ClientID:     <span class="str">"tpid_pk_your_public_key"</span>,
+        ClientSecret: <span class="str">"tpid_sk_your_secret_key"</span>,
+    })
+
+    <span class="cm">// Verify token</span>
+    result, err := client.Verify(accessToken)
+    <span class="kw">if</span> err != <span class="kw">nil</span> {
+        log.Fatal(err)
+    }
+    fmt.Println(result.UserID) <span class="cm">// tpid_usr_...</span>
+}</pre>
+                </div>
+            </section>
+
+            <section id="changelog">
+                <h2>Changelog</h2>
+
+                <h3>v2.2.0 — 27 марта 2026</h3>
+                <p><strong>Безопасность</strong></p>
+                <p>— PKCE (S256) теперь <strong>обязателен</strong> для всех OAuth-клиентов<br>
+                — Ротация refresh-токенов: при обновлении выдаётся новый refresh_token<br>
+                — <code class="mono">session_version</code> — смена пароля/2FA мгновенно инвалидирует все сессии<br>
+                — API-ключи запрещены из браузерных окружений (только серверный вызов)<br>
+                — <code class="mono">requireScope</code> middleware для гранулярного контроля доступа<br>
+                — Webhook подписи в формате Stripe: <code class="mono">t=timestamp,v1=hmac</code><br>
+                — Отвязка TPID доступна только администратору<br>
+                — <code class="mono">/.well-known/security.txt</code> (RFC 9116)</p>
+
+                <p><strong>Dynamic Client Registration (RFC 7591)</strong></p>
+                <p>— <code class="mono">POST /oauth/register</code> — программная регистрация OAuth-клиентов<br>
+                — <code class="mono">GET /oauth/client-info/:id</code> — получение метаданных клиента<br>
+                — <code class="mono">PUT /oauth/register/:id</code> — обновление метаданных клиента<br>
+                — Consent screen отображает <code class="mono">tos_uri</code>, <code class="mono">policy_uri</code>, <code class="mono">client_uri</code><br>
+                — OpenID Discovery: <code class="mono">registration_endpoint</code>, <code class="mono">client_info_endpoint</code></p>
+
+                <p><strong>QR-вход</strong></p>
+                <p>— <code class="mono">POST /auth/qr/login-init</code> — создание QR-сессии<br>
+                — <code class="mono">GET /auth/qr/login-poll/:id</code> — polling статуса<br>
+                — <code class="mono">POST /auth/qr/login-confirm/:id</code> — подтверждение с мобильного<br>
+                — Исправлен критический баг: QR-токены теперь корректно проходят авторизацию</p>
+
+                <p><strong>API</strong></p>
+                <p>— Строгая валидация <code class="mono">redirect_uri</code> (exact match)<br>
+                — OpenID Discovery: <code class="mono">pkce_required: true</code>, <code class="mono">code_challenge_methods_supported: ["S256"]</code><br>
+                — API версия обновлена до 2.2.0</p>
+
+                <p><strong>SDK</strong></p>
+                <p>— <code class="mono">tokenpay-auth.js</code> обновлён до v2.0.0<br>
+                — Автоматическая генерация PKCE (S256) в <code class="mono">authorize()</code><br>
+                — <code class="mono">getCodeVerifier()</code> — получение code_verifier из sessionStorage<br>
+                — CSRF state validation на callback<br>
+                — <code class="mono">code_verifier</code> автоматически передаётся в <code class="mono">exchangeCode()</code><br>
+                — Кнопки обновлены: текст «TOKEN PAY ID», шрифт Comfortaa</p>
+
+                <h3>v2.1.0 — 18 марта 2026</h3>
+                <p><strong>OAuth 2.0</strong></p>
+                <p>— Поддержка <code class="mono">prompt=login</code> для принудительной переавторизации<br>
+                — Поддержка <code class="mono">login_hint</code> для предзаполнения email<br>
+                — Повторная валидация <code class="mono">redirect_uri</code> в <code class="mono">/oauth/approve</code><br>
+                — Новый эндпойнт: <code class="mono">GET /oauth/branding</code></p>
+
+                <p><strong>Widget SDK v1.2.0</strong></p>
+                <p>— 3 варианта кнопок: standard, icon, logo<br>
+                — <code class="mono">TPID.loginWithOAuth()</code> — OAuth popup flow с Promise API<br>
+                — Автоматический рендер через <code class="mono">data-tpid-button</code><br>
+                — Поддержка тем dark/light/auto</p>
+            </section>
+
+            <div style="margin-top:80px;padding:40px;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;text-align:center">
+                <h3 style="color:var(--text);margin-bottom:12px">Нужна помощь?</h3>
+                <p style="color:var(--text-muted);margin-bottom:20px;font-size:.9rem">Свяжитесь с нашей командой разработчиков</p>
+                <a href="mailto:dev@tokenpay.space" class="btn btn-secondary btn-sm" style="margin-right:8px;font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:.3px">dev@tokenpay.space</a>
+                <a href="/#contact" class="btn btn-primary btn-sm">Обратная связь</a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    function scrollToSection(id, el) {
+        document.querySelectorAll('.docs-side-link').forEach(l => l.classList.remove('active'));
+        if (el) el.classList.add('active');
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function copyCode(btn) {
+        const pre = btn.closest('.docs-code').querySelector('pre');
+        navigator.clipboard.writeText(pre.textContent).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = 'Скопировано!';
+            setTimeout(() => btn.textContent = orig, 1500);
+        });
+    }
+
+    // Mobile sidebar toggle
+    function toggleDocsSide() {
+        var side = document.getElementById('docsSide');
+        var overlay = document.getElementById('docsSideOverlay');
+        var isOpen = side.classList.contains('docs-side-open');
+        side.classList.toggle('docs-side-open', !isOpen);
+        overlay.classList.toggle('open', !isOpen);
+        document.body.style.overflow = isOpen ? '' : 'hidden';
+    }
+
+    // Close sidebar on link click (mobile)
+    document.querySelectorAll('.docs-side-link').forEach(function(l) {
+        l.addEventListener('click', function() {
+            if (window.innerWidth <= 768) toggleDocsSide();
+        });
+    });
+
+    // Highlight active section on scroll
+    const sections = document.querySelectorAll('.docs-main section[id]');
+    const sideLinks = document.querySelectorAll('.docs-side-link');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(s => {
+            if (window.scrollY >= s.offsetTop - 100) current = s.id;
+        });
+        sideLinks.forEach(l => {
+            l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+        });
+    }, { passive: true });
+    // Star sky (theme-aware, retina-safe)
+    (function(){
+        var c=document.getElementById('particles');if(!c)return;
+        var ctx=c.getContext('2d'),dpr=Math.min(window.devicePixelRatio||1,2),stars=[],_fc=0,_lt=document.body.classList.contains('light'),_w=0,_h=0;
+        function resize(){
+            _w=window.innerWidth;_h=window.innerHeight;
+            c.width=_w*dpr;c.height=_h*dpr;c.style.width=_w+'px';c.style.height=_h+'px';
+            ctx.setTransform(dpr,0,0,dpr,0,0);stars=[];
+            var n=Math.min(200,Math.floor(_w*_h/6000));
+            for(var i=0;i<n;i++)stars.push({x:Math.random()*_w,y:Math.random()*_h,r:Math.random()*1.2+0.2,o:Math.random()*0.5+0.12,dx:(Math.random()-.5)*.18,dy:(Math.random()-.5)*.18,ph:Math.random()*Math.PI*2});
+        }
+        function draw(){
+            ctx.clearRect(0,0,_w,_h);
+            var rgb=_lt?'160,150,220':'255,255,255';var am=_lt?0.35:1;
+            for(var i=0;i<stars.length;i++){var s=stars[i];s.x+=s.dx;s.y+=s.dy;if(s.x<0||s.x>_w)s.dx*=-1;if(s.y<0||s.y>_h)s.dy*=-1;s.ph+=0.006;var a=s.o*(0.85+0.15*Math.sin(s.ph))*am;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='rgba('+rgb+','+a+')';ctx.fill();}
+            if(++_fc%90===0)_lt=document.body.classList.contains('light');
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize',resize);resize();draw();
+    })();
+    </script>
+</body>
+</html>

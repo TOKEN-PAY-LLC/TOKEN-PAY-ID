@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Админ-панель — TOKEN PAY ID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=6">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=6">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=6">
+    <link rel="manifest" href="manifest.json?v=6">
+    <meta name="theme-color" content="#000000">
+    <link rel="stylesheet" href="styles.css?v=20260325b">
+    <script src="theme-init.js?v=20260325b"></script>
+</head>
+<body>
+    <div class="dash">
+        <aside class="dash-side">
+            <div class="dash-side-logo">
+                <a href="/"><img src="tokenpay-logo.png" alt="TOKEN PAY"></a>
+            </div>
+            <nav class="dash-side-nav">
+                <button class="dash-side-item active" data-section="stats">
+                    <svg viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="1" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="10" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="10" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
+                    Статистика
+                </button>
+                <button class="dash-side-item" data-section="users">
+                    <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M1 17c0-4 3.5-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Пользователи
+                </button>
+                <button class="dash-side-item" data-section="activity">
+                    <svg viewBox="0 0 18 18" fill="none"><polyline points="1,12 5,6 9,10 13,3 17,8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    Активность
+                </button>
+                <button class="dash-side-item" data-section="system">
+                    <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.34 3.34l1.42 1.42M13.24 13.24l1.42 1.42M3.34 14.66l1.42-1.42M13.24 4.76l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Система
+                </button>
+            </nav>
+            <div class="dash-side-footer">
+                <div class="dash-side-user">
+                    <div class="dash-side-user-avatar" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)">A</div>
+                    <div class="dash-side-user-info">
+                        <div class="dash-side-user-name">Admin</div>
+                        <div class="dash-side-user-email">info@tokenpay.space</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="dash-main">
+            <!-- STATS -->
+            <div class="dash-section active" id="sec-stats">
+                <div class="dash-header">
+                    <h1>Админ-панель</h1>
+                    <div class="dash-header-actions">
+                        <span class="dash-badge dash-badge-active" style="padding:8px 16px;font-size:.78rem">API v1.0.0</span>
+                    </div>
+                </div>
+                <div class="dash-grid">
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-label">Пользователи</div>
+                        <div class="dash-stat-value" id="sTotalUsers">—</div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-label">Активные ключи</div>
+                        <div class="dash-stat-value" id="sActiveKeys">—</div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-label">Сессии</div>
+                        <div class="dash-stat-value" id="sActiveSessions">—</div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-label">Активность (24ч)</div>
+                        <div class="dash-stat-value" id="sActivity24">—</div>
+                    </div>
+                </div>
+
+                <div class="dash-panel">
+                    <div class="dash-panel-header">
+                        <h2>Инфраструктура</h2>
+                    </div>
+                    <table class="dash-table">
+                        <thead><tr><th>Сервис</th><th>Хост</th><th>Статус</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td>API Server</td>
+                                <td class="mono">5.23.54.205:8080</td>
+                                <td><span class="dash-badge dash-badge-info" id="apiStatus">Проверка...</span></td>
+                            </tr>
+                            <tr>
+                                <td>PostgreSQL</td>
+                                <td class="mono">5.23.55.152:5432</td>
+                                <td><span class="dash-badge dash-badge-info" id="dbStatus">Проверка...</span></td>
+                            </tr>
+                            <tr>
+                                <td>Nginx</td>
+                                <td class="mono">5.23.54.205:443</td>
+                                <td><span class="dash-badge dash-badge-info" id="nginxStatus">Проверка...</span></td>
+                            </tr>
+                            <tr>
+                                <td>Домен</td>
+                                <td class="mono">tokenpay.space</td>
+                                <td><span class="dash-badge dash-badge-active">Cloudflare</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="dash-panel">
+                    <div class="dash-panel-header">
+                        <h2>Последние регистрации</h2>
+                    </div>
+                    <div id="recentUsers"></div>
+                </div>
+            </div>
+
+            <!-- USERS -->
+            <div class="dash-section" id="sec-users">
+                <div class="dash-header">
+                    <h1>Пользователи</h1>
+                    <div class="dash-header-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="loadUsers()">Обновить</button>
+                    </div>
+                </div>
+                <div class="dash-panel">
+                    <table class="dash-table">
+                        <thead><tr><th>ID</th><th>Email</th><th>Имя</th><th>Роль</th><th>Создан</th><th></th></tr></thead>
+                        <tbody id="usersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ACTIVITY -->
+            <div class="dash-section" id="sec-activity">
+                <div class="dash-header">
+                    <h1>Глобальная активность</h1>
+                </div>
+                <div class="dash-panel">
+                    <div id="globalActivity"><div class="dash-empty"><p>Загрузка...</p></div></div>
+                </div>
+            </div>
+
+            <!-- SYSTEM -->
+            <div class="dash-section" id="sec-system">
+                <div class="dash-header">
+                    <h1>Система</h1>
+                </div>
+                <div class="dash-panel">
+                    <div class="dash-panel-header">
+                        <h2>Docker контейнеры</h2>
+                    </div>
+                    <table class="dash-table">
+                        <thead><tr><th>Контейнер</th><th>Образ</th><th>Порт</th><th>Статус</th></tr></thead>
+                        <tbody>
+                            <tr><td>tokenpay-id-api</td><td class="mono">node:20-alpine</td><td class="mono">8080</td><td><span class="dash-badge dash-badge-active">Running</span></td></tr>
+                            <tr><td>tokenpay-id-nginx</td><td class="mono">nginx:alpine</td><td class="mono">80, 443</td><td><span class="dash-badge dash-badge-active">Running</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="dash-panel">
+                    <div class="dash-panel-header">
+                        <h2>API конфигурация</h2>
+                    </div>
+                    <table class="dash-table">
+                        <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                        <tbody>
+                            <tr><td>Base URL</td><td class="mono">https://tokenpay.space/api/v1</td></tr>
+                            <tr><td>Домен</td><td class="mono">tokenpay.space</td></tr>
+                            <tr><td>SSL</td><td>Cloudflare Origin Certificate</td></tr>
+                            <tr><td>Сервер</td><td class="mono">5.23.54.205 (Timeweb Cloud)</td></tr>
+                            <tr><td>База данных</td><td class="mono">5.23.55.152 (PostgreSQL)</td></tr>
+                            <tr><td>Rate Limit</td><td>120 req/min</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="dash-panel">
+                    <div class="dash-panel-header">
+                        <h2>Действия</h2>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="logout()" style="margin-right:8px">Выйти</button>
+                    <a href="/dashboard" class="btn btn-secondary btn-sm">Личный кабинет</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    const API = '/api/v1';
+    let token = localStorage.getItem('tpid_token');
+    const user = JSON.parse(localStorage.getItem('tpid_user') || 'null');
+
+    // Check admin
+    if (!user || user.role !== 'admin') {
+        // Try to login as admin
+        if (!token) {
+            window.location.href='/login';
+        }
+    }
+
+    // Sidebar nav
+    document.querySelectorAll('.dash-side-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.dash-side-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('sec-' + btn.dataset.section).classList.add('active');
+        });
+    });
+
+    async function apiCall(path, opts = {}) {
+        try {
+            const res = await fetch(API + path, {
+                ...opts,
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    ...(opts.headers || {})
+                }
+            });
+            return await res.json();
+        } catch (e) {
+            console.error('API call failed:', path, e);
+            return null;
+        }
+    }
+
+    async function loadStats() {
+        const data = await apiCall('/admin/stats');
+        if (data) {
+            document.getElementById('sTotalUsers').textContent = data.total_users || 0;
+            document.getElementById('sActiveKeys').textContent = data.active_keys || 0;
+            document.getElementById('sActiveSessions').textContent = data.active_sessions || 0;
+            document.getElementById('sActivity24').textContent = data.activity_24h || 0;
+        }
+    }
+
+    async function loadUsers() {
+        const data = await apiCall('/admin/users?limit=100');
+        if (!data || !data.users) return;
+        const tbody = document.getElementById('usersTable');
+        const recent = document.getElementById('recentUsers');
+
+        tbody.innerHTML = data.users.map(u => `<tr>
+            <td class="mono" style="font-size:.72rem">${u.id}</td>
+            <td>${u.email}</td>
+            <td>${u.name}</td>
+            <td><span class="dash-badge ${u.role === 'admin' ? 'dash-badge-active' : 'dash-badge-info'}">${u.role}</span></td>
+            <td style="font-size:.78rem">${new Date(u.created_at).toLocaleDateString('ru-RU')}</td>
+            <td>${u.role !== 'admin' ? '<button class="api-key-btn api-key-btn-danger" onclick="deleteUser(\'' + u.id + '\')">Удалить</button>' : ''}</td>
+        </tr>`).join('');
+
+        recent.innerHTML = data.users.slice(0, 5).map(u => `<div class="activity-item">
+            <div class="activity-dot success"></div>
+            <div class="activity-content">
+                <div class="activity-title">${u.name} — ${u.email}</div>
+                <div class="activity-meta">${u.role} · ${new Date(u.created_at).toLocaleDateString('ru-RU')}</div>
+            </div>
+        </div>`).join('') || '<div class="dash-empty"><p>Нет пользователей</p></div>';
+    }
+
+    async function deleteUser(id) {
+        if (!confirm('Удалить пользователя? Это действие необратимо.')) return;
+        await apiCall('/admin/users/' + id, { method: 'DELETE' });
+        loadUsers();
+        loadStats();
+    }
+
+    async function checkHealth() {
+        try {
+            const res = await fetch('/health');
+            const data = await res.json();
+            if (data.status === 'ok') {
+                document.getElementById('apiStatus').className = 'dash-badge dash-badge-active';
+                document.getElementById('apiStatus').textContent = 'Online';
+                document.getElementById('dbStatus').className = 'dash-badge dash-badge-active';
+                document.getElementById('dbStatus').textContent = 'Connected';
+                document.getElementById('nginxStatus').className = 'dash-badge dash-badge-active';
+                document.getElementById('nginxStatus').textContent = 'Online';
+            }
+        } catch (e) {
+            document.getElementById('apiStatus').className = 'dash-badge dash-badge-revoked';
+            document.getElementById('apiStatus').textContent = 'Offline';
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('tpid_user');
+        localStorage.removeItem('tpid_token');
+        window.location.href='/login';
+    }
+
+    // Init
+    checkHealth();
+    loadStats();
+    loadUsers();
+    </script>
+</body>
+</html>

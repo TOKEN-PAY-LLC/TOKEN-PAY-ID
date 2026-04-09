@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Войти — TOKEN PAY ID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=6">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=6">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=6">
+    <link rel="manifest" href="manifest.json?v=6">
+    <meta name="theme-color" content="#000000">
+    <link rel="stylesheet" href="styles.css?v=20260327c">
+    <script src="theme-init.js?v=20260327c"></script>
+    <script src="captcha.js?v=20260327c"></script>
+    <script src="qrcode-min.js?v=20260327c"></script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+
+    <div class="auth-page">
+        <div class="auth-container fade-in">
+            <div class="auth-card">
+                <div class="auth-card-logo">
+                    <a href="/"><img src="tokenpay-id-light.png" alt="TOKEN PAY ID" class="tpid-logo"></a>
+                </div>
+
+                <form id="loginForm" onsubmit="return handleLogin(event)">
+                    <!-- Step 1: Email -->
+                    <div class="auth-step active" id="step1">
+                        <p style="text-align:center;font-size:.88rem;color:rgba(255,255,255,.55);margin-bottom:20px" data-ru="Войдите в аккаунт" data-en="Sign in to your account">Войдите в аккаунт</p>
+                        <div id="savedAccounts" style="display:none;margin-bottom:20px">
+                            <div id="accountsList"></div>
+                        </div>
+                        <div class="auth-field" id="emailField">
+                            <label>Email</label>
+                            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" inputmode="email">
+                            <div class="field-error" id="emailFieldError" data-ru="Введите корректный email" data-en="Enter a valid email">Введите корректный email</div>
+                        </div>
+                        <button type="button" class="auth-btn" id="step1Btn" onclick="goToStep2()" data-ru="Далее" data-en="Next">Далее</button>
+                        <div class="auth-alt-divider">
+                            <div class="auth-alt-divider-line"></div>
+                            <span class="auth-alt-divider-text" data-ru="или" data-en="or">или</span>
+                            <div class="auth-alt-divider-line"></div>
+                        </div>
+                        <button type="button" id="qrLoginBtn" class="auth-alt-btn-block" onclick="if(window.startQrLogin){startQrLogin()}else{alert('QR функция не загружена. Обновите страницу (Ctrl+Shift+R)')}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><path d="M21 14h-3v3h3v4h-7v-7h4"/></svg>
+                            <span data-ru="Войти по QR-коду" data-en="Sign in with QR code">Войти по QR-коду</span>
+                        </button>
+                        <div class="auth-footer">
+                            <span data-ru="Нет аккаунта?" data-en="No account?">Нет аккаунта?</span> <a id="registerLink" href="/register" data-ru="Создать" data-en="Create one">Создать</a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Password -->
+                    <div class="auth-step" id="step2">
+                        <button type="button" class="auth-step-back" onclick="backToStep1()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span data-ru="Назад" data-en="Back">Назад</span>
+                        </button>
+                        <div class="auth-step-email" id="step2Email">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+                            <span id="step2EmailText"></span>
+                        </div>
+                        <div class="auth-field" id="passwordField">
+                            <label data-ru="Пароль" data-en="Password">Пароль</label>
+                            <div style="position:relative">
+                                <input type="password" id="loginPassword" placeholder="Ваш пароль" autocomplete="current-password" style="padding-right:44px">
+                                <button type="button" onclick="togglePass('loginPassword',this)" tabindex="-1" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);padding:4px;display:flex;align-items:center" title="Показать/скрыть">
+                                    <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                            <div class="field-error" id="passError" data-ru="Неверный пароль" data-en="Wrong password">Неверный пароль</div>
+                        </div>
+                        <label class="auth-check">
+                            <input type="checkbox" id="guestDevice">
+                            <span class="auth-check-box"></span>
+                            <span class="auth-check-text" data-ru="Чужое устройство" data-en="Someone else's device">Чужое устройство</span>
+                        </label>
+                        <button type="button" class="auth-btn" id="loginBtn" onclick="submitPassword()" data-ru="Далее" data-en="Next">Далее</button>
+                        <div style="text-align:center;margin-top:10px">
+                            <button type="button" class="auth-alt-btn auth-alt-btn-sm" onclick="goForgotPassword()" data-ru="Забыли пароль?" data-en="Forgot password?">Забыли пароль?</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Email verification code -->
+                    <div class="auth-step" id="step3">
+                        <button type="button" class="auth-step-back" onclick="backToStep2()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span data-ru="Назад" data-en="Back">Назад</span>
+                        </button>
+                        <div style="text-align:center;margin-bottom:20px">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.5"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M22 7l-10 7L2 7"/></svg>
+                            <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin:10px 0 0" data-ru="Код отправлен на" data-en="Code sent to">Код отправлен на</p>
+                            <p style="font-size:.9rem;color:rgba(255,255,255,.8);font-weight:600" id="step3EmailText"></p>
+                        </div>
+                        <div class="auth-field" id="emailCodeField">
+                            <label data-ru="Код из письма" data-en="Code from email">Код из письма</label>
+                            <input type="text" id="emailCode" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" style="text-align:center;font-size:1.4rem;letter-spacing:8px;font-weight:700">
+                            <div class="field-error" id="emailCodeError" data-ru="Неверный код" data-en="Invalid code">Неверный код</div>
+                        </div>
+                        <button type="button" class="auth-btn" id="emailCodeBtn" onclick="submitEmailCode()" data-ru="Подтвердить" data-en="Confirm">Подтвердить</button>
+                        <div style="text-align:center;margin-top:12px">
+                            <button type="button" id="resendCodeBtn" class="auth-alt-btn auth-alt-btn-muted" onclick="resendLoginCode()" disabled>Отправить повторно (60)</button>
+                        </div>
+                        <div id="magicLinkSection" style="margin-top:14px;text-align:center">
+                            <button type="button" id="magicLinkBtn" class="auth-alt-btn auth-alt-btn-xs" onclick="sendMagicLink()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M22 7l-10 7L2 7"/></svg>
+                                <span data-ru="Войти по ссылке из письма" data-en="Sign in via email link">Войти по ссылке из письма</span>
+                            </button>
+                            <div id="magicLinkStatus" class="auth-alt-status" style="display:none;margin-top:8px"></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: 2FA (if needed) -->
+                    <div class="auth-step" id="step4">
+                        <button type="button" class="auth-step-back" onclick="backToStep3()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span data-ru="Назад" data-en="Back">Назад</span>
+                        </button>
+                        <div style="text-align:center;margin-bottom:20px">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
+                            <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin:10px 0 0" data-ru="Двухфакторная аутентификация" data-en="Two-factor authentication">Двухфакторная аутентификация</p>
+                        </div>
+                        <div class="auth-field">
+                            <label data-ru="Код из приложения" data-en="Code from app">Код из приложения</label>
+                            <input type="text" id="twoFactorCode" placeholder="000 000" maxlength="7" autocomplete="one-time-code" style="text-align:center;font-size:1.4rem;letter-spacing:6px;font-weight:700">
+                            <div class="field-hint" style="color:rgba(255,255,255,.3);font-size:.78rem;margin-top:6px" data-ru="Введите 6-значный код из Google Authenticator" data-en="Enter the 6-digit code from Google Authenticator">Введите 6-значный код из Google Authenticator</div>
+                        </div>
+                        <button type="submit" class="auth-btn" id="tfaBtn" data-ru="Войти" data-en="Sign in">Войти</button>
+                    </div>
+
+                    <!-- Step 5: Forgot password — email -->
+                    <div class="auth-step" id="step5">
+                        <button type="button" class="auth-step-back" onclick="backFromForgot()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span data-ru="Назад" data-en="Back">Назад</span>
+                        </button>
+                        <div style="text-align:center;margin-bottom:20px">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
+                            <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin:10px 0 0" data-ru="Сброс пароля" data-en="Reset password">Сброс пароля</p>
+                        </div>
+                        <div class="auth-field" id="forgotEmailField">
+                            <label>Email</label>
+                            <input type="email" id="forgotEmail" placeholder="you@example.com" autocomplete="email">
+                            <div class="field-error" id="forgotEmailError" data-ru="Введите корректный email" data-en="Enter a valid email">Введите корректный email</div>
+                        </div>
+                        <button type="button" class="auth-btn" id="forgotSendBtn" onclick="sendResetCode()" data-ru="Отправить код" data-en="Send code">Отправить код</button>
+                    </div>
+
+                    <!-- Step 6: Reset code + new password -->
+                    <div class="auth-step" id="step6">
+                        <button type="button" class="auth-step-back" onclick="backToForgotEmail()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span data-ru="Назад" data-en="Back">Назад</span>
+                        </button>
+                        <div style="text-align:center;margin-bottom:20px">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.5"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M22 7l-10 7L2 7"/></svg>
+                            <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin:10px 0 0" data-ru="Код отправлен на" data-en="Code sent to">Код отправлен на</p>
+                            <p style="font-size:.9rem;color:rgba(255,255,255,.8);font-weight:600" id="step6EmailText"></p>
+                        </div>
+                        <div class="auth-field" id="resetCodeField">
+                            <label data-ru="Код из письма" data-en="Code from email">Код из письма</label>
+                            <input type="text" id="resetCode" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" style="text-align:center;font-size:1.4rem;letter-spacing:8px;font-weight:700">
+                            <div class="field-error" id="resetCodeError" data-ru="Неверный код" data-en="Invalid code">Неверный код</div>
+                        </div>
+                        <div class="auth-field" id="resetPassField">
+                            <label data-ru="Новый пароль" data-en="New password">Новый пароль</label>
+                            <div style="position:relative">
+                                <input type="password" id="resetNewPass" placeholder="Минимум 8 символов" autocomplete="new-password" style="padding-right:44px">
+                                <button type="button" onclick="togglePass('resetNewPass',this)" tabindex="-1" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);padding:4px;display:flex;align-items:center">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                            <div class="field-error" id="resetPassError" data-ru="Минимум 8 символов" data-en="Minimum 8 characters">Минимум 8 символов</div>
+                        </div>
+                        <button type="button" class="auth-btn" id="resetBtn" onclick="submitResetPassword()" data-ru="Сменить пароль" data-en="Change password">Сменить пароль</button>
+                        <div style="text-align:center;margin-top:12px">
+                            <button type="button" id="resetResendBtn" onclick="resendResetCode()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:.8rem;cursor:pointer;font-family:inherit" disabled data-ru="Отправить повторно" data-en="Resend code">Отправить повторно (60)</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 7: 2FA during password reset -->
+                    <div class="auth-step" id="step7">
+                        <button type="button" class="auth-step-back" onclick="backToStep6()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span data-ru="Назад" data-en="Back">Назад</span>
+                        </button>
+                        <div style="text-align:center;margin-bottom:20px">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
+                            <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin:10px 0 0" data-ru="Двухфакторная аутентификация" data-en="Two-factor authentication">Двухфакторная аутентификация</p>
+                            <p style="font-size:.75rem;color:rgba(255,255,255,.3);margin:6px 0 0" data-ru="Для сброса пароля введите код из приложения" data-en="Enter code from authenticator to reset password">Для сброса пароля введите код из приложения</p>
+                        </div>
+                        <div class="auth-field" id="reset2faField">
+                            <label data-ru="Код из приложения" data-en="Code from app">Код из приложения</label>
+                            <input type="text" id="reset2faCode" placeholder="000 000" maxlength="7" autocomplete="one-time-code" style="text-align:center;font-size:1.4rem;letter-spacing:6px;font-weight:700">
+                            <div class="field-error" id="reset2faError" data-ru="Неверный код 2FA" data-en="Invalid 2FA code">Неверный код 2FA</div>
+                        </div>
+                        <button type="button" class="auth-btn" id="reset2faBtn" onclick="submitReset2FA()" data-ru="Сменить пароль" data-en="Change password">Сменить пароль</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=20260325b"></script>
+    <script>
+    const API = '/api/v1';
+    // QR login state — var to avoid TDZ errors
+    var _qrPollTimer = null;
+    var _qrSessionId = null;
+    // FIX BUG-01 & BUG-02: OAuth flow detection — ensure user login, never admin login
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _isOAuth = _urlParams.get('isOAuth') === 'true';
+    const _forceLogin = _urlParams.get('force') === '1';
+    const _loginHint = _urlParams.get('login_hint') || '';
+    // Popup mode — enterprise OAuth popup window (like Google/Apple login)
+    const _isPopup = _urlParams.get('popup') === '1';
+    const _popupCb = _urlParams.get('cb') || '*';
+    if (_isPopup && window.opener) {
+        window.opener.postMessage({ type: 'TPID_POPUP_READY' }, _popupCb);
+        // Compact popup styling
+        document.documentElement.style.setProperty('--popup-mode','1');
+    }
+    function _popupSuccess(data) {
+        if (!_isPopup || !window.opener) return false;
+        window.opener.postMessage({ type: 'TPID_LOGIN_SUCCESS', ...data }, _popupCb);
+        setTimeout(() => window.close(), 300);
+        return true;
+    }
+    if (_isOAuth && window.location.pathname.includes('/admin')) {
+        window.location.href = '/login?isOAuth=true&' + _urlParams.toString();
+    }
+    // force=1 → clear all cached tokens to force fresh login (fixes admin account shown instead of user)
+    if (_forceLogin) {
+        localStorage.removeItem('tpid_token');
+        localStorage.removeItem('tp_token');
+        localStorage.removeItem('tpid_refresh');
+        sessionStorage.removeItem('tpid_token');
+        sessionStorage.removeItem('tpid_refresh');
+    }
+    
+    let needs2FA = false;
+    let resendTimer = null;
+    let resetResendTimer = null;
+    let _magicPollTimer = null;
+    let _magicTokenId = null;
+
+    // ===== i18n + theme =====
+    let _lang = localStorage.getItem('tp_lang') || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ru');
+    let _theme = localStorage.getItem('tp_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    function applyLang() {
+        document.querySelectorAll('[data-' + _lang + ']').forEach(el => {
+            el.textContent = el.getAttribute('data-' + _lang);
+        });
+        document.querySelectorAll('input[placeholder]').forEach(inp => {
+            const ph = inp.getAttribute('data-ph-' + _lang);
+            if (ph) inp.placeholder = ph;
+        });
+        document.title = _lang === 'en' ? 'Sign In — TOKEN PAY ID' : 'Войти — TOKEN PAY ID';
+    }
+    function L(ru, en) { return _lang === 'en' ? en : ru; }
+    applyLang();
+
+    // Preserve redirect param in register link for OAuth flows
+    (function() {
+        const p = new URLSearchParams(window.location.search);
+        const redirect = p.get('redirect');
+        if (redirect) {
+            const regLink = document.getElementById('registerLink');
+            if (regLink) regLink.href = '/register?redirect=' + encodeURIComponent(redirect);
+        }
+    })();
+
+    // ===== Session persistence: redirect if already logged in =====
+    const _redirectTarget = () => {
+        const p = new URLSearchParams(window.location.search);
+        const r = p.get('redirect');
+        if (!r) return '/dashboard';
+        const decoded = decodeURIComponent(r);
+        // Prevent open redirect: only allow relative paths or same-origin URLs
+        if (decoded.startsWith('/') && !decoded.startsWith('//')) return decoded;
+        try { const u = new URL(decoded); if (u.origin === window.location.origin) return decoded; } catch(e) {}
+        return '/dashboard';
+    };
+    (function() {
+        // Skip auto-login when force=1 (user clicked 'Switch account')
+        if (_forceLogin) { _checkLoginHint(); return; }
+        const token = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
+        const refreshTok = localStorage.getItem('tpid_refresh') || sessionStorage.getItem('tpid_refresh');
+        if (token) {
+            fetch(API + '/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) })
+                .then(r => r.json()).then(data => {
+                    if (data.valid) { window.location.href = _redirectTarget(); return; }
+                    // Access token invalid — try refresh token
+                    if (refreshTok) _tryRefresh(refreshTok);
+                    else _checkQuickLoginOrRestore();
+                }).catch(() => { if (refreshTok) _tryRefresh(refreshTok); else _checkQuickLoginOrRestore(); });
+        } else if (refreshTok) {
+            _tryRefresh(refreshTok);
+        } else {
+            _checkQuickLoginOrRestore();
+        }
+    })();
+
+    function _checkQuickLoginOrRestore() {
+        // First try to restore login state from sessionStorage (page refresh)
+        if (_restoreLoginState()) { applyLang(); return; }
+        _checkQuickLogin();
+    }
+
+    function _tryRefresh(refreshTok) {
+        fetch(API + '/auth/refresh', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ refresh_token: refreshTok }) })
+            .then(r => r.json()).then(data => {
+                if (data.accessToken) {
+                    const isSession = !!sessionStorage.getItem('tpid_refresh');
+                    const store = isSession ? sessionStorage : localStorage;
+                    store.setItem('tpid_token', data.accessToken);
+                    store.setItem('tp_token', data.accessToken);
+                    if (data.refreshToken) store.setItem('tpid_refresh', data.refreshToken);
+                    window.location.href = _redirectTarget();
+                } else {
+                    _checkQuickLogin();
+                }
+            }).catch(() => _checkQuickLogin());
+    }
+
+    // Pre-fill email from login_hint param
+    function _checkLoginHint() {
+        if (_loginHint) {
+            document.getElementById('loginEmail').value = _loginHint;
+        }
+    }
+
+    // If last login was within 24h — skip password, go straight to code step
+    let _isQuickLogin = false;
+    function _checkQuickLogin() {
+        // Skip quick login when force=1
+        if (_forceLogin) { _checkLoginHint(); return; }
+        const lastLogin = parseInt(localStorage.getItem('tpid_last_login') || '0');
+        const savedUser = (() => { try { return JSON.parse(localStorage.getItem('tpid_user') || 'null'); } catch(e) { return null; } })();
+        if (Date.now() - lastLogin < 24 * 60 * 60 * 1000 && savedUser && savedUser.email) {
+            _isQuickLogin = true;
+            document.getElementById('loginEmail').value = savedUser.email;
+            _goQuickStep();
+        } else {
+            _checkLoginHint();
+        }
+    }
+    async function _goQuickStep() {
+        const email = document.getElementById('loginEmail').value.trim();
+        if (!email) return;
+        // Show a quick-login banner and jump straight to code step
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step3').classList.add('active');
+        document.getElementById('step3EmailText').textContent = email;
+        document.getElementById('emailCode').value = '';
+        // Auto-send code
+        try {
+            await fetch(API + '/auth/send-code', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, type:'login' }) });
+        } catch(e) {}
+        if (resendTimer) clearInterval(resendTimer);
+        resendTimer = startResendTimer('resendCodeBtn');
+        setTimeout(() => document.getElementById('emailCode').focus(), 150);
+    }
+
+    // Show banner from URL params
+    (function() {
+        const p = new URLSearchParams(window.location.search);
+        if (p.get('verified') === '1') {
+            const b = document.createElement('div');
+            b.style.cssText = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:.83rem;color:rgba(255,255,255,.8);text-align:center';
+            b.textContent = L('Email подтверждён — войдите в аккаунт', 'Email verified — sign in to your account');
+            document.getElementById('step1').insertBefore(b, document.getElementById('step1').firstChild);
+        } else if (p.get('error')) {
+            const b = document.createElement('div');
+            b.style.cssText = 'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:.83rem;color:rgba(255,255,255,.6);text-align:center';
+            b.textContent = p.get('error') === 'invalid_verification_link'
+                ? L('Ссылка для подтверждения недействительна или истекла.', 'Verification link is invalid or expired.')
+                : L('Произошла ошибка. Попробуйте снова.', 'An error occurred. Please try again.');
+            document.getElementById('step1').insertBefore(b, document.getElementById('step1').firstChild);
+        } else if (p.get('reset') === '1') {
+            const b = document.createElement('div');
+            b.style.cssText = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:.83rem;color:rgba(255,255,255,.8);text-align:center';
+            b.textContent = L('Пароль успешно изменён — войдите в аккаунт', 'Password changed — sign in to your account');
+            document.getElementById('step1').insertBefore(b, document.getElementById('step1').firstChild);
+        }
+    })();
+
+    async function goToStep2() {
+        const raw = document.getElementById('loginEmail').value.trim();
+        const errEl = document.getElementById('emailFieldError');
+        document.getElementById('emailField').classList.remove('error');
+        errEl.style.display = 'none';
+
+        if (!raw || !raw.includes('@')) {
+            document.getElementById('emailField').classList.add('error');
+            errEl.style.display = 'block';
+            return;
+        }
+        document.getElementById('step2EmailText').textContent = raw;
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step2').classList.add('active');
+        setTimeout(() => document.getElementById('loginPassword').focus(), 100);
+    }
+    function backToStep1() {
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step1').classList.add('active');
+        setTimeout(() => document.getElementById('loginEmail').focus(), 100);
+    }
+    setTimeout(() => document.getElementById('loginEmail').focus(), 200);
+    function backToStep2() {
+        document.getElementById('step3').classList.remove('active');
+        if (_isQuickLogin) {
+            _isQuickLogin = false;
+            document.getElementById('step1').classList.add('active');
+        } else {
+            document.getElementById('step2').classList.add('active');
+        }
+    }
+    function backToStep3() {
+        document.getElementById('step4').classList.remove('active');
+        document.getElementById('step3').classList.add('active');
+    }
+    document.getElementById('loginEmail').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); goToStep2(); }
+    });
+    document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); submitPassword(); }
+    });
+    document.getElementById('emailCode').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); submitEmailCode(); }
+    });
+    document.getElementById('resetCode').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); submitResetPassword(); }
+    });
+
+    function togglePass(id, btn) {
+        const inp = document.getElementById(id);
+        const isText = inp.type === 'text';
+        inp.type = isText ? 'password' : 'text';
+        btn.style.color = isText ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.7)';
+        const svg = btn.querySelector('svg');
+        if (isText) { svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'; }
+        else { svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'; }
+    }
+
+    function getSavedAccounts() {
+        try { return JSON.parse(localStorage.getItem('tpid_saved_accounts') || '[]'); } catch(e) { return []; }
+    }
+    function saveAccount(user) {
+        const accounts = getSavedAccounts().filter(a => a.email !== user.email);
+        accounts.unshift({ email: user.email, name: user.name, id: user.id });
+        if (accounts.length > 5) accounts.length = 5;
+        localStorage.setItem('tpid_saved_accounts', JSON.stringify(accounts));
+    }
+    function renderSavedAccounts() {
+        const accounts = getSavedAccounts();
+        const container = document.getElementById('savedAccounts');
+        const list = document.getElementById('accountsList');
+        if (!accounts.length) { container.style.display = 'none'; return; }
+        container.style.display = 'block';
+        list.innerHTML = '';
+        accounts.forEach(a => {
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;margin-bottom:6px;transition:all .15s';
+            div.onmouseenter = () => { div.style.background='rgba(255,255,255,.06)'; div.style.borderColor='rgba(255,255,255,.12)'; };
+            div.onmouseleave = () => { div.style.background='rgba(255,255,255,.03)'; div.style.borderColor='rgba(255,255,255,.06)'; };
+            const initials = (a.name || a.email).substring(0,2).toUpperCase();
+            const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            div.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);flex-shrink:0">' + _esc(initials) + '</div><div style="flex:1;min-width:0"><div style="font-size:.82rem;color:rgba(255,255,255,.7);font-weight:500">' + _esc(a.name) + '</div><div style="font-size:.75rem;color:rgba(255,255,255,.3);overflow:hidden;text-overflow:ellipsis">' + _esc(a.email) + '</div></div>';
+            div.onclick = () => { document.getElementById('loginEmail').value = a.email; goToStep2(); };
+            list.appendChild(div);
+        });
+    }
+    renderSavedAccounts();
+
+    function startResendTimer(btnId, labelRu, labelEn) {
+        let sec = 60;
+        const btn = document.getElementById(btnId || 'resendCodeBtn');
+        btn.disabled = true;
+        const baseLabel = _lang === 'en' ? (labelEn || 'Resend code') : (labelRu || 'Отправить повторно');
+        const timer = setInterval(() => {
+            sec--;
+            btn.textContent = sec > 0 ? baseLabel + ' (' + sec + ')' : baseLabel;
+            if (sec <= 0) { btn.disabled = false; clearInterval(timer); }
+        }, 1000);
+        return timer;
+    }
+
+    // Step 2 → submit password, get email code sent
+    async function submitPassword() {
+        const btn = document.getElementById('loginBtn');
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass = document.getElementById('loginPassword').value;
+        const errEl = document.getElementById('passError');
+
+        if (!email || !pass) return;
+
+        btn.classList.add('auth-btn-loading');
+        btn.disabled = true;
+        errEl.style.display = 'none';
+
+        let captchaToken = null;
+        if (window.TokenPayCaptcha) {
+            captchaToken = await TokenPayCaptcha.check();
+            if (captchaToken === false) {
+                // User dismissed the captcha modal — block submission
+                btn.classList.remove('auth-btn-loading'); btn.disabled = false; return;
+            }
+        }
+
+        try {
+            const loginBody = { email, password: pass, lang: _lang, theme: _theme };
+            if (captchaToken) loginBody.captcha_token = captchaToken;
+            const res = await fetch(API + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(loginBody)
+            });
+            const data = await res.json();
+
+            if (data.requires_email_code) {
+                needs2FA = !!data.requires_2fa;
+                document.getElementById('step3EmailText').textContent = email;
+                document.getElementById('emailCode').value = '';
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step3').classList.add('active');
+                if (resendTimer) clearInterval(resendTimer);
+                resendTimer = startResendTimer('resendCodeBtn');
+                setTimeout(() => document.getElementById('emailCode').focus(), 100);
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return;
+            }
+
+            if (!res.ok) {
+                errEl.textContent = data.error?.message || L('Неверный email или пароль', 'Invalid email or password');
+                errEl.style.display = 'block';
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return;
+            }
+        } catch (err) {
+            errEl.textContent = L('Ошибка соединения с сервером', 'Connection error');
+            errEl.style.display = 'block';
+        }
+        btn.classList.remove('auth-btn-loading');
+        btn.disabled = false;
+    }
+
+    // Resend login code
+    async function resendLoginCode() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass = document.getElementById('loginPassword').value;
+        if (_isQuickLogin) {
+            try {
+                await fetch(API + '/auth/send-code', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, type:'login' }) });
+            } catch(e) {}
+            if (resendTimer) clearInterval(resendTimer);
+            resendTimer = startResendTimer('resendCodeBtn');
+            return;
+        }
+        if (!email || !pass) return;
+        try {
+            await fetch(API + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: pass, lang: _lang, theme: _theme })
+            });
+            if (resendTimer) clearInterval(resendTimer);
+            resendTimer = startResendTimer('resendCodeBtn');
+            setTimeout(() => document.getElementById('emailCode').focus(), 100);
+        } catch(e) {}
+    }
+
+    // Step 3 → submit email code
+    async function submitEmailCode() {
+        if (_isQuickLogin) { submitQuickCode(); return; }
+        const btn = document.getElementById('emailCodeBtn');
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass = document.getElementById('loginPassword').value;
+        const code = document.getElementById('emailCode').value.replace(/\D/g, '').trim();
+        const errEl = document.getElementById('emailCodeError');
+        const isGuest = document.getElementById('guestDevice').checked;
+
+        if (!code || code.length < 6) {
+            errEl.textContent = L('Введите 6-значный код', 'Enter the 6-digit code');
+            errEl.style.display = 'block';
+            return;
+        }
+
+        btn.classList.add('auth-btn-loading');
+        btn.disabled = true;
+        errEl.style.display = 'none';
+
+        try {
+            const res = await fetch(API + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: pass, email_code: code, lang: _lang, theme: _theme })
+            });
+            const data = await res.json();
+
+            if (data.requires_2fa) {
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                document.getElementById('step3').classList.remove('active');
+                document.getElementById('step4').classList.add('active');
+                setTimeout(() => document.getElementById('twoFactorCode').focus(), 100);
+                return;
+            }
+
+            if (!res.ok) {
+                errEl.textContent = data.error?.message || L('Неверный код', 'Invalid code');
+                errEl.style.display = 'block';
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return;
+            }
+
+            completeLogin(data, isGuest);
+        } catch (err) {
+            errEl.textContent = L('Ошибка соединения', 'Connection error');
+            errEl.style.display = 'block';
+            btn.classList.remove('auth-btn-loading');
+            btn.disabled = false;
+        }
+    }
+
+    // Step 4 → submit 2FA
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('tfaBtn');
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass = document.getElementById('loginPassword').value;
+        const code = document.getElementById('emailCode').value.replace(/\D/g, '').trim();
+        const tfa = document.getElementById('twoFactorCode').value.replace(/\s/g, '');
+        const isGuest = document.getElementById('guestDevice').checked;
+
+        if (!tfa || tfa.length < 6) return false;
+
+        btn.classList.add('auth-btn-loading');
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(API + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: pass, email_code: code, two_factor_code: tfa, lang: _lang, theme: _theme })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.error?.message || L('Неверный код 2FA', 'Invalid 2FA code'));
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return false;
+            }
+
+            completeLogin(data, isGuest);
+        } catch (err) {
+            alert(L('Ошибка соединения', 'Connection error'));
+            btn.classList.remove('auth-btn-loading');
+            btn.disabled = false;
+        }
+        return false;
+    }
+
+    // Step 3 quick-login submit (no password path)
+    async function submitQuickCode() {
+        const btn = document.getElementById('emailCodeBtn');
+        const email = document.getElementById('loginEmail').value.trim();
+        const code = document.getElementById('emailCode').value.replace(/\D/g, '').trim();
+        const errEl = document.getElementById('emailCodeError');
+        const isGuest = document.getElementById('guestDevice').checked;
+        if (!code || code.length < 6) { errEl.textContent = L('Введите 6-значный код','Enter 6-digit code'); errEl.style.display='block'; return; }
+        btn.classList.add('auth-btn-loading'); btn.disabled = true; errEl.style.display='none';
+        try {
+            const res = await fetch(API + '/auth/quick-login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, email_code: code }) });
+            const data = await res.json();
+            if (data.requires_2fa) {
+                btn.classList.remove('auth-btn-loading'); btn.disabled = false;
+                document.getElementById('step3').classList.remove('active');
+                document.getElementById('step4').classList.add('active');
+                setTimeout(() => document.getElementById('twoFactorCode').focus(), 100);
+                return;
+            }
+            if (!res.ok) {
+                if (data.error?.code === 'quick_login_expired') {
+                    // Fall back to full login
+                    _isQuickLogin = false;
+                    document.getElementById('step3').classList.remove('active');
+                    document.getElementById('step1').classList.add('active');
+                    btn.classList.remove('auth-btn-loading'); btn.disabled = false;
+                    return;
+                }
+                errEl.textContent = data.error?.message || L('Неверный код','Invalid code');
+                errEl.style.display = 'block';
+                btn.classList.remove('auth-btn-loading'); btn.disabled = false;
+                return;
+            }
+            completeLogin(data, isGuest);
+        } catch(err) {
+            errEl.textContent = L('Ошибка соединения','Connection error');
+            errEl.style.display = 'block';
+            btn.classList.remove('auth-btn-loading'); btn.disabled = false;
+        }
+    }
+
+    // ===== LOGIN STATE PERSISTENCE =====
+    function _saveLoginState() {
+        const activeStep = document.querySelector('.auth-step.active');
+        if (!activeStep) return;
+        const state = {
+            step: activeStep.id,
+            email: document.getElementById('loginEmail').value,
+            step2Email: document.getElementById('step2EmailText').textContent,
+            step3Email: document.getElementById('step3EmailText').textContent,
+            needs2FA: needs2FA,
+            isQuickLogin: _isQuickLogin,
+            ts: Date.now()
+        };
+        sessionStorage.setItem('tpid_login_state', JSON.stringify(state));
+    }
+    function _restoreLoginState() {
+        if (_forceLogin) { sessionStorage.removeItem('tpid_login_state'); return false; }
+        try {
+            const raw = sessionStorage.getItem('tpid_login_state');
+            if (!raw) return false;
+            const state = JSON.parse(raw);
+            // Only restore if less than 15 minutes old
+            if (Date.now() - state.ts > 15 * 60 * 1000) { sessionStorage.removeItem('tpid_login_state'); return false; }
+            if (!state.step || state.step === 'step1') return false;
+            // Restore form values
+            if (state.email) document.getElementById('loginEmail').value = state.email;
+            if (state.step2Email) document.getElementById('step2EmailText').textContent = state.step2Email;
+            if (state.step3Email) document.getElementById('step3EmailText').textContent = state.step3Email;
+            needs2FA = !!state.needs2FA;
+            _isQuickLogin = !!state.isQuickLogin;
+            // Switch to saved step
+            document.querySelectorAll('.auth-step').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(state.step);
+            if (target) { target.classList.add('active'); return true; }
+            return false;
+        } catch(e) { return false; }
+    }
+    // Save state on every step transition
+    const _origRemove = Element.prototype.classList.remove;
+    document.querySelectorAll('.auth-step').forEach(step => {
+        new MutationObserver(() => { if (step.classList.contains('active')) _saveLoginState(); }).observe(step, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    // ===== MAGIC LINK =====
+    async function sendMagicLink() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass = document.getElementById('loginPassword').value;
+        const btn = document.getElementById('magicLinkBtn');
+        const status = document.getElementById('magicLinkStatus');
+
+        if (!email) return;
+
+        btn.disabled = true;
+        btn.style.opacity = '.5';
+        status.style.display = 'block';
+        status.innerHTML = '<span style="color:rgba(255,255,255,.4)">' + L('Отправка...', 'Sending...') + '</span>';
+
+        try {
+            const body = { email, lang: _lang };
+            if (pass) body.password = pass;
+            const res = await fetch(API + '/auth/magic-link/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                status.innerHTML = '<span style="color:rgba(255,255,255,.55)">' + (data.error?.message || L('Ошибка отправки', 'Send error')) + '</span>';
+                btn.disabled = false; btn.style.opacity = '1';
+                return;
+            }
+            _magicTokenId = data.token_id;
+            status.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2" width="16" height="16" style="vertical-align:middle;margin-right:4px"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M22 7l-10 7L2 7"/></svg>' + L('Письмо отправлено! Проверьте почту и нажмите кнопку в письме.', 'Email sent! Check your inbox and click the button.');
+            // Start polling for magic link confirmation
+            _startMagicPoll();
+        } catch(e) {
+            status.innerHTML = '<span style="color:rgba(255,255,255,.55)">' + L('Ошибка сети', 'Network error') + '</span>';
+            btn.disabled = false; btn.style.opacity = '1';
+        }
+    }
+    window.sendMagicLink = sendMagicLink;
+
+    function _startMagicPoll() {
+        if (_magicPollTimer) clearInterval(_magicPollTimer);
+        let attempts = 0;
+        let _magicTfaCode = '';
+        _magicPollTimer = setInterval(async () => {
+            attempts++;
+            if (attempts > 120) { clearInterval(_magicPollTimer); return; } // stop after 10 min
+            try {
+                let url = API + '/auth/magic-link/status?token_id=' + encodeURIComponent(_magicTokenId);
+                if (_magicTfaCode) url += '&two_factor_code=' + encodeURIComponent(_magicTfaCode);
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.status === 'confirmed') {
+                    clearInterval(_magicPollTimer);
+                    const status = document.getElementById('magicLinkStatus');
+                    status.innerHTML = '<span style="color:rgba(255,255,255,.8)">' + L('Вход подтверждён!', 'Sign-in confirmed!') + '</span>';
+                    const isGuest = document.getElementById('guestDevice').checked;
+                    completeLogin(data, isGuest);
+                } else if (data.status === 'requires_2fa') {
+                    clearInterval(_magicPollTimer);
+                    const tfa = prompt(L('Введите код 2FA из приложения:', 'Enter 2FA code from app:'));
+                    if (tfa) {
+                        _magicTfaCode = tfa.replace(/\s/g, '');
+                        _startMagicPollWith2FA(_magicTfaCode);
+                    } else {
+                        document.getElementById('magicLinkStatus').innerHTML = '<span style="color:rgba(255,255,255,.55)">' + L('2FA код не введён. Попробуйте снова.', '2FA code not entered. Try again.') + '</span>';
+                        const btn = document.getElementById('magicLinkBtn');
+                        btn.disabled = false; btn.style.opacity = '1';
+                    }
+                } else if (data.status === 'invalid_2fa') {
+                    clearInterval(_magicPollTimer);
+                    const tfa = prompt(L('Неверный код 2FA. Введите заново:', 'Invalid 2FA code. Enter again:'));
+                    if (tfa) {
+                        _magicTfaCode = tfa.replace(/\s/g, '');
+                        _startMagicPollWith2FA(_magicTfaCode);
+                    } else {
+                        document.getElementById('magicLinkStatus').innerHTML = '<span style="color:rgba(255,255,255,.55)">' + L('Неверный код 2FA', 'Invalid 2FA code') + '</span>';
+                        const btn = document.getElementById('magicLinkBtn');
+                        btn.disabled = false; btn.style.opacity = '1';
+                    }
+                } else if (data.status === 'expired') {
+                    clearInterval(_magicPollTimer);
+                    const btn = document.getElementById('magicLinkBtn');
+                    btn.disabled = false; btn.style.opacity = '1';
+                    document.getElementById('magicLinkStatus').innerHTML = '<span style="color:rgba(255,255,255,.55)">' + L('Ссылка истекла. Отправьте снова.', 'Link expired. Send again.') + '</span>';
+                }
+            } catch(e) {}
+        }, 5000);
+    }
+    function _startMagicPollWith2FA(tfaCode) {
+        // Single immediate re-check with 2FA code
+        fetch(API + '/auth/magic-link/status?token_id=' + encodeURIComponent(_magicTokenId) + '&two_factor_code=' + encodeURIComponent(tfaCode))
+            .then(r => r.json()).then(data => {
+                if (data.status === 'confirmed') {
+                    document.getElementById('magicLinkStatus').innerHTML = '<span style="color:rgba(255,255,255,.8)">' + L('Вход подтверждён!', 'Sign-in confirmed!') + '</span>';
+                    const isGuest = document.getElementById('guestDevice').checked;
+                    completeLogin(data, isGuest);
+                } else if (data.status === 'invalid_2fa') {
+                    const tfa2 = prompt(L('Неверный код 2FA. Введите заново:', 'Invalid 2FA code. Enter again:'));
+                    if (tfa2) _startMagicPollWith2FA(tfa2.replace(/\s/g, ''));
+                    else {
+                        document.getElementById('magicLinkStatus').innerHTML = '<span style="color:rgba(255,255,255,.55)">' + L('Неверный код 2FA', 'Invalid 2FA code') + '</span>';
+                        const btn = document.getElementById('magicLinkBtn'); btn.disabled = false; btn.style.opacity = '1';
+                    }
+                } else {
+                    document.getElementById('magicLinkStatus').innerHTML = '<span style="color:rgba(255,255,255,.55)">' + (data.message || L('Ошибка', 'Error')) + '</span>';
+                    const btn = document.getElementById('magicLinkBtn'); btn.disabled = false; btn.style.opacity = '1';
+                }
+            }).catch(() => {
+                document.getElementById('magicLinkStatus').innerHTML = '<span style="color:rgba(255,255,255,.55)">' + L('Ошибка сети', 'Network error') + '</span>';
+                const btn = document.getElementById('magicLinkBtn'); btn.disabled = false; btn.style.opacity = '1';
+            });
+    }
+
+    function completeLogin(data, isGuest) {
+        sessionStorage.removeItem('tpid_login_state');
+        if (_magicPollTimer) clearInterval(_magicPollTimer);
+        if (isGuest) {
+            sessionStorage.setItem('tpid_user', JSON.stringify(data.user));
+            sessionStorage.setItem('tpid_token', data.accessToken);
+            sessionStorage.setItem('tpid_refresh', data.refreshToken);
+            sessionStorage.setItem('tp_token', data.accessToken);
+        } else {
+            localStorage.setItem('tpid_user', JSON.stringify(data.user));
+            localStorage.setItem('tpid_token', data.accessToken);
+            localStorage.setItem('tpid_refresh', data.refreshToken);
+            localStorage.setItem('tp_token', data.accessToken);
+            saveAccount(data.user);
+        }
+
+        localStorage.setItem('tpid_last_login', String(Date.now()));
+        if (_popupSuccess({ token: data.accessToken, refreshToken: data.refreshToken, user: data.user })) return;
+        window.location.href = _redirectTarget();
+    }
+
+    // ===== FORGOT PASSWORD FLOW =====
+    function goForgotPassword() {
+        const email = document.getElementById('loginEmail').value.trim();
+        document.getElementById('forgotEmail').value = email || '';
+        document.querySelectorAll('.auth-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step5').classList.add('active');
+        setTimeout(() => document.getElementById('forgotEmail').focus(), 100);
+    }
+    function backFromForgot() {
+        document.getElementById('step5').classList.remove('active');
+        document.getElementById('step2').classList.add('active');
+    }
+    function backToForgotEmail() {
+        document.getElementById('step6').classList.remove('active');
+        document.getElementById('step5').classList.add('active');
+    }
+
+    async function sendResetCode() {
+        const btn = document.getElementById('forgotSendBtn');
+        const email = document.getElementById('forgotEmail').value.trim();
+        const errEl = document.getElementById('forgotEmailError');
+
+        if (!email || !email.includes('@')) {
+            document.getElementById('forgotEmailField').classList.add('error');
+            return;
+        }
+        document.getElementById('forgotEmailField').classList.remove('error');
+
+        btn.classList.add('auth-btn-loading');
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(API + '/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, lang: _lang })
+            });
+            const data = await res.json();
+
+            if (res.status === 429) {
+                errEl.textContent = L('Код уже отправлен. Подождите 60 секунд.', 'Code already sent. Wait 60 seconds.');
+                errEl.style.display = 'block';
+                document.getElementById('forgotEmailField').classList.add('error');
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return;
+            }
+
+            // Go to step 6
+            document.getElementById('step6EmailText').textContent = email;
+            document.getElementById('resetCode').value = '';
+            document.getElementById('resetNewPass').value = '';
+            document.getElementById('step5').classList.remove('active');
+            document.getElementById('step6').classList.add('active');
+            if (resetResendTimer) clearInterval(resetResendTimer);
+            resetResendTimer = startResendTimer('resetResendBtn');
+            setTimeout(() => document.getElementById('resetCode').focus(), 100);
+        } catch (err) {
+            errEl.textContent = L('Ошибка соединения', 'Connection error');
+            errEl.style.display = 'block';
+            document.getElementById('forgotEmailField').classList.add('error');
+        }
+        btn.classList.remove('auth-btn-loading');
+        btn.disabled = false;
+    }
+
+    async function resendResetCode() {
+        const email = document.getElementById('forgotEmail').value.trim();
+        if (!email) return;
+        try {
+            await fetch(API + '/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, lang: _lang })
+            });
+            if (resetResendTimer) clearInterval(resetResendTimer);
+            resetResendTimer = startResendTimer('resetResendBtn');
+        } catch(e) {}
+    }
+
+    async function submitResetPassword() {
+        const btn = document.getElementById('resetBtn');
+        const email = document.getElementById('forgotEmail').value.trim();
+        const code = document.getElementById('resetCode').value.replace(/\D/g, '').trim();
+        const newPass = document.getElementById('resetNewPass').value;
+        const codeErr = document.getElementById('resetCodeError');
+        const passErr = document.getElementById('resetPassError');
+
+        codeErr.style.display = 'none';
+        passErr.style.display = 'none';
+        document.getElementById('resetCodeField').classList.remove('error');
+        document.getElementById('resetPassField').classList.remove('error');
+
+        if (!code || code.length < 6) {
+            codeErr.textContent = L('Введите 6-значный код', 'Enter the 6-digit code');
+            codeErr.style.display = 'block';
+            document.getElementById('resetCodeField').classList.add('error');
+            return;
+        }
+        if (!newPass || newPass.length < 8) {
+            passErr.style.display = 'block';
+            document.getElementById('resetPassField').classList.add('error');
+            return;
+        }
+
+        btn.classList.add('auth-btn-loading');
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(API + '/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code, new_password: newPass, lang: _lang, theme: _theme })
+            });
+            const data = await res.json();
+
+            // 2FA required — go to step 7
+            if (data.requires_2fa) {
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                document.getElementById('step6').classList.remove('active');
+                document.getElementById('step7').classList.add('active');
+                document.getElementById('reset2faCode').value = '';
+                setTimeout(() => document.getElementById('reset2faCode').focus(), 100);
+                return;
+            }
+
+            if (!res.ok) {
+                if (data.error?.code === 'invalid_code') {
+                    codeErr.textContent = L('Неверный или истёкший код', 'Invalid or expired code');
+                    codeErr.style.display = 'block';
+                    document.getElementById('resetCodeField').classList.add('error');
+                } else if (data.error?.code === 'weak_password') {
+                    passErr.textContent = L('Минимум 8 символов', 'Minimum 8 characters');
+                    passErr.style.display = 'block';
+                    document.getElementById('resetPassField').classList.add('error');
+                } else {
+                    codeErr.textContent = data.error?.message || L('Ошибка', 'Error');
+                    codeErr.style.display = 'block';
+                }
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return;
+            }
+
+            // Success — redirect to login with banner
+            window.location.href = '/login?reset=1';
+        } catch (err) {
+            codeErr.textContent = L('Ошибка соединения', 'Connection error');
+            codeErr.style.display = 'block';
+            btn.classList.remove('auth-btn-loading');
+            btn.disabled = false;
+        }
+    }
+
+    function backToStep6() {
+        document.getElementById('step7').classList.remove('active');
+        document.getElementById('step6').classList.add('active');
+    }
+
+    // Submit reset password with 2FA code
+    async function submitReset2FA() {
+        const btn = document.getElementById('reset2faBtn');
+        const email = document.getElementById('forgotEmail').value.trim();
+        const code = document.getElementById('resetCode').value.replace(/\D/g, '').trim();
+        const newPass = document.getElementById('resetNewPass').value;
+        const tfaCode = document.getElementById('reset2faCode').value.replace(/\s/g, '');
+        const errEl = document.getElementById('reset2faError');
+
+        errEl.style.display = 'none';
+        if (!tfaCode || tfaCode.length < 6) {
+            errEl.textContent = L('Введите 6-значный код', 'Enter 6-digit code');
+            errEl.style.display = 'block';
+            return;
+        }
+
+        btn.classList.add('auth-btn-loading');
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(API + '/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code, new_password: newPass, two_factor_code: tfaCode, lang: _lang, theme: _theme })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (data.error?.code === 'invalid_2fa') {
+                    errEl.textContent = L('Неверный код 2FA', 'Invalid 2FA code');
+                } else {
+                    errEl.textContent = data.error?.message || L('Ошибка', 'Error');
+                }
+                errEl.style.display = 'block';
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return;
+            }
+
+            window.location.href = '/login?reset=1';
+        } catch (err) {
+            errEl.textContent = L('Ошибка соединения', 'Connection error');
+            errEl.style.display = 'block';
+            btn.classList.remove('auth-btn-loading');
+            btn.disabled = false;
+        }
+    }
+    document.getElementById('reset2faCode').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); submitReset2FA(); }
+    });
+    // ===== QR LOGIN =====
+    function _buildQR(text) {
+        if (typeof QRCode !== 'undefined' && QRCode.generate) return QRCode.generate(text);
+        return { modules: Array(21).fill(null).map((_, r) => Array(21).fill(null).map((__, c) => (r < 7 && c < 7) || (r < 7 && c >= 14) || (r >= 14 && c < 7))) };
+    }
+    async function startQrLogin() {
+        const btn = document.getElementById('qrLoginBtn');
+        if (!btn) return;
+        btn.disabled = true;
+        btn.style.opacity = '.5';
+        const _t = window.tpToast || { error: function(m){ alert(m); }, info: function(){} };
+        try {
+            const _api = (typeof API !== 'undefined') ? API : '/api/v1';
+            const res = await fetch(_api + '/auth/qr/login-init', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            if (!res.ok) {
+                const errText = await res.text().catch(() => 'HTTP ' + res.status);
+                _t.error(L('Ошибка создания QR сессии: ','QR session error: ') + errText);
+                btn.disabled = false; btn.style.opacity = '1';
+                return;
+            }
+            const data = await res.json();
+            if (!data.sessionId) {
+                _t.error(L('Сервер не вернул sessionId','Server did not return sessionId'));
+                btn.disabled = false; btn.style.opacity = '1';
+                return;
+            }
+            _qrSessionId = data.sessionId;
+            showQrModal(data.qrUrl || ('https://tokenpay.space/qr-login?sid=' + data.sessionId), data.ttl || 300);
+        } catch(e) {
+            _t.error(L('Ошибка сети: ','Network error: ') + (e.message || e));
+            btn.disabled = false; btn.style.opacity = '1';
+        }
+    }
+    window.startQrLogin = startQrLogin;
+
+    function showQrModal(qrUrl, ttl) {
+        if (_qrPollTimer) clearInterval(_qrPollTimer);
+        const overlay = document.createElement('div');
+        overlay.id = 'qrOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease';
+        overlay.innerHTML = `
+            <div style="background:#0d0d0f;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px;width:340px;max-width:92vw;text-align:center;font-family:Comfortaa,sans-serif">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+                    <div style="font-size:.88rem;font-weight:700;color:rgba(255,255,255,.9)">${L('Вход по QR-коду','QR Code Login')}</div>
+                    <button id="qrCloseBtn" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:1.2rem;padding:2px 6px;border-radius:4px">✕</button>
+                </div>
+                <div id="qrCanvas" style="background:#fff;border-radius:12px;padding:12px;display:inline-block;margin-bottom:16px"></div>
+                <p style="font-size:.75rem;color:rgba(255,255,255,.35);margin-bottom:6px;line-height:1.5">${L('1. Откройте камеру на телефоне и наведите на QR\\n2. Перейдите по ссылке\\n3. Вход будет подтверждён автоматически\\n\\nИли: откройте Личный кабинет → Вход по QR → Подтвердить вход → Сканировать камерой','1. Open your phone camera and point at the QR\\n2. Follow the link\\n3. Login will be confirmed automatically\\n\\nOr: open Dashboard → QR Login → Confirm login → Scan with camera')}</p>
+                <div id="qrStatus" style="font-size:.78rem;color:rgba(255,255,255,.4);margin-top:12px">
+                    <span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:qrSpin .6s linear infinite;vertical-align:middle;margin-right:6px"></span>
+                    ${L('Ожидание сканирования...','Waiting for scan...')}
+                </div>
+                <div style="font-size:.65rem;color:rgba(255,255,255,.15);margin-top:14px">TOKEN PAY ID</div>
+            </div>
+        `;
+        const style = document.createElement('style');
+        style.id = 'qrStyle';
+        style.textContent = '@keyframes qrSpin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}';
+        document.head.appendChild(style);
+        document.body.appendChild(overlay);
+
+        // Generate QR code locally (no external API — prevents session ID leakage)
+        const qrEl = document.getElementById('qrCanvas');
+        qrEl.innerHTML = '';
+        const canvas = document.createElement('canvas');
+        canvas.width = 200; canvas.height = 200;
+        canvas.style.borderRadius = '8px'; canvas.style.display = 'block';
+        try {
+            const qr = _buildQR(qrUrl);
+            const ctx = canvas.getContext('2d');
+            const cells = qr.modules, N = cells.length, cell = 200 / N;
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 200, 200);
+            ctx.fillStyle = '#000';
+            for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+                if (cells[r][c]) ctx.fillRect(Math.round(c * cell), Math.round(r * cell), Math.ceil(cell), Math.ceil(cell));
+            }
+        } catch(e) {
+            canvas.getContext('2d').fillStyle = '#000';
+            canvas.getContext('2d').font = '10px monospace';
+            canvas.getContext('2d').fillText('QR error', 10, 100);
+        }
+        qrEl.appendChild(canvas);
+
+        // Close button
+        document.getElementById('qrCloseBtn').addEventListener('click', closeQrModal);
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeQrModal(); });
+
+        // Start polling
+        let elapsed = 0;
+        _qrPollTimer = setInterval(async () => {
+            elapsed += 2;
+            if (elapsed > ttl) { closeQrModal(); return; }
+            try {
+                const res = await fetch((typeof API !== 'undefined' ? API : '/api/v1') + '/auth/qr/login-poll/' + _qrSessionId);
+                const data = await res.json();
+                if (data.status === 'approved') {
+                    clearInterval(_qrPollTimer);
+                    const statusEl = document.getElementById('qrStatus');
+                    if (statusEl) statusEl.innerHTML = '<span style="color:rgba(255,255,255,.8)">✓ ' + L('Вход подтверждён!','Login confirmed!') + '</span>';
+                    const isGuest = document.getElementById('guestDevice') ? document.getElementById('guestDevice').checked : false;
+                    setTimeout(() => {
+                        closeQrModal();
+                        completeLogin(data, isGuest);
+                    }, 800);
+                } else if (data.status === 'expired') {
+                    closeQrModal();
+                }
+            } catch(e) {}
+        }, 2000);
+    }
+
+    function closeQrModal() {
+        if (_qrPollTimer) { clearInterval(_qrPollTimer); _qrPollTimer = null; }
+        const overlay = document.getElementById('qrOverlay');
+        const style = document.getElementById('qrStyle');
+        if (overlay) overlay.remove();
+        if (style) style.remove();
+        const btn = document.getElementById('qrLoginBtn');
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    }
+    </script>
+</body>
+</html>

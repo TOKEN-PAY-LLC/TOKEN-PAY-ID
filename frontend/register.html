@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Регистрация — TOKEN PAY ID</title>
+    <meta name="title-ru" content="Регистрация — TOKEN PAY ID">
+    <meta name="title-en" content="Sign Up — TOKEN PAY ID">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=6">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=6">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=6">
+    <link rel="manifest" href="manifest.json?v=6">
+    <meta name="theme-color" content="#000000">
+    <link rel="stylesheet" href="styles.css?v=20260325b">
+    <script src="theme-init.js?v=20260325b"></script>
+    <script src="captcha.js?v=20260325b"></script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+
+    <div class="auth-page">
+        <div class="auth-container fade-in">
+            <div class="auth-card">
+                <div class="auth-card-logo">
+                    <a href="/"><img src="tokenpay-id-light.png" alt="TOKEN PAY ID" class="tpid-logo"></a>
+                </div>
+
+                <form id="registerForm" onsubmit="return handleRegister(event)">
+                    <!-- Step 1: Username + Email -->
+                    <div class="auth-step active" id="regStep1">
+                        <div class="auth-field" id="regUsernameField">
+                            <label data-ru="Логин" data-en="Username">Логин</label>
+                            <div style="position:relative">
+                                <input type="text" id="regUsername" placeholder="your_login" data-ph-ru="your_login" data-ph-en="your_login" autocomplete="username" spellcheck="false" autocapitalize="none" style="padding-right:40px;transition:border-color .25s">
+                                <div id="usernameStatus" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:none;transition:opacity .3s">
+                                    <svg id="usernameOk" viewBox="0 0 24 24" fill="none" stroke="#50dc78" stroke-width="2.5" width="18" height="18" style="display:none"><path d="M20 6L9 17l-5-5"/></svg>
+                                    <svg id="usernameFail" viewBox="0 0 24 24" fill="none" stroke="#ff6464" stroke-width="2.5" width="18" height="18" style="display:none"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                    <svg id="usernameLoading" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" width="18" height="18" style="display:none;animation:tpid-spin .8s linear infinite"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
+                                </div>
+                            </div>
+                            <div class="field-hint" id="usernameHint" style="font-size:.72rem;margin-top:5px;color:rgba(255,255,255,.3);transition:color .25s,opacity .25s" data-ru="Строчные буквы, цифры, точки, подчёркивания (3-30)" data-en="Lowercase letters, digits, dots, underscores (3-30)">Строчные буквы, цифры, точки, подчёркивания (3-30)</div>
+                            <div class="field-error" id="regUsernameError" style="display:none"></div>
+                        </div>
+                        <div class="auth-field" id="regEmailField">
+                            <label>Email</label>
+                            <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email">
+                            <div class="field-error" id="regEmailError" data-ru="Введите корректный email" data-en="Enter a valid email">Введите корректный email</div>
+                        </div>
+                        <button type="button" class="auth-btn" onclick="regGoStep2()" data-ru="Далее" data-en="Next">Далее</button>
+                        <div class="auth-footer">
+                            <span data-ru="Уже есть аккаунт?" data-en="Already have an account?">Уже есть аккаунт?</span> <a id="loginLink" href="/login" data-ru="Войти" data-en="Sign in">Войти</a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Password + Confirm + Terms -->
+                    <div class="auth-step" id="regStep2">
+                        <button type="button" class="auth-step-back" onclick="regGoStep1()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span data-ru="Назад" data-en="Back">Назад</span>
+                        </button>
+                        <div class="auth-step-email" id="regStep2Info">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+                            <span id="regStep2Text"></span>
+                        </div>
+                        <div class="auth-field" id="regPassField">
+                            <label data-ru="Пароль" data-en="Password">Пароль</label>
+                            <div style="position:relative">
+                                <input type="password" id="regPassword" placeholder="Минимум 8 символов" data-ph-ru="Минимум 8 символов" data-ph-en="Minimum 8 characters" autocomplete="new-password" oninput="checkPasswordStrength(this.value)" style="padding-right:44px">
+                                <button type="button" onclick="togglePass('regPassword',this)" tabindex="-1" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);padding:4px;display:flex;align-items:center" title="Показать/скрыть">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                            <div class="password-strength" id="passStrength">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <div class="field-hint" id="passHint" data-ru="Используйте буквы, цифры и спецсимволы" data-en="Use letters, numbers and special characters">Используйте буквы, цифры и спецсимволы</div>
+                        </div>
+                        <div class="auth-field" id="regConfirmField">
+                            <label data-ru="Подтвердите пароль" data-en="Confirm password">Подтвердите пароль</label>
+                            <div style="position:relative">
+                                <input type="password" id="regConfirm" placeholder="Повторите пароль" data-ph-ru="Повторите пароль" data-ph-en="Repeat password" autocomplete="new-password" style="padding-right:44px">
+                                <button type="button" onclick="togglePass('regConfirm',this)" tabindex="-1" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);padding:4px;display:flex;align-items:center" title="Показать/скрыть">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                            <div class="field-error" data-ru="Пароли не совпадают" data-en="Passwords don't match">Пароли не совпадают</div>
+                        </div>
+                        <label class="auth-check" id="termsCheck">
+                            <input type="checkbox" id="regTerms">
+                            <span class="auth-check-box"></span>
+                            <span class="auth-check-text" data-ru="Принимаю условия и политику конфиденциальности" data-en="I accept the terms and privacy policy"><span data-ru="Принимаю" data-en="I accept the">Принимаю</span> <a href="/terms" data-ru="условия" data-en="terms">условия</a> <span data-ru="и" data-en="and">и</span> <a href="/privacy" data-ru="политику конфиденциальности" data-en="privacy policy">политику конфиденциальности</a></span>
+                        </label>
+                        <button type="button" class="auth-btn" id="regSendCodeBtn" onclick="regSendCode()" data-ru="Получить код" data-en="Get code">Получить код</button>
+                        <div class="field-error" id="regStep2Error" style="text-align:center;margin-top:8px"></div>
+                    </div>
+
+                    <!-- Step 3: Email verification code -->
+                    <div class="auth-step" id="regStep3">
+                        <button type="button" class="auth-step-back" onclick="regGoStep2FromCode()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span data-ru="Назад" data-en="Back">Назад</span>
+                        </button>
+                        <div style="text-align:center;margin-bottom:20px">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.5"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M22 7l-10 7L2 7"/></svg>
+                            <p style="font-size:.85rem;color:rgba(255,255,255,.5);margin:10px 0 0" data-ru="Код отправлен на" data-en="Code sent to">Код отправлен на</p>
+                            <p style="font-size:.9rem;color:rgba(255,255,255,.8);font-weight:600" id="regStep3Email"></p>
+                        </div>
+                        <div class="auth-field" id="regCodeField">
+                            <label data-ru="Код из письма" data-en="Code from email">Код из письма</label>
+                            <input type="text" id="regCode" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" style="text-align:center;font-size:1.4rem;letter-spacing:8px;font-weight:700">
+                            <div class="field-error" id="regCodeError" data-ru="Неверный код" data-en="Invalid code">Неверный код</div>
+                        </div>
+                        <button type="submit" class="auth-btn" id="regBtn" data-ru="Создать аккаунт" data-en="Create account">Создать аккаунт</button>
+                        <div style="text-align:center;margin-top:12px">
+                            <button type="button" id="regResendBtn" class="auth-alt-btn auth-alt-btn-muted" onclick="regResendCode()" disabled>Отправить повторно (60)</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    @keyframes tpid-spin { to { transform: rotate(360deg); } }
+    @keyframes tpid-pop { 0% { transform: translateY(-50%) scale(0); opacity: 0; } 60% { transform: translateY(-50%) scale(1.2); } 100% { transform: translateY(-50%) scale(1); opacity: 1; } }
+    #usernameStatus svg { animation-fill-mode: forwards; }
+    #usernameOk[style*="inline"], #usernameFail[style*="inline"] { animation: tpid-pop .3s ease; }
+    .username-ok input { border-color: rgba(255,255,255,.3) !important; }
+    .username-fail input { border-color: rgba(255,255,255,.15) !important; }
+    body.light .username-ok input { border-color: rgba(0,0,0,.25) !important; }
+    body.light .username-fail input { border-color: rgba(0,0,0,.15) !important; }
+    body.light #usernameHint { color: rgba(0,0,0,.4) !important; }
+    body.light .field-hint { color: rgba(0,0,0,.4) !important; }
+    </style>
+    <script src="script.js?v=20260325b"></script>
+    <script>
+    const API = '/api/v1';
+    let resendTimer = null;
+
+    // ===== i18n =====
+    let _lang = localStorage.getItem('tp_lang') || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ru');
+    let _theme = localStorage.getItem('tp_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    function applyLang() {
+        document.querySelectorAll('[data-' + _lang + ']').forEach(el => {
+            if (el.children.length === 0) el.textContent = el.getAttribute('data-' + _lang);
+        });
+        document.querySelectorAll('input[placeholder]').forEach(inp => {
+            const ph = inp.getAttribute('data-ph-' + _lang);
+            if (ph) inp.placeholder = ph;
+        });
+        document.title = _lang === 'en' ? 'Sign Up — TOKEN PAY ID' : 'Регистрация — TOKEN PAY ID';
+    }
+    function L(ru, en) { return _lang === 'en' ? en : ru; }
+    applyLang();
+
+    // Preserve redirect param in login link for OAuth flows
+    (function() {
+        const p = new URLSearchParams(window.location.search);
+        const redirect = p.get('redirect');
+        if (redirect) {
+            const ll = document.getElementById('loginLink');
+            if (ll) ll.href = '/login?redirect=' + encodeURIComponent(redirect);
+        }
+    })();
+
+    // ===== Session persistence: redirect if already logged in =====
+    (function() {
+        const token = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
+        if (!token) return;
+        fetch(API + '/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+        }).then(r => r.json()).then(data => {
+            if (data.valid) {
+                const _rp = new URLSearchParams(window.location.search).get('redirect');
+                if (_rp) {
+                    const d = decodeURIComponent(_rp);
+                    if (d.startsWith('/') && !d.startsWith('//')) { window.location.href = d; return; }
+                    try { const u = new URL(d); if (u.origin === window.location.origin) { window.location.href = d; return; } } catch(e) {}
+                }
+                window.location.href = '/dashboard';
+            }
+        }).catch(() => {});
+    })();
+
+    function togglePass(id, btn) {
+        const inp = document.getElementById(id);
+        const isText = inp.type === 'text';
+        inp.type = isText ? 'password' : 'text';
+        btn.style.color = isText ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.7)';
+        const svg = btn.querySelector('svg');
+        if (isText) { svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'; }
+        else { svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'; }
+    }
+
+    function checkPasswordStrength(val) {
+        const el = document.getElementById('passStrength');
+        const hint = document.getElementById('passHint');
+        let score = 0;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        el.className = 'password-strength' + (score > 0 ? ' s' + score : '');
+        const msgs = _lang === 'en' ? ['', 'Weak', 'Fair', 'Good', 'Excellent'] : ['', 'Слабый', 'Средний', 'Хороший', 'Отличный'];
+        hint.textContent = score > 0 ? msgs[score] : L('Используйте буквы, цифры и спецсимволы', 'Use letters, numbers and special characters');
+    }
+
+    // ===== USERNAME AVAILABILITY CHECK =====
+    let _usernameTimer = null;
+    let _usernameAvailable = false;
+    const _usernameInput = document.getElementById('regUsername');
+    const _usernameField = document.getElementById('regUsernameField');
+    const _usernameHint = document.getElementById('usernameHint');
+    const _usernameStatus = document.getElementById('usernameStatus');
+    const _usernameOk = document.getElementById('usernameOk');
+    const _usernameFail = document.getElementById('usernameFail');
+    const _usernameLoading = document.getElementById('usernameLoading');
+    const _usernameErr = document.getElementById('regUsernameError');
+
+    // Force lowercase and strip invalid chars on input
+    _usernameInput.addEventListener('input', function() {
+        const cursor = this.selectionStart;
+        const cleaned = this.value.toLowerCase().replace(/[^a-z0-9._]/g, '');
+        if (cleaned !== this.value) { this.value = cleaned; this.setSelectionRange(cursor, cursor); }
+        _checkUsernameDebounced();
+    });
+
+    function _checkUsernameDebounced() {
+        _usernameAvailable = false;
+        if (_usernameTimer) clearTimeout(_usernameTimer);
+        const val = _usernameInput.value.trim();
+        _usernameField.classList.remove('username-ok', 'username-fail');
+        _usernameErr.style.display = 'none';
+        if (!val || val.length < 3) {
+            _usernameStatus.style.display = 'none';
+            _usernameOk.style.display = 'none';
+            _usernameFail.style.display = 'none';
+            _usernameLoading.style.display = 'none';
+            if (val.length > 0 && val.length < 3) {
+                _usernameHint.textContent = L('Ещё ' + (3 - val.length) + ' символ(а)...', (3 - val.length) + ' more char(s)...');
+                _usernameHint.style.color = 'rgba(255,255,255,.4)';
+            } else {
+                _usernameHint.textContent = L('Строчные буквы, цифры, точки, подчёркивания (3-30)', 'Lowercase letters, digits, dots, underscores (3-30)');
+                _usernameHint.style.color = '';
+            }
+            return;
+        }
+        // Show loading immediately
+        _usernameStatus.style.display = 'block';
+        _usernameOk.style.display = 'none';
+        _usernameFail.style.display = 'none';
+        _usernameLoading.style.display = 'inline';
+        _usernameHint.textContent = L('Проверяю...', 'Checking...');
+        _usernameHint.style.color = 'rgba(255,255,255,.35)';
+
+        _usernameTimer = setTimeout(() => _checkUsername(val), 400);
+    }
+
+    async function _checkUsername(val) {
+        try {
+            const res = await fetch(API + '/auth/check-username?username=' + encodeURIComponent(val) + '&lang=' + _lang);
+            const data = await res.json();
+            // Ensure we're still checking the same value
+            if (_usernameInput.value.trim().toLowerCase() !== val) return;
+            _usernameLoading.style.display = 'none';
+            if (data.available) {
+                _usernameAvailable = true;
+                _usernameOk.style.display = 'inline';
+                _usernameFail.style.display = 'none';
+                _usernameField.classList.add('username-ok');
+                _usernameField.classList.remove('username-fail');
+                _usernameHint.textContent = L('Логин свободен ✓', 'Username available ✓');
+                _usernameHint.style.color = 'rgba(255,255,255,.6)';
+            } else {
+                _usernameAvailable = false;
+                _usernameFail.style.display = 'inline';
+                _usernameOk.style.display = 'none';
+                _usernameField.classList.add('username-fail');
+                _usernameField.classList.remove('username-ok');
+                _usernameHint.textContent = data.reason || L('Недоступен', 'Not available');
+                _usernameHint.style.color = 'rgba(255,255,255,.45)';
+            }
+        } catch (e) {
+            _usernameLoading.style.display = 'none';
+            _usernameHint.textContent = L('Ошибка проверки', 'Check error');
+            _usernameHint.style.color = 'rgba(255,255,255,.4)';
+        }
+    }
+
+    function regGoStep2() {
+        const username = _usernameInput.value.trim().toLowerCase();
+        const email = document.getElementById('regEmail').value.trim();
+        _usernameField.classList.remove('error');
+        document.getElementById('regEmailField').classList.remove('error');
+        if (!username || username.length < 3) { _usernameField.classList.add('error'); _usernameInput.focus(); return; }
+        if (!_usernameAvailable) {
+            _usernameField.classList.add('error');
+            _usernameErr.textContent = L('Выберите доступный логин', 'Choose an available username');
+            _usernameErr.style.display = 'block';
+            _usernameInput.focus();
+            return;
+        }
+        if (!email || !email.includes('@')) { document.getElementById('regEmailField').classList.add('error'); return; }
+        document.getElementById('regStep2Text').textContent = '@' + username + ' \u00B7 ' + email;
+        document.getElementById('regStep1').classList.remove('active');
+        document.getElementById('regStep2').classList.add('active');
+        setTimeout(() => document.getElementById('regPassword').focus(), 100);
+    }
+    function regGoStep1() {
+        document.getElementById('regStep2').classList.remove('active');
+        document.getElementById('regStep1').classList.add('active');
+    }
+    function regGoStep2FromCode() {
+        document.getElementById('regStep3').classList.remove('active');
+        document.getElementById('regStep2').classList.add('active');
+    }
+
+    _usernameInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('regEmail').focus(); }
+    });
+    document.getElementById('regEmail').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); regGoStep2(); }
+    });
+
+    function startRegResendTimer() {
+        let sec = 60;
+        const btn = document.getElementById('regResendBtn');
+        btn.disabled = true;
+        const baseLabel = L('Отправить повторно', 'Resend code');
+        if (resendTimer) clearInterval(resendTimer);
+        resendTimer = setInterval(() => {
+            sec--;
+            btn.textContent = sec > 0 ? baseLabel + ' (' + sec + ')' : baseLabel;
+            if (sec <= 0) { btn.disabled = false; clearInterval(resendTimer); }
+        }, 1000);
+    }
+
+    // Step 2 → validate password, send email code
+    async function regSendCode() {
+        const btn = document.getElementById('regSendCodeBtn');
+        const errEl = document.getElementById('regStep2Error');
+        const username = _usernameInput.value.trim().toLowerCase();
+        const email = document.getElementById('regEmail').value.trim();
+        const pass = document.getElementById('regPassword').value;
+        const confirm = document.getElementById('regConfirm').value;
+        const terms = document.getElementById('regTerms').checked;
+
+        errEl.style.display = 'none';
+        document.getElementById('regPassField').classList.remove('error');
+        document.getElementById('regConfirmField').classList.remove('error');
+
+        if (pass.length < 8) { document.getElementById('regPassField').classList.add('error'); return; }
+        if (pass !== confirm) { document.getElementById('regConfirmField').classList.add('error'); return; }
+        if (!terms) { document.getElementById('termsCheck').style.animation = 'shake .4s'; setTimeout(() => document.getElementById('termsCheck').style.animation = '', 400); return; }
+
+        btn.classList.add('auth-btn-loading');
+        btn.disabled = true;
+
+        let captchaToken = null;
+        if (window.TokenPayCaptcha) {
+            captchaToken = await TokenPayCaptcha.check();
+            if (captchaToken === false) {
+                btn.classList.remove('auth-btn-loading'); btn.disabled = false; return;
+            }
+        }
+
+        try {
+            const regBody = { email, type: 'register', name: username, lang: _lang };
+            if (captchaToken) regBody.captcha_token = captchaToken;
+            const res = await fetch(API + '/auth/send-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(regBody)
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                errEl.textContent = data.error?.message || L('Ошибка отправки кода', 'Failed to send code');
+                errEl.style.display = 'block';
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return;
+            }
+
+            // Go to code step
+            document.getElementById('regStep3Email').textContent = email;
+            document.getElementById('regCode').value = '';
+            document.getElementById('regStep2').classList.remove('active');
+            document.getElementById('regStep3').classList.add('active');
+            startRegResendTimer();
+            setTimeout(() => document.getElementById('regCode').focus(), 100);
+        } catch (err) {
+            errEl.textContent = L('Ошибка соединения с сервером', 'Connection error');
+            errEl.style.display = 'block';
+        }
+        btn.classList.remove('auth-btn-loading');
+        btn.disabled = false;
+    }
+
+    // Resend code
+    async function regResendCode() {
+        const email = document.getElementById('regEmail').value.trim();
+        const username = _usernameInput.value.trim().toLowerCase();
+        try {
+            await fetch(API + '/auth/send-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, type: 'register', name: username, lang: _lang })
+            });
+            startRegResendTimer();
+        } catch(e) {}
+    }
+
+    document.getElementById('regCode').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('regBtn').click(); }
+    });
+
+    // Step 3 → submit registration with email code
+    async function handleRegister(e) {
+        e.preventDefault();
+        const btn = document.getElementById('regBtn');
+        const errEl = document.getElementById('regCodeError');
+        const username = _usernameInput.value.trim().toLowerCase();
+        const email = document.getElementById('regEmail').value.trim();
+        const pass = document.getElementById('regPassword').value;
+        const code = document.getElementById('regCode').value.replace(/\D/g, '').trim();
+
+        if (!code || code.length < 6) {
+            errEl.textContent = L('Введите 6-значный код', 'Enter the 6-digit code');
+            errEl.style.display = 'block';
+            return false;
+        }
+
+        btn.classList.add('auth-btn-loading');
+        btn.disabled = true;
+        errEl.style.display = 'none';
+
+        try {
+            const res = await fetch(API + '/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: pass, username, email_code: code, lang: _lang, theme: _theme })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                errEl.textContent = data.error?.message || L('Ошибка регистрации', 'Registration failed');
+                errEl.style.display = 'block';
+                btn.classList.remove('auth-btn-loading');
+                btn.disabled = false;
+                return false;
+            }
+
+            localStorage.setItem('tpid_user', JSON.stringify(data.user));
+            localStorage.setItem('tpid_token', data.accessToken);
+            localStorage.setItem('tpid_refresh', data.refreshToken);
+            localStorage.setItem('tp_token', data.accessToken);
+            const _rp = new URLSearchParams(window.location.search).get('redirect');
+            let _dest = '/dashboard';
+            if (_rp) {
+                const _d = decodeURIComponent(_rp);
+                if (_d.startsWith('/') && !_d.startsWith('//')) _dest = _d;
+                else { try { const _u = new URL(_d); if (_u.origin === window.location.origin) _dest = _d; } catch(e) {} }
+            }
+            sessionStorage.removeItem('tpid_reg_state');
+            window.location.href = _dest;
+        } catch (err) {
+            errEl.textContent = L('Ошибка соединения с сервером', 'Connection error');
+            errEl.style.display = 'block';
+            btn.classList.remove('auth-btn-loading');
+            btn.disabled = false;
+        }
+        return false;
+    }
+
+    // ===== REGISTER STATE PERSISTENCE (survives page refresh) =====
+    function _saveRegState() {
+        const activeStep = document.querySelector('.auth-step.active');
+        if (!activeStep) return;
+        const state = {
+            step: activeStep.id,
+            username: _usernameInput.value,
+            email: document.getElementById('regEmail').value,
+            usernameAvailable: _usernameAvailable
+        };
+        sessionStorage.setItem('tpid_reg_state', JSON.stringify(state));
+    }
+    function _restoreRegState() {
+        try {
+            const raw = sessionStorage.getItem('tpid_reg_state');
+            if (!raw) return false;
+            const s = JSON.parse(raw);
+            if (!s.step) return false;
+            // Restore field values
+            if (s.username) { _usernameInput.value = s.username; }
+            if (s.email) document.getElementById('regEmail').value = s.email;
+            if (s.usernameAvailable) { _usernameAvailable = true; _checkUsernameDebounced(); }
+            // Activate correct step
+            document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(s.step);
+            if (target) { target.classList.add('active'); }
+            else { document.getElementById('regStep1').classList.add('active'); }
+            // Update step2 text if on step2 or step3
+            if (s.step !== 'regStep1' && s.username && s.email) {
+                document.getElementById('regStep2Text').textContent = '@' + s.username + ' \u00B7 ' + s.email;
+            }
+            if (s.step === 'regStep3' && s.email) {
+                document.getElementById('regStep3Email').textContent = s.email;
+            }
+            return true;
+        } catch(e) { return false; }
+    }
+    // Watch step transitions → save state
+    document.querySelectorAll('.auth-step').forEach(step => {
+        new MutationObserver(() => { if (step.classList.contains('active')) _saveRegState(); }).observe(step, { attributes: true, attributeFilter: ['class'] });
+    });
+    // Restore on load
+    if (!_restoreRegState()) {
+        // No saved state — default step1 already active
+    }
+    </script>
+</body>
+</html>

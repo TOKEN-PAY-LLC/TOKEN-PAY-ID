@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>TOKEN PAY ID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=6">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=6">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=6">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=6">
+    <link rel="manifest" href="manifest.json?v=6">
+    <meta name="theme-color" content="#000000">
+    <link rel="stylesheet" href="styles.css?v=20260325b">
+    <script src="theme-init.js?v=20260325b"></script>
+    <style>
+    .welcome-page{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;padding:40px 24px}
+    .welcome-container{width:100%;max-width:420px;position:relative;z-index:1}
+    .welcome-card{position:relative;border-radius:24px;padding:52px 44px 44px;background:rgba(7,7,9,.88);backdrop-filter:blur(60px);-webkit-backdrop-filter:blur(60px);border:1px solid rgba(255,255,255,.1);overflow:hidden;box-shadow:0 0 100px rgba(255,255,255,.015),0 40px 100px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.12),inset -1px 0 0 rgba(255,255,255,.04);transition:transform .3s cubic-bezier(.4,0,.2,1),box-shadow .3s}
+    .welcome-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);z-index:1}
+    .welcome-logo{text-align:center;margin-bottom:36px;animation:logoEntry .9s cubic-bezier(.4,0,.2,1)}
+    .welcome-logo img{width:60%;max-width:220px;height:auto;pointer-events:none;user-select:none;filter:drop-shadow(0 0 40px rgba(255,255,255,.15));animation:logoPulse 3s ease-in-out infinite;margin:0 auto}
+    @keyframes logoEntry{from{opacity:0;transform:translateY(-20px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 60px rgba(255,255,255,.12))}50%{filter:drop-shadow(0 0 80px rgba(255,255,255,.2))}}
+    .welcome-subtitle{text-align:center;font-size:.88rem;color:rgba(255,255,255,.5);margin-bottom:32px;line-height:1.5}
+    .welcome-actions{display:flex;flex-direction:column;gap:12px}
+    .welcome-btn{width:100%;padding:16px;border:none;border-radius:12px;font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);letter-spacing:.2px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+    .welcome-btn-primary{background:#fff;color:#000}
+    .welcome-btn-primary:hover{background:#e8e8e8;transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,255,255,.12)}
+    .welcome-btn-primary:active{transform:translateY(0);background:#ddd}
+    .welcome-btn-secondary{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.15)}
+    .welcome-btn-secondary:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.25);transform:translateY(-2px)}
+    .welcome-btn-secondary:active{transform:translateY(0)}
+    .welcome-divider{display:flex;align-items:center;gap:16px;margin:24px 0;color:rgba(255,255,255,.2);font-size:.75rem}
+    .welcome-divider::before,.welcome-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+    .welcome-footer{text-align:center;margin-top:28px;font-size:.78rem;color:rgba(255,255,255,.25)}
+    .welcome-footer a{color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s}
+    .welcome-footer a:hover{color:#fff}
+    /* Light theme */
+    body.light .welcome-card{background:rgba(255,255,255,.95);border-color:rgba(0,0,0,.08);box-shadow:0 8px 40px rgba(0,0,0,.08)}
+    body.light .welcome-card::before{background:linear-gradient(90deg,transparent,rgba(0,0,0,.06),transparent)}
+    body.light .welcome-logo img{content:url('tokenpay-id-dark.png');filter:drop-shadow(0 0 30px rgba(0,0,0,.06))}
+    body.light .welcome-subtitle{color:rgba(0,0,0,.45)}
+    body.light .welcome-btn-primary{background:#111;color:#fff}
+    body.light .welcome-btn-primary:hover{background:#222;box-shadow:0 6px 24px rgba(0,0,0,.12)}
+    body.light .welcome-btn-secondary{color:#111;border-color:rgba(0,0,0,.12)}
+    body.light .welcome-btn-secondary:hover{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.2)}
+    body.light .welcome-divider{color:rgba(0,0,0,.15)}
+    body.light .welcome-divider::before,body.light .welcome-divider::after{background:rgba(0,0,0,.06)}
+    body.light .welcome-footer{color:rgba(0,0,0,.25)}
+    body.light .welcome-footer a{color:rgba(0,0,0,.4)}
+    body.light .welcome-footer a:hover{color:#000}
+    /* Animations */
+    .welcome-actions a:nth-child(1){animation:wBtnIn .5s cubic-bezier(.4,0,.2,1) .2s backwards}
+    .welcome-actions a:nth-child(2){animation:wBtnIn .5s cubic-bezier(.4,0,.2,1) .35s backwards}
+    @keyframes wBtnIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    </style>
+</head>
+<body>
+    <canvas id="particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.75"></canvas>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+
+    <div class="welcome-page">
+        <div class="welcome-container fade-in">
+            <div class="welcome-card">
+                <div class="welcome-logo">
+                    <a href="https://tokenpay.space"><img src="tokenpay-id-light.png" alt="TOKEN PAY ID" class="tpid-logo"></a>
+                </div>
+                <p class="welcome-subtitle" data-ru="Единая система идентификации" data-en="Unified Identity System">Единая система идентификации</p>
+                <div class="welcome-actions">
+                    <a href="/login" class="welcome-btn welcome-btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        <span data-ru="Войти" data-en="Sign In">Войти</span>
+                    </a>
+                    <a href="/register" class="welcome-btn welcome-btn-secondary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        <span data-ru="Создать аккаунт" data-en="Create Account">Создать аккаунт</span>
+                    </a>
+                </div>
+                <div class="welcome-divider" data-ru="или" data-en="or">или</div>
+                <div class="welcome-footer">
+                    <a href="https://tokenpay.space" data-ru="Перейти на tokenpay.space" data-en="Go to tokenpay.space">Перейти на tokenpay.space</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=20260325b"></script>
+    <script>
+    // Auto-redirect if already logged in
+    (function(){
+        var t = localStorage.getItem('tpid_token') || sessionStorage.getItem('tpid_token');
+        if (t) { window.location.href = '/dashboard'; }
+    })();
+    // i18n
+    var _lang = localStorage.getItem('tp_lang') || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'ru');
+    document.querySelectorAll('[data-' + _lang + ']').forEach(function(el) {
+        if (el.children.length === 0) el.textContent = el.getAttribute('data-' + _lang);
+    });
+    </script>
+</body>
+</html>
