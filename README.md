@@ -11,7 +11,7 @@
 [![OAuth 2.0](https://img.shields.io/badge/OAuth_2.0-✓-black?style=flat-square)](https://tokenpay.space/docs)
 [![License](https://img.shields.io/badge/License-Proprietary-black?style=flat-square)](LICENSE)
 
-**Base URL:** `https://tokenpay.space/`
+[Base URL:](https://tokenpay.space/)
 
 [Documentation](https://tokenpay.space/docs) · [Dashboard](https://tokenpay.space/dashboard) · [Contact](mailto:info@tokenpay.space/)
 
