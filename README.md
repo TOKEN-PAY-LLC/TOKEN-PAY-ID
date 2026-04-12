@@ -13,7 +13,7 @@
 
 **Base URL:** `https://tokenpay.space`
 
-[Documentation](https://tokenpay.space/docs) · [Dashboard](https://tokenpay.space/dashboard) · [Contact](mailto:info@tokenpay.space)
+[Documentation](https://tokenpay.space/docs) · [Dashboard](https://tokenpay.space/dashboard) · [Contact](mailto:info@tokenpay.space/)
 
 </div>
 
