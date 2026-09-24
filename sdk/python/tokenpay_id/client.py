@@ -31,7 +31,8 @@ class TokenPayIDClient:
         client = TokenPayIDClient(
             client_id="tpid_pk_...",
             client_secret="tpid_sk_...",
-            redirect_uri="https://yourapp.com/callback"
+            redirect_uri="https://yourapp.com/callback",
+            api_version="v3",  # optional; defaults to v1
         )
 
         # Build authorization URL
@@ -48,6 +49,7 @@ class TokenPayIDClient:
         client_secret: str,
         redirect_uri: str,
         base_url: str = BASE_URL,
+        api_version: str = "v1",
     ):
         if not client_id:
             raise ValueError("client_id is required")
@@ -60,6 +62,9 @@ class TokenPayIDClient:
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
         self.base_url = base_url.rstrip("/")
+        if api_version not in ("v1", "v3"):
+            raise ValueError("api_version must be 'v1' or 'v3'")
+        self.api_version = api_version
 
     # ── PKCE ─────────────────────────────────────────────────────────────────
 
@@ -103,7 +108,7 @@ class TokenPayIDClient:
             params["code_challenge"] = pkce["challenge"]
             params["code_challenge_method"] = "S256"
 
-        url = f"{self.base_url}/api/v1/oauth/authorize?{urllib.parse.urlencode(params)}"
+        url = f"{self.base_url}/api/{self.api_version}/oauth/authorize?{urllib.parse.urlencode(params)}"
         return url, state, verifier
 
     # ── TOKEN EXCHANGE ────────────────────────────────────────────────────────
@@ -249,7 +254,7 @@ class TokenPayIDClient:
         import urllib.request, json
         data = json.dumps(body).encode()
         req = urllib.request.Request(
-            self.base_url + path,
+            self._api_url(path),
             data=data,
             headers={"Content-Type": "application/json"},
             method="POST",
@@ -263,7 +268,7 @@ class TokenPayIDClient:
     def _get(self, path: str, access_token: str) -> dict:
         import urllib.request, json
         req = urllib.request.Request(
-            self.base_url + path,
+            self._api_url(path),
             headers={"Authorization": f"Bearer {access_token}"},
         )
         try:
@@ -275,7 +280,7 @@ class TokenPayIDClient:
     def _put(self, path: str, access_token: str) -> dict:
         import urllib.request, json
         req = urllib.request.Request(
-            self.base_url + path,
+            self._api_url(path),
             method="PUT",
             headers={"Authorization": f"Bearer {access_token}"},
         )
@@ -284,3 +289,6 @@ class TokenPayIDClient:
                 return self._read_response(resp)
         except urllib.error.HTTPError as e:
             raise self._http_error(e)
+
+    def _api_url(self, path: str) -> str:
+        return self.base_url + path.replace("/api/v1/", f"/api/{self.api_version}/", 1)

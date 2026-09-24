@@ -8,6 +8,8 @@ All notable changes to TOKEN PAY ID's public API, widget, and source SDKs are re
 - Additive `/api/v3` compatibility base and discovery document; v1 routes remain available with their existing OAuth, token, and authentication response shapes.
 - `X-API-Version: 3.0.0` response header on v3 calls for client-side version pinning.
 - v3 OpenAPI specification at [`openapi-v3.yaml`](openapi-v3.yaml); v2.6.3 auth helpers and device-flow/telemetry endpoints are documented.
+- JavaScript, Python, and Go source SDKs accept an optional v3 setting; they keep v1 as the default for existing integrations.
+- JavaScript SDK 1.2.0 and Python SDK 1.1.0 add the opt-in API version setting; existing code defaults to v1.
 - Production health and SDK metadata now report API 2.6.3 instead of the stale 2.4.0 label.
 
 ### Compatibility

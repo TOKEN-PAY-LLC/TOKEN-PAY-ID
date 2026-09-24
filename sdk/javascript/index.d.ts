@@ -3,6 +3,7 @@ export interface TokenPayIDConfig {
     clientSecret: string;
     redirectUri: string;
     baseUrl?: string;
+    apiVersion?: 'v1' | 'v3';
 }
 
 export interface PKCEPair {

@@ -25,6 +25,7 @@ type Config struct {
 	ClientSecret string
 	RedirectURI  string
 	BaseURL      string // optional, defaults to https://tokenpay.space
+	APIVersion   string // optional: v1 (default) or v3
 }
 
 // Client is the TOKEN PAY ID API client.
@@ -39,6 +40,14 @@ func NewClient(cfg Config) *Client {
 		cfg.BaseURL = defaultBaseURL
 	}
 	cfg.BaseURL = strings.TrimRight(cfg.BaseURL, "/")
+	apiVersion := cfg.APIVersion
+	if apiVersion == "" {
+		apiVersion = "v1"
+	}
+	if apiVersion != "v1" && apiVersion != "v3" {
+		apiVersion = "v1"
+	}
+	cfg.APIVersion = apiVersion
 	return &Client{
 		cfg:        cfg,
 		httpClient: &http.Client{Timeout: 15 * time.Second},
@@ -130,7 +139,7 @@ func (c *Client) GetAuthorizationURL(scope, state, codeChallenge string) string 
 		params.Set("code_challenge", codeChallenge)
 		params.Set("code_challenge_method", "S256")
 	}
-	return c.cfg.BaseURL + "/api/v1/oauth/authorize?" + params.Encode()
+	return c.cfg.BaseURL + "/api/" + c.cfg.APIVersion + "/oauth/authorize?" + params.Encode()
 }
 
 // ExchangeCode exchanges an authorization code for tokens.
@@ -267,7 +276,7 @@ func VerifyWebhookSignature(payload, signature, secret string, toleranceSec int)
 
 func (c *Client) post(path string, body interface{}, out interface{}) error {
 	b, _ := json.Marshal(body)
-	req, err := http.NewRequest("POST", c.cfg.BaseURL+path, bytes.NewReader(b))
+	req, err := http.NewRequest("POST", c.apiURL(path), bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
@@ -276,7 +285,7 @@ func (c *Client) post(path string, body interface{}, out interface{}) error {
 }
 
 func (c *Client) get(path, token string, out interface{}) error {
-	req, err := http.NewRequest("GET", c.cfg.BaseURL+path, nil)
+	req, err := http.NewRequest("GET", c.apiURL(path), nil)
 	if err != nil {
 		return err
 	}
@@ -285,12 +294,20 @@ func (c *Client) get(path, token string, out interface{}) error {
 }
 
 func (c *Client) put(path, token string, out interface{}) error {
-	req, err := http.NewRequest("PUT", c.cfg.BaseURL+path, nil)
+	req, err := http.NewRequest("PUT", c.apiURL(path), nil)
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	return c.do(req, out)
+}
+
+func (c *Client) apiURL(path string) string {
+	version := c.cfg.APIVersion
+	if version == "" {
+		version = "v1"
+	}
+	return c.cfg.BaseURL + strings.Replace(path, "/api/v1/", "/api/"+version+"/", 1)
 }
 
 func (c *Client) do(req *http.Request, out interface{}) error {

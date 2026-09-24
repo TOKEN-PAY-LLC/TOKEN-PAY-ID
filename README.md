@@ -22,7 +22,7 @@ TOKEN PAY ID provides OAuth 2.0 / OpenID Connect, a versioned REST API, an embed
 | Use case | Recommended entry point | Current version |
 | --- | --- | --- |
 | Browser sign-in button and modal | [`sdk/web/tpid-widget.js`](sdk/web/tpid-widget.js) | 1.3.0 |
-| Server-side OAuth client | JavaScript, Python, or Go source SDK | JS 1.1.1 · Python 1.0.1 · Go module |
+| Server-side OAuth client | JavaScript, Python, or Go source SDK | JS 1.2.0 · Python 1.1.0 · Go module |
 | Direct API integration | [`openapi-v3.yaml`](openapi-v3.yaml) | API 3.0.0 |
 
 Only these source SDKs are included in this public repository. Other ecosystem packages are not advertised here as installable releases.
@@ -79,7 +79,8 @@ const { TokenPayIDClient } = require('./sdk/javascript');
 const client = new TokenPayIDClient({
   clientId: process.env.TPID_PUBLIC_KEY,
   clientSecret: process.env.TPID_SECRET_KEY,
-  redirectUri: 'https://yourapp.example/callback'
+  redirectUri: 'https://yourapp.example/callback',
+  apiVersion: 'v3' // optional; omitted means v1
 });
 ```
 
@@ -93,6 +94,7 @@ client = TokenPayIDClient(
     client_id=os.environ['TPID_PUBLIC_KEY'],
     client_secret=os.environ['TPID_SECRET_KEY'],
     redirect_uri='https://yourapp.example/callback',
+    api_version='v3',  # optional; defaults to v1
 )
 ```
 
@@ -107,6 +109,7 @@ client := tpid.NewClient(tpid.Config{
     ClientID:     os.Getenv("TPID_PUBLIC_KEY"),
     ClientSecret: os.Getenv("TPID_SECRET_KEY"),
     RedirectURI:  "https://yourapp.example/callback",
+    APIVersion:   "v3", // optional; defaults to v1
 })
 ```
 
@@ -124,7 +127,7 @@ The SDKs implement OAuth and API calls. They do not replace server-side token va
 
 - **API:** 3.0.0
 - **Web widget:** 1.3.0
-- **JavaScript SDK:** 1.1.1
-- **Python SDK:** 1.0.1
+- **JavaScript SDK:** 1.2.0
+- **Python SDK:** 1.1.0
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes and [LICENSE](LICENSE) for repository terms.

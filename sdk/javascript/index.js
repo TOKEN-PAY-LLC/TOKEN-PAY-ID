@@ -14,6 +14,7 @@ class TokenPayIDClient {
      * @param {string} config.clientSecret  - Your secret key (tpid_sk_...)
      * @param {string} config.redirectUri   - OAuth callback URL
      * @param {string} [config.baseUrl]     - Override API base URL
+     * @param {'v1'|'v3'} [config.apiVersion='v1'] - API version; v1 remains the default
      */
     constructor(config = {}) {
         if (!config.clientId) throw new Error('[TokenPayID] clientId is required');
@@ -24,6 +25,10 @@ class TokenPayIDClient {
         this.clientSecret = config.clientSecret;
         this.redirectUri = config.redirectUri;
         this.baseUrl = (config.baseUrl || BASE_URL).replace(/\/$/, '');
+        this.apiVersion = config.apiVersion || 'v1';
+        if (!['v1', 'v3'].includes(this.apiVersion)) {
+            throw new Error('[TokenPayID] apiVersion must be "v1" or "v3"');
+        }
     }
 
     // ─── PKCE HELPERS ────────────────────────────────────────────────────────
@@ -75,7 +80,7 @@ class TokenPayIDClient {
             params.set('code_challenge', opts.codeChallenge);
             params.set('code_challenge_method', 'S256');
         }
-        return `${this.baseUrl}/api/v1/oauth/authorize?${params}`;
+        return `${this.baseUrl}/api/${this.apiVersion}/oauth/authorize?${params}`;
     }
 
     // ─── TOKEN EXCHANGE ──────────────────────────────────────────────────────
@@ -212,7 +217,7 @@ class TokenPayIDClient {
     // ─── INTERNAL ────────────────────────────────────────────────────────────
 
     async _post(path, body) {
-        const res = await fetch(this.baseUrl + path, {
+        const res = await fetch(this._apiUrl(path), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -221,18 +226,22 @@ class TokenPayIDClient {
     }
 
     async _get(path, accessToken) {
-        const res = await fetch(this.baseUrl + path, {
+        const res = await fetch(this._apiUrl(path), {
             headers: { Authorization: 'Bearer ' + accessToken },
         });
         return this._readResponse(res);
     }
 
     async _put(path, accessToken) {
-        const res = await fetch(this.baseUrl + path, {
+        const res = await fetch(this._apiUrl(path), {
             method: 'PUT',
             headers: { Authorization: 'Bearer ' + accessToken },
         });
         return this._readResponse(res);
+    }
+
+    _apiUrl(path) {
+        return this.baseUrl + path.replace(/^\/api\/v1(?=\/)/, `/api/${this.apiVersion}`);
     }
 
     async _readResponse(res) {
