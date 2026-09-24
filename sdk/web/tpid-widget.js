@@ -118,29 +118,29 @@
 .tpid-light .tpid-back:hover{color:rgba(0,0,0,.7)}
 .tpid-light .tpid-user-chip{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.06);color:rgba(0,0,0,.6)}
 .tpid-light .tpid-user-chip-av{background:rgba(0,0,0,.06);color:rgba(0,0,0,.5)}
-.tpid-light .tpid-label{color:rgba(0,0,0,.4)}
+.tpid-light .tpid-label{color:#4b4b4b}
 .tpid-light .tpid-input{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.1);color:#111}
 .tpid-light .tpid-input:focus{border-color:rgba(0,0,0,.25);background:rgba(0,0,0,.02);box-shadow:0 0 0 3px rgba(0,0,0,.04)}
-.tpid-light .tpid-input::placeholder{color:rgba(0,0,0,.25)}
+.tpid-light .tpid-input::placeholder{color:#707070}
 .tpid-light .tpid-eye{color:rgba(0,0,0,.25)}
 .tpid-light .tpid-eye:hover{color:rgba(0,0,0,.5)}
 .tpid-light .tpid-btn{background:#111;color:#fff}
 .tpid-light .tpid-btn:hover{background:#222;box-shadow:0 6px 20px rgba(0,0,0,.12)}
 .tpid-light .tpid-err{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.1);color:rgba(0,0,0,.55)}
-.tpid-light .tpid-hint{color:rgba(0,0,0,.3)}
-.tpid-light .tpid-hint a{color:rgba(0,0,0,.5)}
+.tpid-light .tpid-hint{color:#555}
+.tpid-light .tpid-hint a{color:#222}
 .tpid-light .tpid-footer{border-color:rgba(0,0,0,.04)}
-.tpid-light .tpid-footer-main,.tpid-light .tpid-footer-main a{color:rgba(0,0,0,.25)}
-.tpid-light .tpid-footer-main a:hover{color:rgba(0,0,0,.5)}
-.tpid-light .tpid-footer-links a{color:rgba(0,0,0,.2)}
-.tpid-light .tpid-footer-links a:hover{color:rgba(0,0,0,.4)}
-.tpid-light .tpid-footer-links span{color:rgba(0,0,0,.1)}
+.tpid-light .tpid-footer-main,.tpid-light .tpid-footer-main a{color:#666}
+.tpid-light .tpid-footer-main a:hover{color:#222}
+.tpid-light .tpid-footer-links a{color:#666}
+.tpid-light .tpid-footer-links a:hover{color:#222}
+.tpid-light .tpid-footer-links span{color:#888}
 .tpid-light .tpid-saved-item{background:rgba(0,0,0,.02);border-color:rgba(0,0,0,.06)}
 .tpid-light .tpid-saved-item:hover{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1)}
 .tpid-light .tpid-saved-av{background:rgba(0,0,0,.06);color:rgba(0,0,0,.45)}
 .tpid-light .tpid-saved-name{color:rgba(0,0,0,.7)}
-.tpid-light .tpid-saved-email{color:rgba(0,0,0,.35)}
-.tpid-light .tpid-divider{color:rgba(0,0,0,.15)}
+.tpid-light .tpid-saved-email{color:#626262}
+.tpid-light .tpid-divider{color:#666}
 .tpid-light .tpid-divider::before,.tpid-light .tpid-divider::after{background:rgba(0,0,0,.06)}
 .tpid-light .tpid-captcha-wrap{background:rgba(0,0,0,.02);border-color:rgba(0,0,0,.06)}
 .tpid-light .tpid-captcha-label{color:rgba(0,0,0,.3)}
@@ -161,6 +161,7 @@
 @media(max-width:480px){.tpid-modal{padding:32px 24px 28px;border-radius:20px;max-width:calc(100vw - 32px)}.tpid-logo-area img{max-width:180px}.tpid-input{font-size:16px;padding:14px}}
 /* Wide desktop identity panel; collapses to the familiar single card on phones. */
 .tpid-trigger-btn,.tpid-logo-btn,.tpid-btn{border-radius:999px}
+#tpid-backdrop .tpid-btn,#tpid-backdrop .tpid-trigger-btn,#tpid-backdrop .tpid-logo-btn{border-radius:999px!important}
 .tpid-enterprise{color:rgba(255,255,255,.68);font-size:.82rem;line-height:1.6}
 .tpid-enterprise-mark{width:52px;height:52px;object-fit:cover;border-radius:15px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);margin-bottom:16px}
 .tpid-enterprise h2{font-size:1.05rem;color:#fff;margin:0 0 8px;font-weight:700}
@@ -171,15 +172,15 @@
 .tpid-light .tpid-enterprise h2,.tpid-light .tpid-brand-name{color:#111!important}
 .tpid-light .tpid-enterprise p{color:rgba(0,0,0,.48)}
 .tpid-light .tpid-enterprise a{color:rgba(0,0,0,.72)}
-@media(min-width:720px){
-  .tpid-modal{max-width:860px;min-height:480px;padding:54px 56px 28px;display:grid;grid-template-columns:minmax(220px,.85fr) minmax(300px,1fr);column-gap:64px;align-content:center}
+@media(min-width:840px){
+  .tpid-modal{width:min(900px,calc(100vw - 64px));max-width:900px;min-height:500px;padding:54px 56px 28px;display:grid;grid-template-columns:minmax(240px,.85fr) minmax(360px,1fr);column-gap:64px;align-content:center}
   .tpid-logo-area{grid-column:1;grid-row:1;text-align:left;margin:0 0 28px}
   .tpid-logo-area img{max-width:210px}
   .tpid-enterprise{grid-column:1;grid-row:2;align-self:start;max-width:280px}
   .tpid-step{grid-column:2;grid-row:1 / span 2;align-self:center;width:100%}
   .tpid-footer{grid-column:1 / -1;margin-top:28px}
 }
-@media(max-width:719px){.tpid-enterprise{display:none}}
+@media(max-width:839px){.tpid-enterprise{display:none}}
 @media(prefers-reduced-motion:reduce){.tpid-modal,.tpid-step,.tpid-logo-area img{animation:none!important;transition-duration:.01ms!important}}
 `;
 

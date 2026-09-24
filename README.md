@@ -4,7 +4,7 @@
 
 **Identity and authentication for TOKEN PAY integrations**
 
-[![API](https://img.shields.io/badge/API-2.4.0-111?style=for-the-badge)](https://tokenpay.space/api/v1/health)
+[![API](https://img.shields.io/badge/API-3.0.0-111?style=for-the-badge)](https://tokenpay.space/api/v3)
 [![OAuth](https://img.shields.io/badge/OAuth-2.0-111?style=for-the-badge)](https://tokenpay.space/.well-known/openid-configuration)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-111?style=for-the-badge)](openapi.yaml)
 [![License](https://img.shields.io/badge/License-Proprietary-111?style=for-the-badge)](LICENSE)
@@ -15,7 +15,7 @@
 
 ---
 
-TOKEN PAY ID provides OAuth 2.0 / OpenID Connect, a versioned REST API, an embeddable sign-in widget, and source SDKs for JavaScript, Python, and Go. Existing API integrations remain on the same `/api/v1` routes; API 2.4.0 adds application branding fields and documents the current passkey and QR flows.
+TOKEN PAY ID provides OAuth 2.0 / OpenID Connect, a versioned REST API, an embeddable sign-in widget, and source SDKs for JavaScript, Python, and Go. Existing API integrations remain on the same `/api/v1` routes; API 3.0.0 adds a versioned compatibility surface and request-version headers while preserving the existing authentication and token response contract. API 2.6.3 introduced remembered-account authentication improvements.
 
 ## Integration options
 
@@ -23,7 +23,7 @@ TOKEN PAY ID provides OAuth 2.0 / OpenID Connect, a versioned REST API, an embed
 | --- | --- | --- |
 | Browser sign-in button and modal | [`sdk/web/tpid-widget.js`](sdk/web/tpid-widget.js) | 1.3.0 |
 | Server-side OAuth client | JavaScript, Python, or Go source SDK | JS 1.1.1 · Python 1.0.1 · Go module |
-| Direct API integration | [`openapi.yaml`](openapi.yaml) | API 2.4.0 |
+| Direct API integration | [`openapi-v3.yaml`](openapi-v3.yaml) | API 3.0.0 |
 
 Only these source SDKs are included in this public repository. Other ecosystem packages are not advertised here as installable releases.
 
@@ -58,9 +58,9 @@ The widget fetches public application branding for the supplied `clientId`. The 
 
 ## API compatibility
 
-The API base URL remains `https://tokenpay.space/api/v1`. API 2.4.0 is an additive release: existing routes and token response fields are retained. The branding update endpoint accepts the existing `app_name` and `redirect_uris` fields plus optional `app_icon_url`, `app_description`, and `client_uri` fields. Passkey registration now requires the current user's bearer token; this closes an account-ownership gap in the previous implementation.
+New integrations can use `https://tokenpay.space/api/v3` and [`openapi-v3.yaml`](openapi-v3.yaml). Existing clients can continue using `https://tokenpay.space/api/v1`; request paths, OAuth behavior, and token response fields remain supported. The v1 contract is documented in [`openapi.yaml`](openapi.yaml). The branding update endpoint accepts the existing `app_name` and `redirect_uris` fields plus optional `app_icon_url`, `app_description`, and `client_uri` fields. Passkey registration now requires the current user's bearer token; this closes an account-ownership gap in the previous implementation.
 
-Use the [OpenAPI specification](openapi.yaml) for request and response details. For OAuth authorization-code integrations:
+Use the [API v3 specification](openapi-v3.yaml) for new clients or the [API v1 specification](openapi.yaml) for existing integrations. For OAuth authorization-code integrations:
 
 1. Generate a cryptographically random `state` value and retain it in the application session.
 2. Use authorization code with PKCE (`S256`) and an exact registered HTTPS redirect URI.
@@ -122,7 +122,7 @@ The SDKs implement OAuth and API calls. They do not replace server-side token va
 
 ## Versioning
 
-- **API:** 2.4.0
+- **API:** 3.0.0
 - **Web widget:** 1.3.0
 - **JavaScript SDK:** 1.1.1
 - **Python SDK:** 1.0.1

@@ -1,18 +1,18 @@
 openapi: 3.0.3
 info:
-  title: TOKEN PAY ID API
+  title: TOKEN PAY ID API v3
   description: |
     Unified identity and authentication platform by TOKEN PAY LLC.
-    
+
     ## Authentication
-    
-    Use a JWT Bearer token (from login/OAuth) or an API key (`tpid_sk_...`) 
+
+    Use a JWT Bearer token (from login/OAuth) or an API key (`tpid_sk_...`)
     in the `Authorization: Bearer <token>` header.
-    
+
     ## Base URL
-    
+
     `https://tokenpay.space`
-  version: "2.6.3"
+  version: "3.0.0"
   contact:
     name: TOKEN PAY LLC
     url: https://tokenpay.space/docs
@@ -23,7 +23,7 @@ info:
 
 servers:
   - url: https://tokenpay.space
-    description: Production
+    description: Production (API v3)
 
 tags:
   - name: auth
@@ -45,7 +45,7 @@ paths:
 
   # ── HEALTH ──────────────────────────────────────────────────────────────────
 
-  /api/v1/health:
+  /api/v3/health:
     get:
       tags: [system]
       summary: Health check
@@ -67,7 +67,7 @@ paths:
 
   # ── AUTH ────────────────────────────────────────────────────────────────────
 
-  /api/v1/auth/send-code:
+  /api/v3/auth/send-code:
     post:
       tags: [auth]
       summary: Send email verification code
@@ -104,7 +104,7 @@ paths:
         "429":
           $ref: '#/components/responses/RateLimit'
 
-  /api/v1/auth/register:
+  /api/v3/auth/register:
     post:
       tags: [auth]
       summary: Register a new user
@@ -144,7 +144,7 @@ paths:
         "409":
           description: Email already registered
 
-  /api/v1/auth/login:
+  /api/v3/auth/login:
     post:
       tags: [auth]
       summary: Login with email and password
@@ -191,7 +191,7 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/auth/passkey/register-challenge:
+  /api/v3/auth/passkey/register-challenge:
     post:
       tags: [auth]
       summary: Create an authenticated WebAuthn registration challenge
@@ -213,7 +213,7 @@ paths:
         "401": { $ref: '#/components/responses/Unauthorized' }
         "429": { $ref: '#/components/responses/RateLimit' }
 
-  /api/v1/auth/passkey/register-verify:
+  /api/v3/auth/passkey/register-verify:
     post:
       tags: [auth]
       summary: Verify and save a WebAuthn credential
@@ -237,7 +237,7 @@ paths:
         "400": { $ref: '#/components/responses/Validation' }
         "401": { $ref: '#/components/responses/Unauthorized' }
 
-  /api/v1/auth/passkey/login-challenge:
+  /api/v3/auth/passkey/login-challenge:
     post:
       tags: [auth]
       summary: Get login options for a registered passkey
@@ -255,7 +255,7 @@ paths:
         "400": { $ref: '#/components/responses/Validation' }
         "429": { $ref: '#/components/responses/RateLimit' }
 
-  /api/v1/auth/passkey/login-verify:
+  /api/v3/auth/passkey/login-verify:
     post:
       tags: [auth]
       summary: Verify a passkey assertion and issue the existing token response
@@ -282,7 +282,7 @@ paths:
         "400": { $ref: '#/components/responses/Validation' }
         "401": { $ref: '#/components/responses/Unauthorized' }
 
-  /api/v1/auth/qr/login-init:
+  /api/v3/auth/qr/login-init:
     post:
       tags: [auth]
       summary: Create a five-minute QR login session
@@ -300,7 +300,7 @@ paths:
                   qrUrl: { type: string, format: uri, description: Uses the allowlisted origin of the initiating login page so browser-local auth sessions remain available after scanning }
         "429": { $ref: '#/components/responses/RateLimit' }
 
-  /api/v1/auth/qr/login-poll/{sessionId}:
+  /api/v3/auth/qr/login-poll/{sessionId}:
     get:
       tags: [auth]
       summary: Poll a QR login session
@@ -313,7 +313,7 @@ paths:
         "200":
           description: Pending, expired, or approved. Approved returns the same token response fields as login.
 
-  /api/v1/auth/qr/login-confirm/{sessionId}:
+  /api/v3/auth/qr/login-confirm/{sessionId}:
     post:
       tags: [auth]
       summary: Confirm a desktop QR login from an authenticated device
@@ -329,7 +329,7 @@ paths:
         "401": { $ref: '#/components/responses/Unauthorized' }
         "410": { description: QR session expired }
 
-  /api/v1/oauth/branding:
+  /api/v3/oauth/branding:
     get:
       tags: [oauth]
       summary: Read public OAuth application branding
@@ -341,7 +341,7 @@ paths:
       responses:
         "200": { description: Widget metadata and optional application name, HTTPS icon, description, and website }
 
-  /api/v1/keys/{id}/branding:
+  /api/v3/keys/{id}/branding:
     put:
       tags: [keys]
       summary: Update compatible API key branding and redirect URIs
@@ -372,7 +372,7 @@ paths:
         "400": { $ref: '#/components/responses/Validation' }
         "401": { $ref: '#/components/responses/Unauthorized' }
 
-  /api/v1/auth/refresh:
+  /api/v3/auth/refresh:
     post:
       tags: [auth]
       summary: Refresh access token
@@ -397,7 +397,7 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/auth/logout:
+  /api/v3/auth/logout:
     post:
       tags: [auth]
       summary: Logout and revoke session
@@ -412,7 +412,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Success'
 
-  /api/v1/auth/forgot-password:
+  /api/v3/auth/forgot-password:
     post:
       tags: [auth]
       summary: Send password reset code
@@ -441,7 +441,7 @@ paths:
         "429":
           $ref: '#/components/responses/RateLimit'
 
-  /api/v1/auth/reset-password:
+  /api/v3/auth/reset-password:
     post:
       tags: [auth]
       summary: Reset password with code
@@ -475,7 +475,7 @@ paths:
 
   # ── USER ────────────────────────────────────────────────────────────────────
 
-  /api/v1/users/me:
+  /api/v3/users/me:
     get:
       tags: [user]
       summary: Get current user
@@ -522,7 +522,7 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/users/activity:
+  /api/v3/users/activity:
     get:
       tags: [user]
       summary: Get user activity log
@@ -554,7 +554,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/ActivityEntry'
 
-  /api/v1/users/sessions:
+  /api/v3/users/sessions:
     get:
       tags: [user]
       summary: List active sessions (devices)
@@ -574,7 +574,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Session'
 
-  /api/v1/users/sessions/{id}:
+  /api/v3/users/sessions/{id}:
     delete:
       tags: [user]
       summary: Revoke a session
@@ -595,7 +595,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Success'
 
-  /api/v1/users/connected-apps:
+  /api/v3/users/connected-apps:
     get:
       tags: [user]
       summary: List connected applications
@@ -615,7 +615,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/ConnectedApp'
 
-  /api/v1/users/connected-apps/{id}:
+  /api/v3/users/connected-apps/{id}:
     delete:
       tags: [user]
       summary: Revoke app access
@@ -638,7 +638,7 @@ paths:
 
   # ── API KEYS ─────────────────────────────────────────────────────────────────
 
-  /api/v1/keys:
+  /api/v3/keys:
     get:
       tags: [keys]
       summary: List API keys
@@ -682,7 +682,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiKeyWithSecret'
 
-  /api/v1/keys/{id}:
+  /api/v3/keys/{id}:
     delete:
       tags: [keys]
       summary: Revoke an API key
@@ -705,7 +705,7 @@ paths:
 
   # ── OAUTH ────────────────────────────────────────────────────────────────────
 
-  /api/v1/oauth/authorize:
+  /api/v3/oauth/authorize:
     get:
       tags: [oauth]
       summary: Authorization endpoint
@@ -754,7 +754,7 @@ paths:
         "302":
           description: Redirect to login or consent page
 
-  /api/v1/oauth/token:
+  /api/v3/oauth/token:
     post:
       tags: [oauth]
       summary: Token endpoint
@@ -777,7 +777,7 @@ paths:
         "400":
           description: Invalid grant or parameters
 
-  /api/v1/oauth/userinfo:
+  /api/v3/oauth/userinfo:
     get:
       tags: [oauth]
       summary: UserInfo endpoint (OIDC)
@@ -792,7 +792,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OIDCUserInfo'
 
-  /api/v1/oauth/revoke:
+  /api/v3/oauth/revoke:
     post:
       tags: [oauth]
       summary: Revoke an OAuth token
@@ -852,7 +852,7 @@ paths:
 
   # ── NOTIFICATIONS ───────────────────────────────────────────────────────────
 
-  /api/v1/notifications:
+  /api/v3/notifications:
     get:
       tags: [notifications]
       summary: Get notification history
@@ -878,7 +878,7 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/notifications/{id}/read:
+  /api/v3/notifications/{id}/read:
     put:
       tags: [notifications]
       summary: Mark notification as read
@@ -901,7 +901,7 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/notifications/read-all:
+  /api/v3/notifications/read-all:
     put:
       tags: [notifications]
       summary: Mark all notifications as read
@@ -918,14 +918,14 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v1/notifications/stream:
+  /api/v3/notifications/stream:
     get:
       tags: [notifications]
       summary: SSE notification stream
       description: |
         Server-Sent Events stream for real-time push notifications.
         Pass your JWT token as a query parameter.
-        
+
         Events:
         - `notification` — new notification (JSON payload)
         - `ping` — keep-alive (every 30s)
@@ -949,7 +949,7 @@ paths:
 
   # ── ENTERPRISE ───────────────────────────────────────────────────────────────
 
-  /api/v1/enterprise/apply:
+  /api/v3/enterprise/apply:
     post:
       tags: [enterprise]
       summary: Apply for enterprise account
@@ -979,7 +979,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Success'
 
-  /api/v1/enterprise/application:
+  /api/v3/enterprise/application:
     get:
       tags: [enterprise]
       summary: Get enterprise application status
@@ -1003,7 +1003,7 @@ paths:
                     type: string
                     format: date-time
 
-  /api/v1/enterprise/users:
+  /api/v3/enterprise/users:
     get:
       tags: [enterprise]
       summary: List users who authorized your app
@@ -1023,7 +1023,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/EnterpriseUser'
 
-  /api/v1/enterprise/stats:
+  /api/v3/enterprise/stats:
     get:
       tags: [enterprise]
       summary: Enterprise usage statistics
@@ -1038,7 +1038,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnterpriseStats'
 
-  /api/v1/enterprise/settings:
+  /api/v3/enterprise/settings:
     get:
       tags: [enterprise]
       summary: Get integration settings
@@ -1080,7 +1080,7 @@ paths:
 # ── COMPONENTS ─────────────────────────────────────────────────────────────────
 
 
-  /api/v1/auth/account-check:
+  /api/v3/auth/account-check:
     post:
       tags: [auth]
       summary: Check available sign-in methods and remembered-account policy
@@ -1101,7 +1101,7 @@ paths:
         "401": { $ref: '#/components/responses/Unauthorized' }
         "429": { $ref: '#/components/responses/RateLimit' }
 
-  /api/v1/auth/quick-login:
+  /api/v3/auth/quick-login:
     post:
       tags: [auth]
       summary: Complete remembered-account sign-in with an email code
@@ -1125,7 +1125,7 @@ paths:
         "401": { $ref: '#/components/responses/Unauthorized' }
         "429": { $ref: '#/components/responses/RateLimit' }
 
-  /api/v1/auth/session-version:
+  /api/v3/auth/session-version:
     get:
       tags: [auth]
       summary: Read the authenticated user's session version
@@ -1135,7 +1135,7 @@ paths:
         "200": { description: Current session version }
         "401": { $ref: '#/components/responses/Unauthorized' }
 
-  /api/v1/oauth/device:
+  /api/v3/oauth/device:
     post:
       tags: [oauth]
       summary: Start OAuth device authorization (RFC 8628)
@@ -1155,7 +1155,7 @@ paths:
         "400": { description: Invalid request }
         "401": { $ref: '#/components/responses/Unauthorized' }
 
-  /api/v1/oauth/device/token:
+  /api/v3/oauth/device/token:
     post:
       tags: [oauth]
       summary: Poll device authorization status and exchange an approved device code
@@ -1170,7 +1170,7 @@ paths:
         "400": { description: Authorization is pending, expired, or denied }
         "429": { $ref: '#/components/responses/RateLimit' }
 
-  /api/v1/telemetry/event:
+  /api/v3/telemetry/event:
     post:
       tags: [system]
       summary: Submit a privacy-filtered SDK telemetry event
@@ -1185,7 +1185,7 @@ paths:
         "400": { $ref: '#/components/responses/Validation' }
         "429": { $ref: '#/components/responses/RateLimit' }
 
-  /api/v1/telemetry/funnel:
+  /api/v3/telemetry/funnel:
     get:
       tags: [system]
       summary: Read the authenticated client's aggregate SDK funnel data
@@ -1204,6 +1204,14 @@ paths:
         "200": { description: Aggregate event and session counts }
         "401": { $ref: '#/components/responses/Unauthorized' }
         "403": { description: Client key is not owned by the authenticated user }
+
+  /api/v3:
+    get:
+      tags: [system]
+      summary: API v3 discovery and compatibility information
+      operationId: discoverApiV3
+      responses:
+        "200": { description: API version, base URLs, and OpenAPI document URL }
 
 components:
   securitySchemes:

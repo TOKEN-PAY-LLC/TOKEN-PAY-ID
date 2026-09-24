@@ -1,6 +1,6 @@
 # TOKEN PAY ID Web Widget
 
-**Version:** 1.3.0 · **API:** 2.4.0
+**Widget:** 1.3.0 · **API contract:** `/api/v1` remains supported; API v3 is optional
 
 The widget source in this directory is the same file served at `https://tokenpay.space/sdk/tpid-widget.js`.
 

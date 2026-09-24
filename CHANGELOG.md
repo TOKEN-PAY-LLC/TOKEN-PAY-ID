@@ -2,6 +2,23 @@
 
 All notable changes to TOKEN PAY ID's public API, widget, and source SDKs are recorded here.
 
+## API 3.0.0 · 2026-09-24
+
+### Added
+- Additive `/api/v3` compatibility base and discovery document; v1 routes remain available with their existing OAuth, token, and authentication response shapes.
+- `X-API-Version: 3.0.0` response header on v3 calls for client-side version pinning.
+- v3 OpenAPI specification at [`openapi-v3.yaml`](openapi-v3.yaml); v2.6.3 auth helpers and device-flow/telemetry endpoints are documented.
+- Production health and SDK metadata now report API 2.6.3 instead of the stale 2.4.0 label.
+
+### Compatibility
+- Existing `/api/v1` consumers are unchanged. v3 currently dispatches to the same reviewed handlers, so clients can migrate the base path without changing payloads. This release does not claim a breaking contract redesign.
+
+## API 2.6.3 · 2026-05-04
+
+- Remembered-account authentication: quick login with email code within the remembered window, plus policy metadata from account-check.
+- Correct 2FA continuation in passwordless quick-login.
+- Native SDK release manifest for Android, Swift, and JVM Desktop.
+
 ## API 2.4.0 · 2026-09-24
 
 ### Added
