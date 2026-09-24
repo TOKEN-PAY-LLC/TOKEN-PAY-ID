@@ -216,6 +216,35 @@ class TokenPayIDClient:
 
     # ── INTERNAL ──────────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _read_response(resp) -> Dict[str, Any]:
+        raw = resp.read(1_048_577)
+        if len(raw) > 1_048_576:
+            raise TokenPayIDError("response_too_large", "TOKEN PAY ID response exceeded 1 MiB", getattr(resp, "status", 0))
+        try:
+            return _json.loads(raw or b"{}")
+        except (ValueError, UnicodeDecodeError):
+            raise TokenPayIDError("invalid_response", "TOKEN PAY ID returned an invalid response", getattr(resp, "status", 0))
+
+    @staticmethod
+    def _http_error(exc) -> TokenPayIDError:
+        try:
+            body = _json.loads(exc.read(1_048_576) or b"{}")
+        except (ValueError, UnicodeDecodeError):
+            body = {}
+        error = body.get("error", {}) if isinstance(body, dict) else {}
+        if isinstance(error, str):
+            code = error
+            message = body.get("error_description") or body.get("message") or str(exc)
+            status = exc.code
+        elif isinstance(error, dict):
+            code = error.get("code", "request_failed")
+            message = error.get("message", str(exc))
+            status = error.get("status", exc.code)
+        else:
+            code, message, status = "request_failed", str(exc), exc.code
+        return TokenPayIDError(code, message, status)
+
     def _post(self, path: str, body: dict) -> dict:
         import urllib.request, json
         data = json.dumps(body).encode()
@@ -226,15 +255,10 @@ class TokenPayIDClient:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req) as resp:
-                return json.loads(resp.read())
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return self._read_response(resp)
         except urllib.error.HTTPError as e:
-            err = json.loads(e.read()).get("error", {})
-            raise TokenPayIDError(
-                err.get("code", "request_failed"),
-                err.get("message", str(e)),
-                err.get("status", e.code),
-            )
+            raise self._http_error(e)
 
     def _get(self, path: str, access_token: str) -> dict:
         import urllib.request, json
@@ -243,15 +267,10 @@ class TokenPayIDClient:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         try:
-            with urllib.request.urlopen(req) as resp:
-                return json.loads(resp.read())
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return self._read_response(resp)
         except urllib.error.HTTPError as e:
-            err = json.loads(e.read()).get("error", {})
-            raise TokenPayIDError(
-                err.get("code", "request_failed"),
-                err.get("message", str(e)),
-                err.get("status", e.code),
-            )
+            raise self._http_error(e)
 
     def _put(self, path: str, access_token: str) -> dict:
         import urllib.request, json
@@ -261,12 +280,7 @@ class TokenPayIDClient:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         try:
-            with urllib.request.urlopen(req) as resp:
-                return json.loads(resp.read())
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return self._read_response(resp)
         except urllib.error.HTTPError as e:
-            err = json.loads(e.read()).get("error", {})
-            raise TokenPayIDError(
-                err.get("code", "request_failed"),
-                err.get("message", str(e)),
-                err.get("status", e.code),
-            )
+            raise self._http_error(e)

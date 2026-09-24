@@ -163,7 +163,7 @@ class TokenPayIDClient {
      * @param {string} notificationId
      */
     async markNotificationRead(accessToken, notificationId) {
-        return this._put('/api/v1/notifications/' + notificationId + '/read', accessToken);
+        return this._put('/api/v1/notifications/' + encodeURIComponent(notificationId) + '/read', accessToken);
     }
 
     /**
@@ -185,20 +185,25 @@ class TokenPayIDClient {
      * @returns {boolean}
      */
     static verifyWebhookSignature(payload, signature, secret, tolerance = 300) {
+        if (typeof payload !== 'string' || typeof signature !== 'string' || typeof secret !== 'string' || !Number.isFinite(tolerance) || tolerance < 0) return false;
         const parts = {};
         signature.split(',').forEach(p => {
             const [k, ...v] = p.split('=');
             parts[k] = v.join('=');
         });
-        const ts = parseInt(parts.t, 10);
-        if (!ts || !parts.v1) return false;
+        if (!/^\d+$/.test(parts.t || '') || !parts.v1) return false;
+        const ts = Number(parts.t);
+        if (!Number.isSafeInteger(ts) || ts <= 0) return false;
         if (Math.abs(Date.now() / 1000 - ts) > tolerance) return false;
         try {
             const { createHmac } = require('crypto');
             const expected = createHmac('sha256', secret)
                 .update(ts + '.' + payload)
                 .digest('hex');
-            return expected === parts.v1;
+            if (!/^[a-f0-9]{64}$/i.test(parts.v1)) return false;
+            const expectedBytes = Buffer.from(expected, 'hex');
+            const suppliedBytes = Buffer.from(parts.v1, 'hex');
+            return expectedBytes.length === suppliedBytes.length && require('crypto').timingSafeEqual(expectedBytes, suppliedBytes);
         } catch (_) {
             return false;
         }
@@ -212,18 +217,14 @@ class TokenPayIDClient {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
         });
-        const data = await res.json();
-        if (!res.ok) throw new TokenPayIDError(data.error || { code: 'request_failed', message: res.statusText, status: res.status });
-        return data;
+        return this._readResponse(res);
     }
 
     async _get(path, accessToken) {
         const res = await fetch(this.baseUrl + path, {
             headers: { Authorization: 'Bearer ' + accessToken },
         });
-        const data = await res.json();
-        if (!res.ok) throw new TokenPayIDError(data.error || { code: 'request_failed', message: res.statusText, status: res.status });
-        return data;
+        return this._readResponse(res);
     }
 
     async _put(path, accessToken) {
@@ -231,8 +232,45 @@ class TokenPayIDClient {
             method: 'PUT',
             headers: { Authorization: 'Bearer ' + accessToken },
         });
-        const data = await res.json();
-        if (!res.ok) throw new TokenPayIDError(data.error || { code: 'request_failed', message: res.statusText, status: res.status });
+        return this._readResponse(res);
+    }
+
+    async _readResponse(res) {
+        const maxBytes = 1_048_576;
+        if (!res.body || typeof res.body.getReader !== 'function') {
+            throw new TokenPayIDError({ code: 'invalid_response', message: 'Response streaming is unavailable', status: res.status });
+        }
+        const reader = res.body.getReader();
+        const chunks = [];
+        let totalBytes = 0;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            totalBytes += value.byteLength;
+            if (totalBytes > maxBytes) {
+                await reader.cancel();
+                throw new TokenPayIDError({ code: 'response_too_large', message: 'TOKEN PAY ID response exceeded 1 MiB', status: res.status });
+            }
+            chunks.push(value);
+        }
+        const bytes = new Uint8Array(totalBytes);
+        let offset = 0;
+        for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+        const body = new TextDecoder().decode(bytes);
+        let data;
+        try { data = body ? JSON.parse(body) : {}; }
+        catch (_) {
+            if (res.ok) throw new TokenPayIDError({ code: 'invalid_response', message: 'TOKEN PAY ID returned a non-JSON response', status: res.status });
+            data = { error: { code: 'invalid_response', message: 'TOKEN PAY ID returned a non-JSON error response' } };
+        }
+        if (!res.ok) {
+            const error = data.error;
+            throw new TokenPayIDError(typeof error === 'object' && error ? { ...error, status: error.status || res.status } : {
+                code: typeof error === 'string' ? error : 'request_failed',
+                message: data.error_description || data.message || res.statusText,
+                status: res.status,
+            });
+        }
         return data;
     }
 }

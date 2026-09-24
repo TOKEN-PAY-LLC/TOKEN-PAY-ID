@@ -1,34 +1,60 @@
 # Changelog
 
-All notable changes to TOKEN PAY ID API and SDKs.
+All notable changes to TOKEN PAY ID's public API, widget, and source SDKs are recorded here.
+
+## API 2.4.0 · 2026-09-24
+
+### Added
+- Public OAuth branding fields for application name, icon URL, description, and HTTPS website URL.
+- API key dashboard fields for application branding; existing `app_name` and `redirect_uris` payloads remain supported.
+- OpenAPI coverage for passkey registration and login, QR login, public branding, and API key branding.
+- Public widget v1.3.0: responsive desktop two-column sign-in panel with enterprise icon/name/website branding; mobile remains a single-column card.
+
+### Security and reliability
+- Passkey registration challenge and verification now require an authenticated account matching the submitted email.
+- WebAuthn challenge age, ceremony type, exact first-party origins, RP ID hash, user presence, and supported signature counters are checked.
+- WebAuthn QR session responses are marked non-cacheable; the QR page suppresses referrer leakage.
+- SDK webhook verification uses constant-time comparison; JS/Python/Go response parsing is bounded and handles non-JSON errors safely.
+- Python SDK packaging no longer assumes a README exists inside its package directory; JavaScript SDK now declares its Node.js 18 runtime requirement.
+
+### UI
+- Homepage header remains fixed to the viewport and visible during initial load and scrolling.
+- Sign-in buttons use the site's rounded style. Passkey is presented as a secondary method below the primary email/QR choices.
+- Cookie notice keeps its policy links and legal context in a calmer, more compact layout; storage failures no longer prevent the page from loading it.
+
+---
+
+## Native SDKs · [2.5.0-pre.1] — 2026-04-18
+
+### TpidLoginButton — three official variants
+- Dark, light, and icon-only variants with shared size presets and full-width support.
+- Canonical TOKEN PAY ID logo assets keep the button presentation consistent across apps.
+
+### Native widget — visual refresh
+- Welcome, email, password, 2FA, and passkey screens share a rounded monochrome auth-card style.
+- Light and dark themes, runtime RU / EN / ZH strings, and enterprise app-name branding.
+
+### Android, Swift, and JVM Desktop
+- Bundled wordmark/icon resources, consistent language behavior, and native Compose / SwiftUI layouts.
+- This native prerelease remains separate from the API 2.4.0 release and is not presented as a stable public SDK package here.
+
+---
 
 ## [1.1.0] — 2025-04-02
 
 ### API
 - Push notifications via Server-Sent Events (SSE)
-- `GET /api/v1/notifications` — notification history
-- `PUT /api/v1/notifications/:id/read` — mark as read
-- `PUT /api/v1/notifications/read-all` — mark all as read
-- `GET /api/v1/notifications/stream?token=JWT` — real-time SSE stream
-- Webhook events expanded: `user.oauth_connect`, `user.oauth_cancel`, `user.oauth_deny`, `user.unlink`, `key.created`, `key.revoked`
-- Webhook signature verification (HMAC-SHA256, Stripe-style `t=timestamp,v1=hash`)
-- QR code login flow (`/api/v1/auth/qr/*`)
-- Contact form endpoint (`POST /api/v1/contact`)
+- Notification history and read-state routes
+- QR code login flow
+- Contact form endpoint
 
 ### SDKs
-- `verifyWebhookSignature()` — all SDKs (JS, Python, Go)
-- `getNotifications()` — all SDKs
-- Widget SDK v1.2: three button variants, auto PKCE, popup OAuth
+- Webhook signature verification and notification helpers for JavaScript, Python, and Go
+- Widget SDK v1.2
 
 ### Security
-- Security headers: HSTS, CSP, Referrer-Policy, Permissions-Policy
-- Nginx: X-Frame-Options DENY, server_tokens off, no-store for HTML
-- JSON parse errors no longer leak stack traces
-- QR login rate-limited with session cap
-
-### Examples
-- Webhook handler examples (Node.js, Python, Go)
-- SSE notification listener example (Node.js)
+- Security headers and QR session rate limits
+- JSON parse errors no longer expose stack traces
 
 ---
 
@@ -37,21 +63,9 @@ All notable changes to TOKEN PAY ID API and SDKs.
 ### API
 - OAuth 2.0 authorization code flow with PKCE
 - OpenID Connect discovery endpoint
-- JWT access tokens (1h) + refresh tokens (30d)
-- Email verification for all accounts
-- TOTP-based 2FA
-- Enterprise accounts with API key management
-- Temporary API keys with `expires_in_days`
-- API key expiry enforcement in auth middleware
-- Activity log and session management
-- Webhook support for enterprise accounts
+- JWT access and refresh tokens
+- Email verification and TOTP-based two-factor authentication
+- Enterprise API keys, webhooks, activity log, and session management
 
 ### SDKs
-- JavaScript/Node.js SDK (`@tokenpay/id`)
-- Python SDK (`tokenpay-id`)
-- Go SDK (`github.com/TOKEN-PAY-LLC/TOKEN-PAY-ID/sdk/go`)
-
-### Security
-- Enterprise-only API key creation (enforced on backend)
-- Expired key detection returns `key_expired` error code
-- All keys shown once — secret not stored in plain text in API responses
+- JavaScript/Node.js, Python, and Go source clients

@@ -299,7 +299,10 @@ func (c *Client) do(req *http.Request, out interface{}) error {
 		return err
 	}
 	defer resp.Body.Close()
-	data, _ := io.ReadAll(resp.Body)
+	data, readErr := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if readErr != nil {
+		return fmt.Errorf("read TOKEN PAY ID response: %w", readErr)
+	}
 	if resp.StatusCode >= 400 {
 		var errResp struct {
 			Error Error `json:"error"`

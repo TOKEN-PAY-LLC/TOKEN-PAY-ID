@@ -1,6 +1,6 @@
 {
   "name": "@tokenpay/id",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Official JavaScript SDK for TOKEN PAY ID — unified authentication platform",
   "main": "index.js",
   "types": "index.d.ts",
@@ -13,5 +13,5 @@
     "url": "https://github.com/TOKEN-PAY-LLC/TOKEN-PAY-ID.git"
   },
   "files": ["index.js", "index.d.ts", "README.md"],
-  "engines": { "node": ">=14" }
+  "engines": { "node": ">=18" }
 }
