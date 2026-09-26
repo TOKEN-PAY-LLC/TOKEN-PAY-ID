@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "space.tokenpay.id"
-version = "3.0.0"
+version = "3.0.1"
 
 kotlin {
     // Kotlin 1.9 + Compose 1.6 runs on JDK 17 LTS. Higher toolchain versions

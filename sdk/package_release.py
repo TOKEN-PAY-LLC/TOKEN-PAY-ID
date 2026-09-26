@@ -18,7 +18,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSION = "3.0.0"
+VERSION = "3.0.1"
 PROJECTS = {
     "android": ("android", "tokenpay-id-android"),
     "swift": ("swift", "tokenpay-id-swift"),
@@ -104,10 +104,11 @@ def main() -> None:
     manifest["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     manifest["distribution"] = "source-release"
     manifest["notes"] = (
-        "3.0.0 — native SDK UI and authentication-flow update. Compact remembered-account card, "
+        "3.0.1 — native SDK UI and security update. Compact remembered-account card, "
         "clear next-step guidance, QR shortcut and rounded monochrome actions on Android, Swift and JVM. "
         "Windows and Apple automatic themes follow the OS. Cached sessions must match the selected account; "
-        "unfinished native passkey screens are no longer offered. Existing API v1 and integrator contracts remain supported."
+        "unfinished native passkey screens are no longer offered. Swift validates full DER SPKI hashes, "
+        "and JVM never stores tokens with a machine-derived encryption key. Existing API v1 and integrator contracts remain supported."
     )
     by_id = {item["id"]: item for item in manifest["artifacts"]}
     for project_id, (subdir, stem) in PROJECTS.items():

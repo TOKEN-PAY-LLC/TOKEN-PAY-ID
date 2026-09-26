@@ -68,6 +68,8 @@ final class ApiClient: NSObject, URLSessionDelegate, @unchecked Sendable {
     private let storage: SecureStorage
     private let pinTLS: Bool
     private var pinnedSPKIs: Set<Data> = []
+    private let pinMismatchLock = NSLock()
+    private var rejectedPinHost: String?
     var hasActivePins: Bool { pinTLS && !pinnedSPKIs.isEmpty }
 
     private lazy var session: URLSession = {
@@ -134,6 +136,9 @@ final class ApiClient: NSObject, URLSessionDelegate, @unchecked Sendable {
             }
         }
         // No pin matched → possible MITM
+        pinMismatchLock.lock()
+        rejectedPinHost = challenge.protectionSpace.host
+        pinMismatchLock.unlock()
         completionHandler(.cancelAuthenticationChallenge, nil)
     }
 
@@ -202,7 +207,17 @@ final class ApiClient: NSObject, URLSessionDelegate, @unchecked Sendable {
             return (data, http)
         } catch let err as URLError {
             switch err.code {
-            case .cancelled, .secureConnectionFailed, .serverCertificateUntrusted,
+            case .cancelled:
+                pinMismatchLock.lock()
+                let rejected = rejectedPinHost == req.url?.host
+                if rejected { rejectedPinHost = nil }
+                pinMismatchLock.unlock()
+                if rejected {
+                    storage.clearSession()
+                    throw TpidError.phishingDetected(host: req.url?.host ?? "unknown")
+                }
+                throw TpidError.userCancelled
+            case .secureConnectionFailed, .serverCertificateUntrusted,
                  .serverCertificateHasBadDate, .serverCertificateNotYetValid,
                  .serverCertificateHasUnknownRoot, .clientCertificateRequired:
                 storage.clearSession()
@@ -716,5 +731,5 @@ public struct TpidDeviceFlowSession: Sendable {
 }
 
 enum TpidVersion {
-    static let string = "3.0.0"
+    static let string = "3.0.1"
 }

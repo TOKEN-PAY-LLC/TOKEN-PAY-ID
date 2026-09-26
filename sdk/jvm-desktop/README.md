@@ -1,9 +1,10 @@
 # TOKEN PAY ID — JVM Desktop SDK
 
-**Version**: `3.0.0` · **Status**: Source release · **API compatibility**: existing `/api/v1` auth contracts remain in use
+**Version**: `3.0.1` · **Status**: Source release · **API compatibility**: existing `/api/v1` auth contracts remain in use
 
-## 3.0.0
+## 3.0.1
 
+- Removed the deterministic file-encryption fallback for refresh tokens. Without DPAPI, Keychain, or libsecret, sessions now remain in process memory only.
 - Wider, top-aligned Windows dialog removes the empty band around saved-account sign-in. Rounded actions, a compact account row, QR access, and clear next-step guidance match the web sign-in.
 - Automatic theme now reads the Windows app-theme setting. Active enterprise names from `/sdk/config` appear below the TOKEN PAY ID wordmark.
 - The widget refuses a cached session belonging to a different account. It no longer routes users to a nonfunctional native passkey screen.
@@ -52,7 +53,7 @@ shared between the Android and JVM Desktop SDKs.
   - **Windows** → DPAPI (via JNA `Crypt32.dll`)
   - **macOS** → Keychain (via `security` CLI)
   - **Linux** → libsecret (via `secret-tool` CLI)
-  - **Fallback** — AES-GCM file with a key derived from local machine identifiers. Use the OS secret service for stronger protection of copied profiles.
+  - **Fallback** — process memory only. Without a system credential store, the user signs in again after restarting the app.
 - **Native Compose screens** — saved account, email, password, email code, 2FA, QR, recovery, loading, success, and fatal error. Native passkey sign-in is not offered until implemented.
 - Native password/email-code sign-in, OAuth token refresh, and device flow. No embedded browser or WebView.
 - **Device Flow (RFC 8628)** — for Swing-less / JavaFX-less headless apps, or when native window isn't possible.
@@ -124,16 +125,13 @@ gradle :tokenpay-id-jvm:test           # run SDK tests
 
 ## Security notes
 
-- On **Windows** with JNA unavailable (e.g. locked-down enterprise setups),
-  storage falls back to AES-GCM file. The derived key is bound to machine-id +
-  user — a copied file on another machine cannot be decrypted.
-- On **Linux** without `secret-tool` (non-GNOME environments), same AES-GCM fallback.
+- On **Windows** without DPAPI or **Linux** without `secret-tool`, sessions remain in process memory; refresh tokens are not written to disk.
 - The SDK **does not** store the user's password — only `access_token` / `refresh_token` returned by the OAuth 2.0 token endpoint.
-- TLS pin mismatch → clears all stored tokens + returns `TpidError.PhishingDetected`.
+- TLS pin mismatch aborts the request and returns `TpidError.PhishingDetected`.
 
 ## Distribution & support
 
-Source archives for version 3.0.0 are listed at <https://tokenpay.space/sdk/>. No Maven Central artifact is advertised for this release.
+Source archives for version 3.0.1 are listed at <https://tokenpay.space/sdk/>. No Maven Central artifact is advertised for this release.
 
 - Partner support: `info@tokenpay.space`
 - Security: `security@tokenpay.space`

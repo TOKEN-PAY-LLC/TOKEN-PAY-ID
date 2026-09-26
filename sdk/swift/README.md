@@ -1,9 +1,10 @@
 # TOKEN PAY ID — Swift SDK
 
-**Version:** `3.0.0` · **API compatibility:** existing `/api/v1` auth contracts remain in use
+**Version:** `3.0.1` · **API compatibility:** existing `/api/v1` auth contracts remain in use
 
-## 3.0.0
+## 3.0.1
 
+- SPKI pins now hash the complete certificate SubjectPublicKeyInfo. An ordinary request cancellation no longer clears a valid session as a suspected pin mismatch.
 - Saved-account screen now has a compact account card, clear next-step guidance, QR access, and fully rounded black-and-white actions.
 - Remembered sessions are checked against the selected account and a nonnegative login age. The automatic theme follows the operating system on Apple platforms.
 - Removed the dead-end native passkey prompt. Passkeys remain available on the hosted web sign-in; native flows use working password, email-code, QR, and 2FA paths.
@@ -65,15 +66,15 @@ Fully native authentication widget for Apple platforms. Authentication screens a
 Add to `Package.swift`:
 
 ```swift
-.package(path: "./tokenpay-id-swift-3.0.0")
+.package(path: "./tokenpay-id-swift-3.0.1")
 ```
 
 Or via Xcode:
-1. Download `tokenpay-id-swift-3.0.0.tar.gz` and its `.sha256` file from <https://tokenpay.space/sdk/>
+1. Download `tokenpay-id-swift-3.0.1.tar.gz` and its `.sha256` file from <https://tokenpay.space/sdk/>
 2. Unpack, add `Package.swift` directory to Xcode as local package
 3. Add `TokenPayID` library to your target
 
-The 3.0.0 release is distributed as a source archive. Add its extracted package directory as a local Swift package.
+The 3.0.1 release is distributed as a source archive. Add its extracted package directory as a local Swift package.
 
 ---
 

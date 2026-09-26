@@ -1,8 +1,8 @@
 # TOKEN PAY ID — Android SDK (Kotlin, Jetpack Compose)
 
-**Version:** `3.0.0` · **API compatibility:** existing `/api/v1` auth contracts remain in use
+**Version:** `3.0.1` · **API compatibility:** existing `/api/v1` auth contracts remain in use
 
-## 3.0.0
+## 3.0.1
 
 - Reworked the saved-account screen into a compact account card with clear next-step guidance, QR access, and rounded actions. The widget keeps its black-and-white palette in both themes.
 - Saved sessions are accepted only for the matching account and a valid remembered-login window. Older sessions continue through email code or password as before.
@@ -72,11 +72,11 @@ Fully native authentication widget for Android. Authentication screens are rende
 
 ```bash
 # In your Android project root:
-curl -L -O https://www.tokenpay.space/sdk/android/tokenpay-id-android-3.0.0.tar.gz
-curl -L -O https://www.tokenpay.space/sdk/android/tokenpay-id-android-3.0.0.tar.gz.sha256
-sha256sum -c tokenpay-id-android-3.0.0.tar.gz.sha256
-tar -xzf tokenpay-id-android-3.0.0.tar.gz
-cp -r tokenpay-id-android-3.0.0/tokenpay-id-sdk ./tokenpay-id-sdk
+curl -L -O https://www.tokenpay.space/sdk/android/tokenpay-id-android-3.0.1.tar.gz
+curl -L -O https://www.tokenpay.space/sdk/android/tokenpay-id-android-3.0.1.tar.gz.sha256
+sha256sum -c tokenpay-id-android-3.0.1.tar.gz.sha256
+tar -xzf tokenpay-id-android-3.0.1.tar.gz
+cp -r tokenpay-id-android-3.0.1/tokenpay-id-sdk ./tokenpay-id-sdk
 ```
 
 In `settings.gradle.kts`:

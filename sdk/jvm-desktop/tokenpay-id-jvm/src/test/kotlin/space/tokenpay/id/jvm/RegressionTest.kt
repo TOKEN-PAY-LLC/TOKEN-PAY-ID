@@ -30,7 +30,7 @@ class RegressionTest {
         val rc = RemoteConfig(recommendedSdkVersion = "3.1.0")
         // Must not throw, regardless of the outcome.
         val result = rc.isOlderThan("3.1.0")
-        // Shipping SDK 3.0.0 is older than a future 3.1.0 GA.
+        // Shipping SDK 3.0.1 is older than a future 3.1.0 GA.
         assertTrue(result, "current build must report as older than a future GA")
     }
 
@@ -67,7 +67,7 @@ class RegressionTest {
 
     @Test
     fun `SdkBuildInfo version matches the 3_0_0 native UI release`() {
-        assertEquals("3.0.0", SdkBuildInfo.version)
+        assertEquals("3.0.1", SdkBuildInfo.version)
         assertEquals("jvm", SdkBuildInfo.platform)
         assertTrue(SdkBuildInfo.userAgent.startsWith("TokenPayID-JVM/3.0"))
         assertTrue(SdkBuildInfo.sdkHeader.startsWith("jvm-desktop/3.0"))

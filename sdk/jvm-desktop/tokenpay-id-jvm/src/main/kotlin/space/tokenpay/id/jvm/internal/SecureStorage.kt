@@ -6,29 +6,20 @@ import kotlinx.serialization.json.Json
 import space.tokenpay.id.jvm.TpidSession
 import space.tokenpay.id.jvm.TpidUser
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.attribute.PosixFilePermissions
-import java.security.MessageDigest
 import java.time.Instant
 import java.util.Base64
 import java.util.Locale
-import javax.crypto.Cipher
-import javax.crypto.SecretKey
-import javax.crypto.spec.GCMParameterSpec
-import javax.crypto.spec.SecretKeySpec
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Per-user secure storage for refresh tokens and session metadata.
  *
  * Backend selection:
- *  - Windows → DPAPI (via JNA) if available; otherwise AES-GCM file with PBKDF2 key.
- *  - macOS → Keychain generic password via `security` CLI; otherwise AES-GCM file.
- *  - Linux → libsecret via `secret-tool` CLI if present; otherwise AES-GCM file.
- *
- * The AES-GCM fallback is still safe-at-rest because the derived key is bound to
- * a stable machine-id + user principal, so the ciphertext is useless if copied
- * to another machine. It is NOT safe against a local attacker that already has
- * code-execution rights in the user's profile — no desktop keychain is.
+ *  - Windows → DPAPI (via JNA) if available.
+ *  - macOS → Keychain generic password via `security` CLI if available.
+ *  - Linux → libsecret via `secret-tool` CLI if available.
+ * If no system credential store is available, tokens remain in memory for this
+ * process only. A deterministic machine-derived encryption key is not a secret.
  */
 internal class SecureStorage(clientId: String) {
 
@@ -147,87 +138,22 @@ internal class SecureStorage(clientId: String) {
         val os = System.getProperty("os.name", "").lowercase(Locale.ROOT)
         val ns = "tokenpay-id/$clientId"
         return when {
-            os.contains("win") -> WindowsDpapiBackend.tryCreate(ns) ?: FileBackend(ns)
-            os.contains("mac") -> MacKeychainBackend.tryCreate(ns) ?: FileBackend(ns)
-            os.contains("nix") || os.contains("nux") -> LinuxLibsecretBackend.tryCreate(ns) ?: FileBackend(ns)
-            else -> FileBackend(ns)
+            os.contains("win") -> WindowsDpapiBackend.tryCreate(ns) ?: MemoryBackend(ns)
+            os.contains("mac") -> MacKeychainBackend.tryCreate(ns) ?: MemoryBackend(ns)
+            os.contains("nix") || os.contains("nux") -> LinuxLibsecretBackend.tryCreate(ns) ?: MemoryBackend(ns)
+            else -> MemoryBackend(ns)
         }
     }
 
-    // ---- AES-GCM file backend (used on any OS as fallback) ----
-
-    private class FileBackend(private val namespace: String) : Backend {
-        private val root: File = run {
-            val base = when {
-                System.getProperty("os.name", "").lowercase(Locale.ROOT).contains("win") ->
-                    File(System.getenv("APPDATA") ?: System.getProperty("user.home"))
-                System.getProperty("os.name", "").lowercase(Locale.ROOT).contains("mac") ->
-                    File(System.getProperty("user.home"), "Library/Application Support")
-                else -> File(System.getenv("XDG_DATA_HOME") ?: "${System.getProperty("user.home")}/.local/share")
-            }
-            File(base, namespace).also { it.mkdirs() }
-        }
-        private val key: SecretKey by lazy { deriveKey(namespace) }
-
-        override fun put(key: String, value: String) {
-            val iv = ByteArray(12).also { java.security.SecureRandom().nextBytes(it) }
-            val c = Cipher.getInstance("AES/GCM/NoPadding")
-            c.init(Cipher.ENCRYPT_MODE, this.key, GCMParameterSpec(128, iv))
-            val ct = c.doFinal(value.toByteArray(Charsets.UTF_8))
-            val out = iv + ct
-            val f = File(root, "$key.bin")
-            f.writeBytes(out)
-            restrictPermissions(f)
-        }
-
-        override fun get(key: String): String? {
-            val f = File(root, "$key.bin")
-            if (!f.exists()) return null
-            return runCatching {
-                val bytes = f.readBytes()
-                val iv = bytes.copyOfRange(0, 12)
-                val ct = bytes.copyOfRange(12, bytes.size)
-                val c = Cipher.getInstance("AES/GCM/NoPadding")
-                c.init(Cipher.DECRYPT_MODE, this.key, GCMParameterSpec(128, iv))
-                String(c.doFinal(ct), Charsets.UTF_8)
-            }.getOrNull()
-        }
-
-        override fun remove(key: String) { File(root, "$key.bin").delete() }
-
-        override fun scope(sub: String): Backend = FileBackend("$namespace/$sub")
-
-        private fun restrictPermissions(f: File) {
-            try {
-                if (!System.getProperty("os.name", "").lowercase(Locale.ROOT).contains("win")) {
-                    Files.setPosixFilePermissions(f.toPath(), PosixFilePermissions.fromString("rw-------"))
-                }
-            } catch (_: Throwable) { /* best-effort */ }
-        }
-
-        private fun deriveKey(ns: String): SecretKey {
-            val seed = buildString {
-                append(System.getProperty("user.name", ""))
-                append('|')
-                append(System.getProperty("user.home", ""))
-                append('|')
-                append(machineId())
-                append('|')
-                append(ns)
-            }.toByteArray(Charsets.UTF_8)
-            val digest = MessageDigest.getInstance("SHA-256").digest(seed)
-            return SecretKeySpec(digest, "AES")
-        }
-
-        private fun machineId(): String {
-            // Best-effort stable per-machine identifier
-            val props = listOfNotNull(
-                System.getenv("COMPUTERNAME"),
-                System.getenv("HOSTNAME"),
-                runCatching { java.net.InetAddress.getLocalHost().hostName }.getOrNull(),
-            )
-            return if (props.isEmpty()) "default" else props.joinToString("|")
-        }
+    private class MemoryBackend(
+        private val namespace: String,
+        private val values: MutableMap<String, String> = ConcurrentHashMap(),
+    ) : Backend {
+        private fun scoped(key: String) = "$namespace/$key"
+        override fun put(key: String, value: String) { values[scoped(key)] = value }
+        override fun get(key: String): String? = values[scoped(key)]
+        override fun remove(key: String) { values.remove(scoped(key)) }
+        override fun scope(sub: String): Backend = MemoryBackend("$namespace/$sub", values)
     }
 
     // ---- macOS Keychain via `security` CLI ----

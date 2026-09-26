@@ -145,7 +145,7 @@ internal data class RemoteConfig(
 
 /** Compile-time constants describing this build of the SDK. */
 internal object SdkBuildInfo {
-    const val version: String = "3.0.0"
+    const val version: String = "3.0.1"
     const val platform: String = "jvm"
     const val userAgent: String = "TokenPayID-JVM/$version"
     const val sdkHeader: String = "jvm-desktop/$version"
