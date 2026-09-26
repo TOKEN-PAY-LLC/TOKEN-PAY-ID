@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <application>
+        <activity
+            android:name="space.tokenpay.id.ui.WidgetActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TpidWidget"
+            android:configChanges="orientation|screenSize|uiMode"
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTop" />
+    </application>
+</manifest>

@@ -15,7 +15,7 @@
 
 ---
 
-TOKEN PAY ID provides OAuth 2.0 / OpenID Connect, a versioned REST API, an embeddable sign-in widget, and source SDKs for JavaScript, Python, and Go. Existing API integrations remain on the same `/api/v1` routes; API 3.0.0 adds a versioned compatibility surface and request-version headers while preserving the existing authentication and token response contract. API 2.6.3 introduced remembered-account authentication improvements.
+TOKEN PAY ID provides OAuth 2.0 / OpenID Connect, a versioned REST API, an embeddable sign-in widget, and source SDKs for JavaScript, Python, Go, Android, Swift, and desktop JVM. Existing API integrations remain on the same `/api/v1` routes; API 3.0.0 adds a versioned compatibility surface and request-version headers while preserving the existing authentication and token response contract.
 
 ## Integration options
 
@@ -23,9 +23,12 @@ TOKEN PAY ID provides OAuth 2.0 / OpenID Connect, a versioned REST API, an embed
 | --- | --- | --- |
 | Browser sign-in button and modal | [`sdk/web/tpid-widget.js`](sdk/web/tpid-widget.js) | 1.3.0 |
 | Server-side OAuth client | JavaScript, Python, or Go source SDK | JS 1.2.0 · Python 1.1.0 · Go module |
+| Native Android sign-in | [`sdk/android`](sdk/android) | 3.0.0 source |
+| Native Apple sign-in | [`sdk/swift`](sdk/swift) | 3.0.0 source |
+| Windows, Linux, macOS desktop sign-in | [`sdk/jvm-desktop`](sdk/jvm-desktop) | 3.0.0 source |
 | Direct API integration | [`openapi-v3.yaml`](openapi-v3.yaml) | API 3.0.0 |
 
-Only these source SDKs are included in this public repository. Other ecosystem packages are not advertised here as installable releases.
+Native 3.0.0 updates the saved-account interface, corrects automatic theme selection on Windows and Apple platforms, and removes a passkey button that previously led to an unfinished native flow. Existing `/api/v1` authentication contracts and integrator APIs remain supported. [Download archives and checksums](https://tokenpay.space/sdk/).
 
 ## Quick start: web widget
 

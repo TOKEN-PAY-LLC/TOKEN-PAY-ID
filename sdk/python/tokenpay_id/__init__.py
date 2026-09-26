@@ -6,4 +6,4 @@ https://tokenpay.space/docs
 from .client import TokenPayIDClient, TokenPayIDError
 
 __all__ = ["TokenPayIDClient", "TokenPayIDError"]
-__version__ = "1.0.0"
+__version__ = "1.1.0"

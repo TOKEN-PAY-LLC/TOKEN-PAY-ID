@@ -10,6 +10,7 @@ __pycache__/
 venv/
 dist/
 build/
+.gradle/
 *.egg-info/
 .idea/
 .vscode/
@@ -76,3 +77,10 @@ cloudflare_email_guide.md
 .wrangler/
 coverage/
 .nyc_output/
+
+# Public native SDK source assets and release tooling.
+!sdk/android/**/tpid_*.png
+!sdk/swift/**/tpid_*.png
+!sdk/jvm-desktop/**/tpid_*.png
+!sdk/package_release.py
+sdk/android/local.properties
